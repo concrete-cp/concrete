@@ -3,6 +3,8 @@ package util
 
 import java.lang.Math.floorDiv
 import Math.ceilDiv
+import java.lang.Math.addExact
+import java.lang.Math.multiplyExact
 
 object Interval {
   def union(i0: Option[Interval], i1: Option[Interval]): Option[Interval] = {
@@ -34,29 +36,35 @@ object Interval {
 case class Interval(lb: Int, ub: Int) {
   //assume(ub >= lb)
   val size: Int = math.max(0, ub - lb + 1)
-  def contains(v: Int): Boolean = lb <= v && v <= ub
 
   def isEmpty: Boolean = ub < lb
+
   def nonEmpty: Boolean = ub >= lb
 
   def allValues: Range = lb to ub
 
   /**
-   * [a, b] + [c, d] = [a + c, b + d]
-   * [a, b] − [c, d] = [a − d, b − c]
-   * [a, b] × [c, d] = [min (a × c, a × d, b × c, b × d), max (a × c, a × d, b × c, b × d)]
-   * [a, b] ÷ [c, d] = [min (a ÷ c, a ÷ d, b ÷ c, b ÷ d), max (a ÷ c, a ÷ d, b ÷ c, b ÷ d)] when 0 is not in [c, d].
-   */
+    * [a, b] + [c, d] = [a + c, b + d]
+    * [a, b] − [c, d] = [a − d, b − c]
+    * [a, b] × [c, d] = [min (a × c, a × d, b × c, b × d), max (a × c, a × d, b × c, b × d)]
+    * [a, b] ÷ [c, d] = [min (a ÷ c, a ÷ d, b ÷ c, b ÷ d), max (a ÷ c, a ÷ d, b ÷ c, b ÷ d)] when 0 is not in [c, d].
+    */
 
-  def +(i: Interval): Interval = Interval(lb + i.lb, ub + i.ub)
+  def +(i: Interval): Interval = {
+    Interval(lb + i.lb, ub + i.ub)
+  }
 
-  def +(v: Int): Interval = Interval(lb + v, ub + v)
+  def checkedAdd(i: Interval): Interval = {
+    Interval(addExact(lb, i.lb), addExact(ub, i.ub))
+  }
 
   def shrink(i: Interval): Interval = Interval(lb - i.lb, ub - i.ub)
 
   def -(i: Interval): Interval = Interval(lb - i.ub, ub - i.lb)
 
   def -(v: Int): Interval = this + -v
+
+  def +(v: Int): Interval = Interval(lb + v, ub + v)
 
   def *(i: Interval): Interval = {
     val Interval(c, d) = i
@@ -82,6 +90,16 @@ case class Interval(lb: Int, ub: Int) {
     }
   }
 
+  def checkedMultiply(v: Int): Interval = {
+    val lbv = multiplyExact(lb, v)
+    val ubv = multiplyExact(ub, v)
+    if (lbv < ubv) {
+      Interval(lbv, ubv)
+    } else {
+      Interval(ubv, lbv)
+    }
+  }
+
   def sq: Interval = {
     val lb2 = lb * lb
     val ub2 = ub * ub
@@ -95,6 +113,8 @@ case class Interval(lb: Int, ub: Int) {
       }
     }
   }
+
+  def contains(v: Int): Boolean = lb <= v && v <= ub
 
   def sqrt: Interval = {
     require(lb >= 0)
@@ -205,11 +225,17 @@ case class Interval(lb: Int, ub: Int) {
 
   def span(i: Interval): Interval = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
-  def unary_- : Interval = Interval(-ub, -lb)
-
   def abs: Interval =
-    if (ub < 0) { -this }
-    else if (lb > 0) { this }
-    else { Interval(0, math.max(-lb, ub)) }
+    if (ub < 0) {
+      -this
+    }
+    else if (lb > 0) {
+      this
+    }
+    else {
+      Interval(0, math.max(-lb, ub))
+    }
+
+  def unary_- : Interval = Interval(-ub, -lb)
 
 }

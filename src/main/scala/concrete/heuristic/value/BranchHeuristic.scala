@@ -8,6 +8,18 @@ import concrete.heuristic.{Assign, Decision, Remove}
 import scala.util.{Random, Try}
 
 object BranchHeuristic {
+  def default(params: ParameterManager, rand: Random): Try[BranchHeuristic] = {
+    for (heuristic <- BranchHeuristic(params, rand)) yield {
+      val randomDiv = params.getOrElse("heuristic.value.randomDiv", 0.0)
+
+      if (randomDiv > 0) {
+        new RandomValHeuristic(Seq(heuristic, new RandomValue(rand)), Seq(1 - randomDiv, randomDiv), rand)
+      } else {
+        heuristic
+      }
+    }
+  }
+
   def apply(pm: ParameterManager, rand: Random): Try[BranchHeuristic] = {
     Try(
       pm.classInPackage("heuristic.value", "concrete.heuristic.value", classOf[BestValue])

@@ -290,11 +290,14 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
       .assign(r, 1)
       .assign(v0, 0)
       .toState
+      .fold(problem.constraints) { (ps, c) =>
+        c.eventAll(ps)
+        c.revise(ps)
+      }
 
-    val Array(bc) = problem.constraints
 
-    bc.eventAll(state)
-    assert(!bc.revise(state).isState)
+    assert(!state.isState)
+
   }
 
 }

@@ -1,15 +1,18 @@
 package concrete.generator.cspompatterns
 
+
 import com.typesafe.scalalogging.LazyLogging
 import concrete.CSPOMDriver
 import concrete.constraint.linear.{SumLT, SumNE}
 import concrete.generator.SumGenerator
 import cspom.compiler.ConstraintCompiler._
-import cspom.compiler.{ConstraintCompiler, Delta}
+import cspom.compiler.{ConstraintCompiler, Delta, ProblemCompiler}
 import cspom.util.{IntInterval, RangeSet}
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
 
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -53,7 +56,7 @@ object AllDiffConstant extends ConstraintCompiler {
 
     var delta = removeCtr(constraint, problem)
 
-    if (filt.length > 1) {
+    if (filt.lengthCompare(1) > 0) {
       delta ++= addCtr(CSPOMDriver.allDifferent(filt: _*), problem)
     }
 
@@ -69,7 +72,7 @@ object AllDiffConstant extends ConstraintCompiler {
   * Aggregates cliques of alldifferent constraints. Uses a small tabu search engine
   * to detect max-cliques.
   */
-object AllDiff extends ConstraintCompiler with LazyLogging {
+object AllDiff extends ProblemCompiler with LazyLogging {
   type A = Seq[CSPOMVariable[_]]
   val RAND = new Random(0)
 
@@ -78,27 +81,87 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   private val neCoefs2 = Seq(1, -1)
 
-  override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM): Option[List[CSPOMVariable[_]]] = {
-    DIFF_CONSTRAINT(constraint).flatMap { args =>
-      // println(constraint)
-      // println(constraint.toString(problem.displayName))
-      val clique = expand(args.collect { case v: CSPOMVariable[_] => v }.toSet, problem)
-      if (clique.size > args.size) {
-        Some(clique)
-      } else {
-        None
-      }
+  //  override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM): Option[List[CSPOMVariable[_]]] = {
+  //    DIFF_CONSTRAINT(constraint).flatMap { args =>
+  //      // println(constraint)
+  //      // println(constraint.toString(problem.displayName))
+  //      val clique = expand(args.collect { case v: CSPOMVariable[_] => v }.toSet, problem)
+  //      if (clique.size > args.size) {
+  //        Some(clique)
+  //      } else {
+  //        None
+  //      }
+  //    }
+  //  }
+
+  //  def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Seq[CSPOMVariable[_]]): Delta = {
+  //    newAllDiff(clique, problem)
+  //  }
+
+  def apply(cspom: CSPOM): Delta = {
+    val expressions = new mutable.HashMap[CSPOMExpression[_], Int]
+    val expr = new ArrayBuffer[CSPOMExpression[_]]
+    val neighbors = new ArrayBuffer[Set[Int]]
+    for (c <- cspom.constraints; args <- DIFF_CONSTRAINT(c); Seq(a1, a2) <- args.combinations(2)) {
+      val i1 = expressions.getOrElseUpdate(a1, {
+        val i = neighbors.length
+        expr += a1
+        neighbors += Set()
+        i
+      })
+      val i2 = expressions.getOrElseUpdate(a2, {
+        val i = neighbors.length
+        expr += a2
+        neighbors += Set()
+        i
+      })
+      neighbors(i1) += i2
+      neighbors(i2) += i1
+    }
+
+    val ranges = expr.zipWithIndex.collect {
+      case (IntExpression(e), i) => i -> IntExpression.implicits.ranges(e)
+    }
+
+    for (Seq((i1, r1), (i2, r2)) <- ranges.combinations(2) if (r1 & r2).isEmpty) {
+      logger.info(s"Additional neighbors ${expr(i1)} != ${expr(i2)}")
+      neighbors(i1) += i2
+      neighbors(i2) += i1
+    }
+
+    val cliques = BronKerbosch2(neighbors).sortBy(-_.size)
+
+    cliques.foldLeft(Delta.empty) { (d, c) =>
+      d ++ newAllDiff(c.map(expr), cspom)
     }
   }
 
-  /**
-    * If constraint is part of a larger clique of inequalities, replace it by a
-    * larger all-diff constraint.
-    *
-    * @param constraint
-    */
-  def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Seq[CSPOMVariable[_]]): Delta = {
-    newAllDiff(clique, problem)
+  def BronKerbosch2(neighbors: IndexedSeq[Set[Int]]): Seq[Set[Int]] = {
+
+    var C: Seq[Set[Int]] = Seq()
+
+    def recurse(r: Set[Int], p: Set[Int], x: Set[Int]): Unit = {
+
+      if (p.isEmpty && x.isEmpty) {
+        // report R as a max clique
+        C :+= r
+      } else {
+        //choose a pivot vertex u in P ⋃ X
+        val u: Int = p.headOption.getOrElse(x.head)
+
+        var pr = p
+        var xr = x
+        for (v <- pr if !neighbors(u).contains(v)) {
+          // BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
+          recurse(r + v, pr.intersect(neighbors(v)), xr.intersect(neighbors(v)))
+          pr -= v
+          xr += v
+        }
+      }
+    }
+
+    recurse(Set(), neighbors.indices.toSet, Set())
+    C
   }
 
   /**
@@ -107,39 +170,37 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
     *
     * @param scope
     */
-  private def newAllDiff(scope: Seq[SimpleExpression[_]], problem: CSPOM): Delta = {
+  private def newAllDiff(scope: Set[CSPOMExpression[_]], problem: CSPOM): Delta = {
 
-    val allDiff = CSPOMConstraint('alldifferent)(scope: _*)
+    val subsumed = scope.flatMap(problem.deepConstraints).filter(c => isSubsumed(c, scope))
 
-    var delta = Delta()
-
-    if (!scope.flatMap(problem.constraints).exists(c => isSubsumed(allDiff, c))) {
-      logger.debug("New alldiff: " + allDiff.toString(problem.displayName))
-      delta ++= addCtr(allDiff, problem)
+    if (subsumed.nonEmpty) {
+      val allDiff = CSPOMConstraint('alldifferent)(scope.toSeq: _*)
+      logger.info("New alldiff: " + allDiff.toString(problem.displayName))
+      var delta = addCtr(allDiff, problem)
 
       var removed = 0
       /* Remove newly subsumed neq/alldiff constraints. */
 
-      for (
-        v <- scope;
-        c <- problem.deepConstraints(v) if isSubsumed(c, allDiff)
-      ) {
+      for (c <- subsumed) {
         removed += 1
+        logger.info(s"Removing ${c.toString(problem.displayName)}")
         delta ++= removeCtr(c, problem)
       }
-      logger.debug("removed " + removed + " constraints, " + problem.constraints.size + " left")
+      logger.info(s"removed $removed constraints, ${problem.constraints.size} left")
+      delta
+    } else {
+      logger.info(s"alldiff(${scope.map(_.toString(problem.displayName)).mkString(", ")}) does not replace any constraint")
+      Delta()
     }
-    delta
+
   }
 
   //private val neighborsCache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
 
-  private def isSubsumed(c: CSPOMConstraint[_], by: CSPOMConstraint[_]): Boolean = {
-    (by ne c) && DIFF_CONSTRAINT(by).isDefined && {
-
-      ALLDIFF_CONSTRAINT(c).exists { a =>
-        a.forall(by.arguments.contains)
-      }
+  private def isSubsumed(c: CSPOMConstraint[_], by: Set[CSPOMExpression[_]]): Boolean = {
+    (c.flattenedScope.size < by.size) && ALLDIFF_CONSTRAINT(c).exists { a =>
+      a.forall(by.contains)
     }
   }
 
@@ -176,36 +237,5 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   def selfPropagation = false
 
-  def neighbors(v: CSPOMVariable[_], problem: CSPOM): Set[CSPOMVariable[_]] = {
-    //    println("****** constraints with " + v)
-    //    problem.deepConstraints(v).foreach(c=> println(c.toString(problem.displayName)))
-    problem.deepConstraints(v)
-      .iterator
-      .flatMap(DIFF_CONSTRAINT)
-      .flatten
-      .collect {
-        case v: CSPOMVariable[_] => v
-      }
-      .toSet
-    //      problem.deepConstraints(v).flatMap(DIFF_CONSTRAINT).flatten.collect {
-    //        case v: IntVariable => v
-    //      }.toSet - v)
-
-  }
-
-  private def expand(base: Set[CSPOMVariable[_]], problem: CSPOM) = {
-
-    val expanded = base.toList
-
-    val candidates = neighbors(expanded.head, problem) -- base
-
-    var allNeighbors = expanded.tail.map(v => neighbors(v, problem))
-
-    expanded ++ (for (c <- candidates if allNeighbors.forall(n => n.contains(c))) yield {
-      allNeighbors ::= neighbors(c, problem)
-      c
-    })
-
-  }
 
 }

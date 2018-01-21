@@ -9,7 +9,7 @@ class AtMost(val result: Variable, val value: Variable,
              val vars: Array[Variable])
   extends Constraint(result +: value +: vars) with StatefulConstraint[Map[Int, BitVector]] with LazyLogging {
 
-  override def init(ps: ProblemState) = {
+  override def init(ps: ProblemState): ProblemState = {
     val initMap = ps.dom(value).view.map(i => i -> BitVector.empty).toMap
     ps.updateState(this, updateState(ps, initMap, BitVector.filled(arity), ps.dom(value)))
   }

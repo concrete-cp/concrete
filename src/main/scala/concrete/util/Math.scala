@@ -1,7 +1,6 @@
 package concrete.util
 
 import scala.collection.mutable
-import scala.collection.mutable.HashSet
 import scala.math.BigDecimal.RoundingMode
 import scala.util.Random
 
@@ -115,14 +114,14 @@ object Math {
   }
 
   def logSumOfExponentials(xs: Seq[Double]): Double = {
-    if (xs.length == 1) return xs.head
+    if (xs.lengthCompare(1) == 0) return xs.head
     val max = xs.max
     val sum = xs.filterNot(_.isNegInfinity).map(x => math.exp(x - max)).sum
     max + math.log(sum)
   }
 
   def paretoMin[T](uv: Seq[T])(implicit ordering: PartialOrdering[T]): Seq[T] = {
-    uv.filterNot { v => uv.exists(w => ordering.gt(v, w)) }
+    uv.filter { v => uv.forall(w => ordering.lteq(v, w)) }
   }
 
   implicit def partialOrderingVector[T](implicit ordering: Ordering[T]): PartialOrdering[Seq[T]] =

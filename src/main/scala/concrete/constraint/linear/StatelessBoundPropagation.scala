@@ -17,10 +17,10 @@ object StatelessBoundPropagation {
 trait StatelessBoundPropagation extends Linear {
   import StatelessBoundPropagation._
   protected val doms = new Array[Domain](arity)
-  protected val initBound = -Interval(constant, constant)
+  protected val initBound: Interval = -Interval(constant, constant)
   protected def is: Array[Int]
 
-  protected def updateF(ps: ProblemState) = {
+  protected def updateF(ps: ProblemState): (Interval, Int) = {
     var f = initBound
     var p = arity - 1
     var maxI = 0
@@ -52,12 +52,12 @@ trait StatelessBoundPropagation extends Linear {
 
     if (f.ub <= 0) {
       /* Entailed */
-      PFiltered(hasChanged, true, f)
+      PFiltered(hasChanged, entailed = true, f)
     } else if (f.lb > 0) {
       PContradiction
     } else if (p >= arity || is(p) <= -f.lb) {
       /* End or Short-circuit */
-      PFiltered(hasChanged, false, f)
+      PFiltered(hasChanged, entailed = false, f)
     } else {
       val dom = doms(p)
 

@@ -5,16 +5,18 @@ import concrete.constraint.linear._
 import concrete.generator.SumGenerator
 import cspom.compiler.ConstraintCompiler._
 import cspom.compiler.VariableCompiler
-import cspom.util.IntervalsArithmetic.{Arithmetics, RangeArithmetics}
-import cspom.util.{IntInterval, RangeSet}
+import cspom.util.IntervalsArithmetic.Arithmetics
+import cspom.util.{Finite, IntInterval}
 import cspom.variable._
 import cspom.{CSPOMConstraint, UNSATException}
+
+import scala.util.{Failure, Try}
 
 object SumDomains extends VariableCompiler('sum) with LazyLogging {
 
   def compiler(c: CSPOMConstraint[_]) = throw new IllegalStateException
 
-  override def compilerWEntail(c: CSPOMConstraint[_]) = c match {
+  override def compilerWEntail(c: CSPOMConstraint[_]): (Seq[(CSPOMExpression[Any], SimpleExpression[Any])], Boolean) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, _, _) =>
 
       val (iargs, coef, result, mode) = SumGenerator.readCSPOM(c)
@@ -24,34 +26,39 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
       } else {
 
         val initBound = mode match {
-          case SumLE => RangeSet(IntInterval.atMost(result))
-          case SumLT => RangeSet(IntInterval.atMost(result - 1))
-          case SumEQ => RangeSet(IntInterval.singleton(result))
-          case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
+          case SumLE => IntInterval.atMost(result)
+          case SumLT => IntInterval.atMost(result - 1)
+          case SumEQ => IntInterval.singleton(result)
+          case SumNE => IntInterval.all
         }
 
+        val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * Finite(c)).toIndexedSeq
 
-        val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
-
-        val filt = for (i <- iargs.indices) yield {
-          val others = iargs.indices
-            .filter(_ != i)
-            .map(coefspan)
-            .foldLeft(initBound)(_ - _)
+        val filt = for {
+          i <- iargs.indices
+          others <- Try(
+            iargs.indices
+              .filter(_ != i)
+              .map(coefspan)
+              .foldLeft(initBound)(_ - _))
+            .recoverWith {
+              case e: Exception =>
+                logger.warn(s"$e when computing bounds of $c")
+                Failure(e)
+            }
+            .toOption
+        } yield {
           iargs(i) -> reduceDomain(iargs(i), others / coef(i))
         }
 
         val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1
 
-        // logger.debug((filt, entailed).toString)
-
         (filt, entailed)
 
       }
 
-    case CSPOMConstraint(r, _, _, _) => {
-      (Seq(r -> BoolExpression.coerce(r)), false)
-    }
+    case CSPOMConstraint(r, _, _, _) => (Seq(r -> BoolExpression.coerce(r)), false)
+
 
     // case _ => (Seq(), false)
   }

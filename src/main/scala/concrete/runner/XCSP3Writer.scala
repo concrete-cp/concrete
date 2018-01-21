@@ -36,7 +36,7 @@ class XCSP3Writer(val pm:ParameterManager, problem:String, val stats: Statistics
     // e.printStackTrace(Console.err)
   }
 
-  def disconnect(status: Result) {
+  def disconnect(status: RunnerResult) {
     writeStats()
     for (s <- lastSolution) {
       Console.println(s.split("\n").map("v " + _).mkString("\n"))

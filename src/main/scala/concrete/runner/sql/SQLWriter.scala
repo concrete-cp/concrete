@@ -297,7 +297,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
     e.toString
   }
 
-  def disconnect(status: Result) {
+  def disconnect(status: RunnerResult) {
     // logger.warn("Disconnecting")
     try {
 

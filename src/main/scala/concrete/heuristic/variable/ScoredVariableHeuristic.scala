@@ -7,19 +7,11 @@ import concrete._
 
 import scala.collection.mutable.ArrayBuffer
 
-abstract class ScoredVariableHeuristic(val tieBreaker: VariableHeuristic) extends VariableHeuristic with LazyLogging {
+abstract class ScoredVariableHeuristic extends VariableHeuristic with LazyLogging {
   private val poolSet = pool.toSet
 
-  // def trustCandidates: Boolean
-
-  def compute(s: MAC, ps: ProblemState): ProblemState = {
-    tieBreaker.compute(s, ps)
-  }
-
-  def select(state: ProblemState, i: Seq[Variable]): Option[Variable] = {
-    val tied = selectTied(i.view.filter(poolSet), state)
-
-    tieBreaker.select(state, tied)
+  def select(state: ProblemState, i: Seq[Variable]): Seq[Variable] = {
+    selectTied(i.view.filter(poolSet), state)
   }
 
   def selectTied(i: Traversable[Variable], state: ProblemState): Seq[Variable] = {

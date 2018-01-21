@@ -26,9 +26,8 @@ class MemberGenerator(pg: ProblemGenerator) extends Generator {
     val variable = cspom2concrete(constraint.arguments(1)).asVariable(pg)
     val r = result.asVariable(pg)
     Seq(
-      new ReifiedConstraint(r,
-        new Member(variable, seq),
-        new NotMember(variable, seq)))
+      new ReifiedConstraint(neg = false, r, new Member(variable, seq)),
+      new ReifiedConstraint(neg = true, r, new NotMember(variable, seq)))
   }
 
 }

@@ -25,20 +25,23 @@ object ConcretePatterns {
         Knapsack, Lex, NoOverlap, MinDomains, MaxDomains, DiffNWCumulative,
         GCC)
 
-    require(concreteDef.distinct.size == concreteDef.size)
+    require(concreteDef.lengthCompare(concreteDef.distinct.size) == 0)
 
     val concreteImp = Seq(
       //AbsDiff, AbsDiffDomains,
-      AllDiff, SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
+      SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
       //MergeNotDisj,
       UnaryClause, SumFactors, SumEq, BoolSum, BoolProd, MergeSameCommutative
-      , SumSE, ClauseSE, MinMaxSE
+      , SumSE
+      , ClauseSE
+      , MinMaxSE,
+      AllDiff
     ) //, MergeRelations) //, LexLeq2SAT)
 
     val improveModel = params.getOrElse("improveModel", true)
 
     if (improveModel) {
-      StandardCompilers() ++ StandardCompilers.improve() ++ concreteDef ++ concreteImp
+      StandardCompilers() ++ concreteDef ++ StandardCompilers.improve() ++ concreteImp
     } else {
       StandardCompilers() ++ concreteDef
     }

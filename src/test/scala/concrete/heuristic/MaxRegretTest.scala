@@ -1,7 +1,7 @@
 package concrete.heuristic
 
 import concrete.{IntDomain, Problem, Variable}
-import concrete.heuristic.variable.{LexVar, MaxRegret}
+import concrete.heuristic.variable.MaxRegret
 import org.scalatest.{FlatSpec, Matchers, OptionValues}
 
 /**
@@ -14,8 +14,8 @@ class MaxRegretTest extends FlatSpec with Matchers with OptionValues {
 
     val p = Problem(v1, v2)
 
-    val h = new MaxRegret(p.variables, new LexVar(p.variables))
+    val h = new MaxRegret(p.variables)
     val ps = h.compute(null, p.initState.toState)
-    h.select(ps, p.variables).value shouldBe v1
+    h.select(ps, p.variables).headOption.value shouldBe v1
   }
 }

@@ -80,7 +80,7 @@ final class ParameterManager(
     (parameters.get(name) match {
       case Some(s: String) =>
         used += name
-        classInPackage(s, pack)
+        ParameterManager.classInPackage(s, pack)
       case Some(c) =>
         used += name
         c
@@ -90,12 +90,6 @@ final class ParameterManager(
 
   }
 
-  def classInPackage(name: String, pack: String): Class[_] = {
-    try Class.forName(name)
-    catch {
-      case _: ClassNotFoundException => Class.forName(s"$pack.$name")
-    }
-  }
 
   def contains(name: String): Boolean = {
     val c = parameters.contains(name)
@@ -121,4 +115,13 @@ final class ParameterManager(
     }
   }
 
+}
+
+object ParameterManager {
+  def classInPackage(name: String, pack: String): Class[_] = {
+    try Class.forName(name)
+    catch {
+      case _: ClassNotFoundException => Class.forName(s"$pack.$name")
+    }
+  }
 }

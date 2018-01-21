@@ -1,5 +1,6 @@
 package concrete.generator.cspompatterns
 
+import com.typesafe.scalalogging.LazyLogging
 import concrete.CSPOMDriver
 import concrete.generator.SumGenerator
 import cspom.CSPOM._
@@ -13,8 +14,24 @@ object SumSE extends ACCSE[IntPair] {
 
   def populate(c: CSPOMConstraint[_]): Iterator[IntPair] = {
     if (c.function == 'sum) {
-      val (vars, coefs, _, _) = SumGenerator.readCSPOM(c)
-      for (Seq((k1, v1), (k2, v2)) <- (coefs zip vars).combinations(2)) yield {
+      val (vars, coefs, constant, _) = SumGenerator.readCSPOM(c)
+
+//      val width = Try {
+//        (vars.map(IntExpression.span), coefs).zipped.map(_ * Finite(_)).reduce(_ + _) + Finite(Math.negateExact(constant))
+//      }
+//        .recoverWith {
+//          case e: Exception =>
+//            logger.warn(s"${e.toString} when considering ACCSE for $c")
+//            Failure(e)
+//        }
+//        .toOption
+//        .filter(w => w.lb >= BigInt(Int.MinValue) && w.ub <= BigInt(Int.MaxValue))
+
+
+      for {
+//        _ <- width.iterator
+        Seq((k1, v1), (k2, v2)) <- (coefs zip vars).combinations(2)
+      } yield {
         IntPair(k1, v1, k2, v2)
       }
     } else {
@@ -90,19 +107,27 @@ class EqualPair(val v1: SimpleExpression[_], val v2: SimpleExpression[_]) extend
 
 case class CoefPair(k1: Int, v1: SimpleExpression[_], k2: Int, v2: SimpleExpression[_]) extends IntPair
 
-object IntPair {
+case class Clause(pos: Set[SimpleExpression[Any]], neg: Set[SimpleExpression[Any]])
+
+case class MinMaxPair(min: Boolean, v: Set[CSPOMExpression[Any]])
+
+object IntPair extends LazyLogging {
+
+
   def apply(k1: Int, v1: SimpleExpression[_], k2: Int, v2: SimpleExpression[_]): IntPair = {
+
+    val gcd = concrete.util.Math.gcd(Math.abs(k1), Math.abs(k2))
+
     if (k1 < k2) {
-      val gcd = concrete.util.Math.gcd(Math.abs(k1), Math.abs(k2))
       CoefPair(k1 / gcd, v1, k2 / gcd, v2)
     } else if (k1 > k2) {
-      val gcd = concrete.util.Math.gcd(Math.abs(k1), Math.abs(k2))
       CoefPair(k2 / gcd, v2, k1 / gcd, v1)
     } else {
-      assert(concrete.util.Math.gcd(Math.abs(k1), Math.abs(k2)) == k1)
+      assert(gcd == k1)
       new EqualPair(v1, v2)
     }
   }
+
 }
 
 object ClauseSE extends ACCSE[Clause] {
@@ -123,7 +148,7 @@ object ClauseSE extends ACCSE[Clause] {
     val aux = new BoolVariable()
     val newConstraint = CSPOMConstraint(aux)('clause)(pair.pos.toSeq, pair.neg.toSeq)
 
-    logger.info(s"New subexpression in ${ls.size} constraints: ${aux.toString(dn)} = ${pair.pos.map(_.toString(dn)).mkString("\\/")} \\/ ${pair.neg.map("-" + _.toString(dn)).mkString("\\/")}")
+    logger.info(s"New subexpression in ${ls.size} constraints: ${aux.toString(dn)} = ${(pair.pos.map(_.toString(dn)) ++ pair.neg.map("-" + _.toString(dn))).mkString(" ∨ ")}")
 
     val newConstraints = for (a <- ls) yield {
       val Seq(SimpleExpression.simpleSeq(positive), SimpleExpression.simpleSeq(negative)) = a.arguments
@@ -136,8 +161,6 @@ object ClauseSE extends ACCSE[Clause] {
 
 
 }
-
-case class Clause(pos: Set[SimpleExpression[Any]], neg: Set[SimpleExpression[Any]])
 
 object Clause {
   def apply(neg1: Boolean, v1: SimpleExpression[_], neg2: Boolean, v2: SimpleExpression[_]): Clause = {
@@ -173,15 +196,17 @@ object MinMaxSE extends ACCSE[MinMaxPair] {
     val function = if (pair.min) 'min else 'max
     val aux = IntVariable.free()
     val newConstraint = CSPOMConstraint(aux)(function)(pair.v.toSeq: _*)
+
+
+    logger.info(s"New subexpression in ${ls.size} constraints ${ls.map(_.toString(dn))}")
+
+
     val newConstraints = for (a <- ls) yield {
       assert(a.function == function)
-      CSPOMConstraint(a.result)(function)(aux +: a.arguments.filterNot(pair.v.contains):_*)
+      CSPOMConstraint(a.result)(function)(aux +: a.arguments.filterNot(pair.v.contains): _*)
     }
     newConstraint +: newConstraints
   }
 
 
 }
-
-
-case class MinMaxPair(min: Boolean, v: Set[CSPOMExpression[Any]])

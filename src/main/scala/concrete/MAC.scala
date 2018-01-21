@@ -79,7 +79,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   }
   @Statistic
   var nbRuns = 0
-  var currentStack: Stack = Stack(problem.initState.andThen(init))
+  var currentStack: Stack = Stack(problem.initState)
   var currentBTLeft: Option[Int] = None
 
   @Statistic
@@ -163,6 +163,9 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
         if (stack.noRightStack) {
           (UNSAT, Stack(c), maxBacktracks, nbAssignments)
         } else {
+          for (level <- stack.decisionHistory.headOption; decision <- level.lastOption) {
+            heuristic.event(BadDecision(decision), c)
+          }
 
           val (newStack, modified) = stack.backtrackAndApplyRightDecision
 
@@ -211,7 +214,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
             mac(modified, newStack, maxBacktracks, nbAssignments + 1)
         }
 
-      
+
     }
   }
 
@@ -292,6 +295,11 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     }
   }
 
+  def init(ps: ProblemState): Outcome = {
+    heuristic.compute(this,
+      ps.updateData(this, SparseSeq(heuristic.decisionVariables: _*)))
+  }
+
   def nextSolution(): SolverResult = try {
 
     logger.info(heuristic.toString)
@@ -303,7 +311,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
         .andThen { ps =>
           if (firstRun) {
             firstRun = false
-            preprocess(filter, ps)
+            preprocess(filter, ps).andThen(init)
           } else {
             assert(ps eq filter.reduceAll(ps))
             ps
@@ -350,12 +358,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   }
 
   override def toString: String = "maintain generalized arc consistency - iterative"
-
-  def init(ps: ProblemState): Outcome = {
-    ps.updateData(this, SparseSeq(heuristic.decisionVariables: _*))
-      .andThen(heuristic.compute(this, _))
-  }
-
 
   @elidable(elidable.ASSERTION)
   private def controlSolution(ps: ProblemState): Unit = {

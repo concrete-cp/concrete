@@ -42,8 +42,8 @@ class MapArcsScores(max: Int) extends ArcsScores {
   def increment(i: Int, j: Int): Unit = arcs(i)(j) += 1
 }
 
-class WArcsOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
-  extends ScoredVariableHeuristic(tieBreaker) {
+class WArcsOnDom(val pool: Seq[Variable])
+  extends ScoredVariableHeuristic {
 
   private var arcs: ArcsScores = _ // = new mutable.HashMap[(Int, Int), Int]().withDefaultValue(0)
 
@@ -68,7 +68,7 @@ class WArcsOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
       }
     }
     neighbors = neighb.mapValues(_.toSeq).toMap
-    super.compute(s, ps)
+    ps //super.compute(s, ps)
   }
 
   def score(variable: Variable, dom: Domain, state: ProblemState): Double = {
@@ -103,5 +103,5 @@ class WArcsOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
 
   override def shouldRestart: Boolean = true
 
-  override def toString = s"max-warcs/dom then $tieBreaker"
+  override def toString = s"max-warcs/dom"
 }

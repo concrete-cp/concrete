@@ -30,7 +30,7 @@ object Pow extends ConstraintCompilerNoData {
     //    println(constraint)
     //    println(mdd)
 
-    val rDom = RangeSet(mdd.projectOne(2).map { case i => IntInterval.singleton(i) })
+    val rDom = RangeSet(mdd.projectOne(2).map { i => IntInterval.singleton(i) })
 
     //    println(constraint)
     //    mdd.foreach(println)

@@ -23,13 +23,13 @@ package variable
 
 import java.util.EventObject
 
-final class WDeg(val pool: Seq[Variable], tieBreaker: VariableHeuristic) extends ScoredVariableHeuristic(tieBreaker)
+final class WDeg(val pool: Seq[Variable]) extends ScoredVariableHeuristic
   with ConstraintWeighting {
 
   def score(variable: Variable, dom: Domain, state: ProblemState): Double =
     state.wDeg(variable) //.getWDegEntailed(state)
 
-  override def toString = s"max-wdeg then $tieBreaker"
+  override def toString = s"max-wdeg"
 
   override def shouldRestart = true
 
@@ -44,7 +44,7 @@ trait ConstraintWeighting extends ScoredVariableHeuristic {
         v.weight += 1
       }
     }
-    super.compute(s, ps)
+    ps // super.compute(s, ps)
   }
 
 

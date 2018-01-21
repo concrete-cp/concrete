@@ -54,10 +54,10 @@ class SumGeneratorTest extends FlatSpec with Matchers {
 
     CSPOMCompiler.compile(cspom, Seq(MergeEq)).get
 
-    val (problem, variables) = new ProblemGenerator().generate(cspom).get
+    val (problem, _) = new ProblemGenerator().generate(cspom).get
 
     withClue(problem.toString(problem.initState.toState)) {
-      problem.constraints.size shouldBe 2
+      problem.constraints should have length 3
     }
 
   }

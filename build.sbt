@@ -27,7 +27,7 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.8.2" % "test",
-	"com.github.davidmoten" % "rtree" % "0.8.0.2"
+	"com.github.davidmoten" % "rtree" % "0.8.0.4"
 	)
 
 scalacOptions ++= Seq(

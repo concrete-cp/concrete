@@ -7,6 +7,7 @@ import java.net.URL
 import com.typesafe.scalalogging.LazyLogging
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.{ConcretePatterns, FZPatterns, XCSPPatterns}
+import concrete.heuristic.variable._
 import concrete.runner.{XCSP3Concrete, XCSP3SolutionChecker}
 import cspom.CSPOM.Parser
 import cspom.compiler.CSPOMCompiler
@@ -196,11 +197,12 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "test.fzn.xz" -> ((true, false)))
     .map { case (pb, (nbsol, test)) => (pb, (nbsol, 0.0)) }
 
-  private val parameters = new ParameterManager() //.updated("f", Unit).updated("heuristic.value", classOf[BestCost])
+  private val pm = new ParameterManager()
+  private val parameters = pm.updated("heuristic.variable", classOf[LastConflict] +: VariableHeuristic.default) //.updated("f", Unit).updated("heuristic.value", classOf[BestCost])
 
   for ((p, (r, test)) <-
        lecoutrePB ++
-         problemBank
+     problemBank //.slice(7,8)
   ) {
 
     describe(p) {

@@ -21,8 +21,10 @@ package concrete
 package heuristic
 package variable
 
-final class MaxRegret(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
-  extends ScoredVariableHeuristic(tieBreaker) {
+final class MaxRegret(val pool: Seq[Variable])
+  extends ScoredVariableHeuristic {
+
+  override def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
   def score(variable: Variable, dom: Domain, state: ProblemState): Double = {
     val v0 = dom.head
@@ -30,8 +32,8 @@ final class MaxRegret(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
     v1 - v0
   }
 
-  override def toString = s"max-regret then $tieBreaker"
+  override def toString = s"max-regret"
 
-  override def shouldRestart: Boolean = tieBreaker.shouldRestart
+  override def shouldRestart: Boolean = false
 
 }

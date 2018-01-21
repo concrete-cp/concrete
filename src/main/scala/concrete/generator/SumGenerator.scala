@@ -11,7 +11,7 @@ import cspom.variable.{CSPOMConstant, IntExpression, SimpleExpression}
 
 object SumGenerator {
   def readCSPOM(constraint: CSPOMConstraint[_]): (IndexedSeq[SimpleExpression[Any]], Seq[Int], Int, SumMode) = {
-    require(constraint.arguments.size == 3)
+    require(constraint.arguments.lengthCompare(3) == 0)
     val IntExpression.constSeq(coefs) = constraint.arguments(0)
     val SimpleExpression.simpleSeq(vars) = constraint.arguments(1)
     val CSPOMConstant(c) = constraint.arguments(2) //map cspom2concreteVar
@@ -32,27 +32,25 @@ object SumGenerator {
 }
 
 object ACBC {
-  private val empty: ACBC = ACBC(None, None)
+  private val empty: ACBC = ACBC(Seq(), Seq())
 
-  def withAC(c: Constraint) = empty.withAC(c)
+  def withAC(c: Constraint*): ACBC = empty.withAC(c: _*)
 
-  def withBC(c: Constraint) = empty.withBC(c)
+  def withBC(c: Constraint*): ACBC = empty.withBC(c: _*)
 }
 
-case class ACBC(ac: Option[Constraint], bc: Option[Constraint]) {
-  def toSeq = ac.toSeq ++ bc.toSeq
+case class ACBC(ac: Seq[Constraint], bc: Seq[Constraint]) {
+  def toSeq: Seq[Constraint] = ac ++ bc
 
-  def withAC(c: Constraint) = {
-    require(ac.isEmpty)
-    ACBC(Some(c), bc)
+  def withAC(c: Constraint*): ACBC = {
+    ACBC(ac ++ c, bc)
   }
 
-  def withBC(c: Constraint) = {
-    require(bc.isEmpty)
-    ACBC(ac, Some(c))
+  def withBC(c: Constraint*): ACBC = {
+    ACBC(ac, bc ++ c)
   }
 
-  def foreach[U](f: Constraint => U) = {
+  def foreach[U](f: Constraint => U): Unit = {
     ac.foreach(f)
     bc.foreach(f)
   }
@@ -60,14 +58,14 @@ case class ACBC(ac: Option[Constraint], bc: Option[Constraint]) {
 
 final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
 
-  override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
+  override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
     val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
     val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable(pg))
 
     withBinSpec(solverVariables, varParams, constant, mode).toSeq
   }
 
-  override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
+  override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap): Seq[Constraint] = {
     val r = result.asVariable(pg)
 
     val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
@@ -76,27 +74,11 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
     val (negParams, negConstant, negMode) = reverse(varParams, constant, mode)
     val negative = withBinSpec(solverVariables, negParams, negConstant, negMode)
 
-    val ac = positive.ac
-      .map { pac =>
-        val neg = negative.ac.orElse(negative.bc).get
-        new ReifiedConstraint(r, pac, neg)
-      }
-      .orElse {
-        for (
-          pbc <- positive.bc;
-          nac <- negative.ac
-        ) yield new ReifiedConstraint(r, pbc, nac)
-      }
+    val ac = positive.ac.map { pac => new ReifiedConstraint(neg = false, r, pac) } ++
+      negative.ac.map { nac => new ReifiedConstraint(neg = true, r, nac) }
 
-    val bc = positive.bc
-      .map {
-        pbc =>
-          val neg = negative.bc.orElse(negative.ac).get
-          new ReifiedConstraint(r, pbc, neg)
-      }
-      .orElse {
-        for (pac <- positive.ac; nbc <- negative.bc) yield new ReifiedConstraint(r, pac, nbc)
-      }
+    val bc = positive.bc.map { pbc => new ReifiedConstraint(neg = false, r, pbc) } ++
+      negative.bc.map { nbc => new ReifiedConstraint(neg = true, r, nbc) }
 
     val reified = ACBC(ac, bc).toSeq
 
@@ -116,9 +98,8 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           case (Seq(-1), SumLT, k) => ACBC.withBC(new GtC(x, -k))
           case (Seq(1), SumNE, k) => ACBC.withBC(new NeqC(x, k))
           case _ =>
-
             val c = general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
-            logger.info(s"${c} is non-specialized unary linear constraint")
+            logger.info(s"$c is non-specialized unary linear constraint")
             c
         }
       case 2 =>
@@ -149,9 +130,9 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
       Linear(constant, varParams.toArray, solverVariables.toArray, mode, pm))
   }
 
-  def pm = pg.pm
+  def pm: ParameterManager = pg.pm
 
-  def reverse(varParams: Seq[Int], constant: Int, mode: SumMode) = {
+  def reverse(varParams: Seq[Int], constant: Int, mode: SumMode): (Seq[Int], Int, SumMode) = {
     mode match {
       case SumEQ => (varParams, constant, SumNE)
       case SumNE => (varParams, constant, SumEQ)

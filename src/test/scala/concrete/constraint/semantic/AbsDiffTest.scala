@@ -13,16 +13,19 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
 
   "AbsDiff" should "behave the same as extensional constraint" in {
     forAll(dom, dom, dom) { (x: Seq[Int], y: Seq[Int], z: Seq[Int]) =>
+
       val vx: Variable = new Variable("x", IntDomain.ofSeq(x: _*))
       val vy: Variable = new Variable("y", IntDomain.ofSeq(y: _*))
       val vz: Variable = new Variable("z", IntDomain.ofSeq(z: _*))
 
-      ConstraintComparator.compare(
-        Array(vx, vy, vz),
-        new AbsDiffAC(vx, vy, vz),
-        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
-          def check(t: Array[Int]): Boolean = t(0) == math.abs(t(1) - t(2))
-        })
+      whenever (!vx.initDomain.convex || !vy.initDomain.convex || !vz.initDomain.convex) {
+        ConstraintComparator.compare(
+          Array(vx, vy, vz),
+          new AbsDiffAC(vx, vy, vz),
+          new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+            def check(t: Array[Int]): Boolean = t(0) == math.abs(t(1) - t(2))
+          })
+      }
 
     }
   }

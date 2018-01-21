@@ -5,8 +5,7 @@ import java.util
 
 import concrete.ParameterManager
 import concrete.generator.cspompatterns.{ConcretePatterns, FZPatterns, XCSPPatterns}
-import cspom.CSPOM
-import cspom.CSPOMGoal._
+import cspom.{CSPOM, CSPOMGoal}
 import cspom.compiler.CSPOMCompiler
 import cspom.extension.MDDRelation
 import cspom.flatzinc.FlatZincFastParser
@@ -95,9 +94,9 @@ object ProblemStats extends App {
       }
       .flatMap { cspom =>
         val nature = cspom.goal.get.obj match {
-          case Satisfy => "satisfy"
-          case Maximize(e) => s"maximize ${cspom.displayName(e)}"
-          case Minimize(e) => s"minimize ${cspom.displayName(e)}"
+          case CSPOMGoal.Satisfy => "satisfy"
+          case CSPOMGoal.Maximize(e) => s"maximize ${cspom.displayName(e)}"
+          case CSPOMGoal.Minimize(e) => s"minimize ${cspom.displayName(e)}"
         }
         CSPOMCompiler.compile(cspom, ConcretePatterns(pm)).map((nature, _))
       }

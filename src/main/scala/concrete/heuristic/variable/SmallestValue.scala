@@ -21,13 +21,15 @@ package concrete
 package heuristic
 package variable
 
-final class SmallestValue(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
-  extends ScoredVariableHeuristic(tieBreaker) {
+final class SmallestValue(val pool: Seq[Variable])
+  extends ScoredVariableHeuristic {
+
+  override def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
   def score(variable: Variable, dom: Domain, state: ProblemState): Double = -dom.head
 
-  override def toString = s"smallest-value then $tieBreaker"
+  override def toString = s"smallest-value"
 
-  override def shouldRestart: Boolean = tieBreaker.shouldRestart
+  override def shouldRestart: Boolean = false
 
 }

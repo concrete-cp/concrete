@@ -5,12 +5,10 @@ import org.scalatest.FlatSpec
 import concrete.constraint.Constraint
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.generator.cspompatterns.FZPatterns
 import concrete.runner.FZConcrete
-import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 
-import scala.util.{Random, Success}
+import scala.util.Random
 
 class SolutionTest extends FlatSpec {
 

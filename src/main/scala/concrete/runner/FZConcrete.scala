@@ -208,25 +208,21 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         case v: CSPOMVariable[_] => variables(v)
       }
 
-      def tieBreaker = new LexVar(decisionVariables)
-
-
-
       val FZAnnotation(varchoiceannotation, _) = vca
 
-      val varh: VariableHeuristic = varchoiceannotation match {
-        case "input_order" => tieBreaker
-        case "first_fail" => new Dom(decisionVariables, tieBreaker)
-        case "antifirst_fail" => new MaxDom(decisionVariables, tieBreaker)
-        case "smallest" => new SmallestValue(decisionVariables, tieBreaker)
-        case "largest" => new LargestValue(decisionVariables, tieBreaker)
-        case "occurrence" => new DDeg(decisionVariables, tieBreaker)
-        case "most_constrained" => new DDeg(decisionVariables, new Dom(decisionVariables, tieBreaker))
-        case "max_regret" => new MaxRegret(decisionVariables, tieBreaker)
-        case "free" => CrossHeuristic.defaultVar(pm, decisionVariables, rand).get
+      val varh: Seq[VariableHeuristic] = varchoiceannotation match {
+        case "input_order" => Seq(new LexVar(decisionVariables))
+        case "first_fail" => Seq(new Dom(decisionVariables))
+        case "antifirst_fail" => Seq(new MaxDom(decisionVariables))
+        case "smallest" => Seq(new SmallestValue(decisionVariables))
+        case "largest" => Seq(new LargestValue(decisionVariables))
+        case "occurrence" => Seq(new DDeg(decisionVariables))
+        case "most_constrained" => Seq(new DDeg(decisionVariables), new Dom(decisionVariables))
+        case "max_regret" => Seq(new MaxRegret(decisionVariables))
+        case "free" => VariableHeuristic.default(pm, decisionVariables, rand).get
         case h =>
           logger.warn(s"Unsupported varchoice $h")
-          CrossHeuristic.defaultVar(pm, decisionVariables, rand).get
+          VariableHeuristic.default(pm, decisionVariables, rand).get
       }
 
       val FZAnnotation(assignmentannotation, _) = aa
@@ -240,10 +236,10 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         case "indomain_split" => new Split()
         case "indomain_reverse_split" => new RevSplit()
         case "indomain_interval" => new IntervalBranch()
-        case "indomain_free" => CrossHeuristic.defaultVal(pm, rand).get
+        case "indomain_free" => BranchHeuristic.default(pm, rand).get
         case h =>
           logger.warn(s"Unsupported assignment heuristic $h")
-          CrossHeuristic.defaultVal(pm, rand).get
+          BranchHeuristic.default(pm, rand).get
       }
 
       CrossHeuristic(varh, valh)

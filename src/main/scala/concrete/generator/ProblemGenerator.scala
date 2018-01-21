@@ -23,7 +23,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   var genTime: Quantity[Double] = _
 
   def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
-    val (result, time) = StatisticsManager.measure {
+    val (result, time) = StatisticsManager.measure[(Problem, Map[CSPOMVariable[_], Variable]), Unit, Double] {
 
       val variables = generateVariables(cspom)
 
@@ -39,7 +39,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
 
       logger.info(problem.constraints
         .groupBy {
-          case c: ReifiedConstraint => (classOf[ReifiedConstraint], c.positiveConstraint.getClass)
+          case c: ReifiedConstraint => (classOf[ReifiedConstraint], c.constraint.getClass)
           case c => c.getClass
         }
         .map { case (k, v) => s"$k: ${v.length}" }.mkString("\n"))
@@ -51,29 +51,12 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
     result
   }
 
-  def isBoolean(constraint: CSPOMConstraint[_]): Boolean = {
-    //    if (constraint.function == 'sum) {
-    //      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-    //      println(vars)
-    //    }
-
-    constraint.nonReified && (constraint.function == 'pseudoboolean || constraint.function == 'sum && {
-      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-      (mode == SumLE || mode == SumEQ) &&
-        vars.forall {
-          case BoolExpression(_) => true
-          case e if BoolExpression.is01(e) => true
-          case _ => false
-        }
-    })
-  }
-
   def generateVariables(cspom: CSPOM): Map[CSPOMVariable[_], Variable] = {
 
     cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] =>
         val dn = cspom.displayName(v)
-        require(v.fullyDefined, s"$dn has no bounds. Involved by ${cspom.deepConstraints(v)}")
+        require(v.fullyDefined, s"$dn has no bounds. Involved by ${cspom.deepConstraints(v).map(_.toString(cspom.displayName)).mkString(", ")}")
         require(v.searchSpace > 0, s"$dn has empty domain. Involved by ${cspom.deepConstraints(v)}")
         if (!cspom.isReferenced(v)) logger.warn(s"$dn ($v) is not referenced by constraints")
         v -> new Variable(dn, generateDomain(v))
@@ -90,7 +73,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
           val Finite(l) = v.domain.lowerBound
           val Finite(u) = v.domain.upperBound
 
-          (l,u) match {
+          (l, u) match {
             case (0, 0) => concrete.BooleanDomain(false)
             case (1, 1) => concrete.BooleanDomain(true)
             case (0, 1) => concrete.BooleanDomain()
@@ -108,7 +91,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
     dom
   }
 
-  private def goal(goal: Option[WithParam[CSPOMGoal[_]]], variables:Map[CSPOMVariable[_], Variable]): Goal = {
+  private def goal(goal: Option[WithParam[CSPOMGoal[_]]], variables: Map[CSPOMVariable[_], Variable]): Goal = {
 
     def obtain(expr: CSPOMVariable[_]): Variable =
       variables.getOrElse(expr, throw new IllegalArgumentException(s"Could not find variable $expr"))
@@ -124,5 +107,22 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
         case g => throw new InvalidParameterException("Cannot execute goal " + g)
       }
       .getOrElse(Satisfy)
+  }
+
+  def isBoolean(constraint: CSPOMConstraint[_]): Boolean = {
+    //    if (constraint.function == 'sum) {
+    //      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
+    //      println(vars)
+    //    }
+
+    constraint.nonReified && (constraint.function == 'pseudoboolean || constraint.function == 'sum && {
+      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
+      (mode == SumLE || mode == SumEQ) &&
+        vars.forall {
+          case BoolExpression(_) => true
+          case e if BoolExpression.is01(e) => true
+          case _ => false
+        }
+    })
   }
 }

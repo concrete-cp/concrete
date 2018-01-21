@@ -19,8 +19,6 @@
 
 package concrete
 
-import java.util.Optional
-
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.extension.{BinaryExt, ReduceableExt}
 import concrete.constraint.linear.LinearLe
@@ -32,8 +30,8 @@ import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.compiler.CSPOMCompiler
 import cspom.{CSPOM, Statistic, StatisticsManager}
 import org.scalameter.Quantity
-
 import scala.collection.JavaConverters._
+
 import scala.util.Try
 
 object Solver {
@@ -205,65 +203,12 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   protected def nextSolution(): SolverResult
 
   protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables
-    .map(v => (v, state.dom(v))).map {
-    case (variable, dom: IntDomain) => variable -> dom.head
-    case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
-    case (variable, dom) => throw new NumberFormatException(s"$variable = $dom : $dom should contain integer or boolean values")
-  }
+    .view.map(v => v -> state.dom(v).head)
+//    .map {
+//    case (variable, dom: IntDomain) => variable -> dom.head
+//    case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
+//    case (variable, dom) => throw new NumberFormatException(s"$variable = $dom : $dom should contain integer or boolean values")
+//  }
     .toMap
 
-}
-
-sealed trait SolverResult {
-  def isSat: Boolean
-
-  def get: Option[Map[Variable, Any]]
-
-  def getInteger: java.util.Optional[java.util.Map[Variable, java.lang.Integer]] = {
-    val o = getInt.map {
-      _.mapValues(i => i: java.lang.Integer).asJava
-    }
-
-    Optional.ofNullable(o.orNull)
-  }
-
-  def getInt: Option[Map[Variable, Int]] = get.map { s =>
-    s.mapValues(util.Math.any2Int)
-  }
-}
-
-case class SAT(solution: Map[Variable, Any]) extends SolverResult {
-  def isSat = true
-
-  def get = Some(solution)
-
-  override def toString: String = "SAT: " + (if (solution.size > 10) solution.take(10).toString + "..." else solution.toString)
-}
-
-case object UNSAT extends SolverResult {
-  def isSat = false
-
-  def get = None
-
-  override def toString = "UNSAT"
-}
-
-object UNKNOWNResult {
-  def apply(cause: Throwable): UNKNOWNResult = UNKNOWNResult(Some(cause))
-}
-
-case class UNKNOWNResult(cause: Option[Throwable]) extends SolverResult {
-  def isSat = false
-
-  def get = None
-
-  override def toString: String = "UNKNOWN" + cause
-}
-
-case object RESTART extends SolverResult {
-  def isSat = false
-
-  def get = None
-
-  override def toString = "RESTART"
 }

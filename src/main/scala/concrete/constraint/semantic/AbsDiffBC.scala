@@ -37,7 +37,7 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
   }
 
   override def toString(ps: ProblemState): String =
-    s"${result.toString(ps)} =BC= |${v0.toString(ps)} - ${v1.toString(ps)}|";
+    s"${result.toString(ps)} =BC= |${v0.toString(ps)} - ${v1.toString(ps)}|"
 
   def advise(ps: ProblemState, pos: Int): Int = 5
 

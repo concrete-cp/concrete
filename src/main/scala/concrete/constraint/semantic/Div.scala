@@ -113,16 +113,16 @@ class DivAC(v0: Variable, v1: Variable, result: Variable, val skipIntervals: Boo
     t(1) != 0 && t(0) / t(1) == t(2)
   }
 
-//  override def revise(state: ProblemState, modified: BitVector): Outcome = {
-//    super.revise(state, modified)
-//      .andThen { r =>
-//        if (intervalsOnly(state) && !intervalsOnly(r)) {
-//          println(diff(state, r))
-//        }
-//        r
-//      }
-//
-//  }
+  //  override def revise(state: ProblemState, modified: BitVector): Outcome = {
+  //    super.revise(state, modified)
+  //      .andThen { r =>
+  //        if (intervalsOnly(state) && !intervalsOnly(r)) {
+  //          println(diff(state, r))
+  //        }
+  //        r
+  //      }
+  //
+  //  }
 
 
   override def advise(ps: ProblemState, event: Event, pos: Int): Int = {
@@ -139,13 +139,14 @@ class DivAC(v0: Variable, v1: Variable, result: Variable, val skipIntervals: Boo
       case 1 => if (value == 0) None else doms(0).find(x => doms(2).present(x / value)).map(x => Array(x, value, x / value))
       case 2 =>
         //println(s"Searching for a support of result = $value")
-        for (b <- doms(1).view) {
-          for (r <- if (signum(value) == signum(b)) 0 until math.abs(b) else 0 until -math.abs(b) by -1) {
-            val a = b * value + r
-            if (doms(0).present(a)) {
-              //println(s"Found $a = $b * $value + $r")
-              return Some(Array(a, b, value))
-            }
+        for {
+          b <- doms(1)
+          r <- if (signum(value) == signum(b)) 0 until math.abs(b) else 0 until -math.abs(b) by -1
+        } {
+          val a = b * value + r
+          if (doms(0).present(a)) {
+            //println(s"Found $a = $b * $value + $r")
+            return Some(Array(a, b, value))
           }
         }
         None

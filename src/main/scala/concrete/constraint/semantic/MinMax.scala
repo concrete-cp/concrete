@@ -40,8 +40,8 @@ final class Min private(result: Variable, vars: Array[Variable])
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
     /*
-     * Vars before "first" are strictly higher than minimum variable
-     * (i.e., var.head > result.last)
+     * list contains vars that may be lower than minimum variable
+     * (i.e., var.head <= result.last)
      */
     var list: Seq[Variable] = ps(this)
 
@@ -53,11 +53,19 @@ final class Min private(result: Variable, vars: Array[Variable])
     var lb = resultDom.last + 1
     var ub = resultDom.last
 
+    var union: Domain = EmptyIntDomain
+
     list = list.filter { v =>
       val dom = ps.dom(v)
       lb = math.min(lb, dom.head)
       ub = math.min(ub, dom.last)
-      dom.head <= ub
+
+      if (dom.head <= ub) {
+        union |= dom
+        true
+      } else {
+        false
+      }
     }
 
     if (list.isEmpty) {
@@ -66,9 +74,9 @@ final class Min private(result: Variable, vars: Array[Variable])
       /*
        * Result must take values in variables' domain
        */
-      val union = list.view.map(v => ps.dom(v) & (lb, ub)).reduce(_ | _) //foldLeft(EmptyIntDomain: Domain) { (u, v) => u | (ps.dom(vars(v)) & (lb, ub)) }
+      // val union = list.view.map(v => ps.dom(v) & (lb, ub)).reduce(_ | _)
 
-      val minDom = resultDom & union
+      val minDom = resultDom & (lb, ub) & union
 
       ps.updateDom(result, minDom)
         .andThen { ps =>
@@ -82,9 +90,9 @@ final class Min private(result: Variable, vars: Array[Variable])
           updated
         }
         .andThen { state =>
-
-          list match {
-            case Seq(single) =>
+          list.size match {
+            case 1 =>
+              val single = list.head
               /**
                 * Handle case where only one variable can be the minimum
                 */
@@ -92,13 +100,15 @@ final class Min private(result: Variable, vars: Array[Variable])
               state
                 .updateDom(result, intersection)
                 .updateDom(single, intersection)
+                .entailIf(this, _ => intersection.isAssigned)
+
+            case 0 => ps.entail(this)
             case _ => state
           }
         }
 
     }
       .updateState(this, list)
-      .entailIfFree(this)
 
 
   }
@@ -124,7 +134,7 @@ final class Max private(result: Variable, vars: Array[Variable])
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     /*
-     * "list" contains variable positions that may be higher than result
+     * "list" contains variables that may be higher than result
      * (i.e., var.last >= result.head)
      */
     var list: Seq[Variable] = ps(this)
@@ -136,12 +146,18 @@ final class Max private(result: Variable, vars: Array[Variable])
      */
     var lb = resultDom.head
     var ub = resultDom.head - 1
+    var union: Domain = EmptyIntDomain
     list = list.filter { v =>
       val dom = ps.dom(v)
       ub = math.max(ub, dom.last)
       lb = math.max(lb, dom.head)
 
-      dom.last >= lb
+      if (dom.last >= lb) {
+        union |= dom
+        true
+      } else {
+        false
+      }
     }
 
     if (list.isEmpty) {
@@ -151,12 +167,12 @@ final class Max private(result: Variable, vars: Array[Variable])
       /*
        * Result must take values in variables' domain
        */
-      val union: Domain = list.view.map(v => ps.dom(v) & (lb, ub)).reduce(_ | _)
-//      for (v <- list) {
-//        union |= ps.dom(v) & (lb, ub)
-//      }
+      // val union: Domain = list.view.map(v => ps.dom(v) & (lb, ub)).reduce(_ | _)
+      //      for (v <- list) {
+      //        union |= ps.dom(v) & (lb, ub)
+      //      }
 
-      val maxDom = resultDom & union
+      val maxDom = resultDom & (lb, ub) & union
 
 
       ps.updateDom(result, maxDom)
@@ -175,18 +191,20 @@ final class Max private(result: Variable, vars: Array[Variable])
           /**
             * Handle case where only one variable can be the minimum
             */
-          list match {
-            case Seq(single) =>
+          list.size match {
+            case 1 =>
+              val single = list.head
               val intersection = maxDom & ps.dom(single)
               state
                 .updateDom(result, intersection)
                 .updateDom(single, intersection)
+                .entailIf(this, _ => intersection.isAssigned)
+            case 0 => state.entail(this)
             case _ => state
           }
 
         }
         .updateState(this, list)
-        .entailIfFree(this)
     }
 
   }

@@ -33,8 +33,11 @@ class XCSP3SolutionChecker(file: URL) extends LazyLogging {
     val solution = XCSP3Concrete.xmlSolution(variables, sol, obj)
     logger.info(solution.toString)
     val sc = new org.xcsp.checker.SolutionChecker(
+      false,
       temp.getPath,
-      new ReaderInputStream(new StringReader(s""""$solution"""")))
+      new ReaderInputStream(new StringReader(s""""$solution""""))) {
+      override def endInstance(): Unit = ()
+    }
 
     if (sc.violatedCtrs.isEmpty && sc.invalidObjs.isEmpty) {
       None

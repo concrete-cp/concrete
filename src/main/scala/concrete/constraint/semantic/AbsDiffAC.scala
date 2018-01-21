@@ -7,7 +7,7 @@ import concrete.{Domain, Event, ProblemState, Variable}
 final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
   extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion {
 
-  def skipIntervals: Boolean = false
+  def skipIntervals: Boolean = true
 
   def check(t: Array[Int]): Boolean = t(0) == math.abs(t(1) - t(2))
 
@@ -76,13 +76,11 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
     val d1 = ps.card(v0)
     val d2 = ps.card(v1)
     val eval = d0 * d1 + d0 * d2 + d1 * d2
-    val r = if (skip(ps, eval)) {
+    if (skip(ps, eval)) {
       -2
     } else {
       eval
     }
-    if (scope(position).name == "x[6]") logger.debug(s"advise ${toString(ps)}, x[6] = $r")
-    r
   }
 
   def simpleEvaluation = 2

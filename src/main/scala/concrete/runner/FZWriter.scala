@@ -36,7 +36,7 @@ class FZWriter(val params: ParameterManager, val problem: String, val stats: Sta
     e.printStackTrace(Console.err)
   }
 
-  def disconnect(status: Result) {
+  def disconnect(status: RunnerResult) {
     writeStats()
     Console.println {
       status match {

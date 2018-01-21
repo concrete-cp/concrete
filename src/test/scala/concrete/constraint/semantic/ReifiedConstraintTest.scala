@@ -15,41 +15,59 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val v1 = new Variable("v1", IntDomain.ofSeq(3, 4))
     val control1 = new Variable("control1", BooleanDomain())
     val control2 = new Variable("control2", BooleanDomain())
-    val c1 = new ReifiedConstraint(
+    val c11 = new ReifiedConstraint(
+      neg = false,
       control1,
-      new Neq(v0, v1),
+      new Neq(v0, v1))
+
+    val c21 = new ReifiedConstraint(
+      neg = true,
+      control1,
       new EqACFast(v0, v1))
 
-    val c2 = new ReifiedConstraint(
+    val c12 = new ReifiedConstraint(
+      neg = false,
       control2,
-      new Neq(v0, v1),
+      new Neq(v0, v1))
+
+    val c22 = new ReifiedConstraint(
+      neg = true,
+      control2,
       new EqBC(v0, v1))
 
     val ac = new AdviseCount
-    c1.register(ac)
-    c2.register(ac)
+    Seq(c11, c21, c12, c22).foreach(_.register(ac))
+
 
     val pb = Problem(control1, control2, v0, v1)
-    pb.addConstraints(Seq(c1, c2))
+    pb.addConstraints(Seq(c11, c12, c21, c22))
     val ps = pb.initState.assign(v0, 0)
 
     val m2 = ps.andThen { ps =>
       //c1.advise(ps, 2) should be >= 0
-      c2.event(ps, Assignment, 2) should be >= 0
-
-      c2.revise(ps)
+      c12.event(ps, Assignment, 1) should be >= 0
+      c12.revise(ps)
     }
+      .andThen { ps =>
+        c22.event(ps, Assignment, 1) should be >= 0
+        c22.revise(ps)
+      }
+
     m2.dom(control2) shouldBe BooleanDomain.TRUE
-    assert(m2.toState.entailed.hasInactiveVar(c2))
+    assert(m2.toState.entailed.hasInactiveVar(c22))
 
     val m1 = ps.andThen { ps =>
-      c1.eventAll(ps)
-      c1.revise(ps)
+      c11.eventAll(ps)
+      c11.revise(ps)
     }
+      .andThen { ps =>
+        c21.eventAll(ps)
+        c21.revise(ps)
+      }
 
 
     m1.dom(control1) shouldBe BooleanDomain.TRUE
-    assert(m1.toState.entailed.hasInactiveVar(c1))
+    assert(m1.toState.entailed.hasInactiveVar(c21))
 
   }
 
@@ -57,17 +75,32 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val v0 = new Variable("v0", IntDomain.ofInterval(1, 3))
     val v1 = new Variable("v1", Singleton(0))
     val control = new Variable("control", BooleanDomain())
-    val constraint = new ReifiedConstraint(
+
+    val constraint1 = new ReifiedConstraint(
+      neg = false,
       control,
-      new EqBC(false, v0, -1, v1),
+      new EqBC(false, v0, -1, v1))
+
+    val constraint2 = new ReifiedConstraint(
+      neg = true,
+      control,
       new LinearNe(1, Array(1, -1), Array(v0, v1)))
+
     val pb = Problem(v0, v1, control)
-    pb.addConstraint(constraint)
-    constraint.register(new AdviseCount)
-    val ns = pb.initState.andThen { state =>
-      constraint.eventAll(state)
-      constraint.revise(state)
-    }
+    pb.addConstraint(constraint1)
+    pb.addConstraint(constraint2)
+    constraint1.register(new AdviseCount)
+    constraint2.register(new AdviseCount)
+
+    val ns = pb.initState
+      .andThen { state =>
+        constraint1.eventAll(state)
+        constraint1.revise(state)
+      }
+      .andThen { state =>
+        constraint2.eventAll(state)
+        constraint2.revise(state)
+      }
 
     ns.dom(control) shouldBe BooleanDomain.UNKNOWNBoolean
 
@@ -93,21 +126,15 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       .assign(v1, 0)
       .assign(v0, 1)
       .andThen { state =>
-
         withClue(problem.toString(state)) {
-
-          val bc = problem.constraints.toSeq.collect {
-            case c: ReifiedConstraint => c
+          state.fold {
+            problem.constraints.collect {
+              case c: ReifiedConstraint => c
+            }
+          } { (state, bc) =>
+            bc.eventAll(state)
+            bc.revise(state)
           }
-            .head
-          //    ac.eventAll(state)
-          //    ac.revise(state) match {
-          //      case Contradiction    => fail()
-          //      case ns: ProblemState => ns.dom(r) shouldBe TRUE
-          //    }
-
-          bc.eventAll(state)
-          bc.revise(state)
         }
       }
 
@@ -142,7 +169,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     withClue(problem.toString(state)) {
 
       val Seq(bc) = problem.constraints.toSeq.collect {
-        case c: ReifiedConstraint if c.positiveConstraint.isInstanceOf[StatelessLinearEq] => c
+        case c: ReifiedConstraint if c.constraint.isInstanceOf[StatelessLinearEq] => c
       }
 
       bc.revise(state)
@@ -176,14 +203,15 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     val state = problem.initState.toState
 
-    val Seq(bc) = problem.constraints.toSeq
-
-    bc.eventAll(state)
-    bc.revise(state) match {
-      case _: Contradiction => fail()
-      case ns: ProblemState => ns.domains shouldBe state.domains
+    state.fold(problem.constraints) { (state, bc) =>
+      bc.eventAll(state)
+      bc.revise(state) match {
+        case _: Contradiction => fail()
+        case ns: ProblemState =>
+          ns.domains shouldBe state.domains
+          ns
+      }
     }
-
   }
 
 }

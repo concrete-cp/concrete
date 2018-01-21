@@ -4,7 +4,7 @@ import concrete.BuildInfo
 import cspom.StatisticsManager
 
 trait ConcreteWriter {
-  var end: Result = Unfinished()
+  var end: RunnerResult = Unfinished()
 
   var lastSolution: Option[String] = None
 
@@ -21,7 +21,7 @@ trait ConcreteWriter {
 
   def disconnect(): Unit = disconnect(end)
 
-  def disconnect(status: Result): Unit
+  def disconnect(status: RunnerResult): Unit
 
   def version: String = s"${BuildInfo.version}.${BuildInfo.buildTime}"
 }

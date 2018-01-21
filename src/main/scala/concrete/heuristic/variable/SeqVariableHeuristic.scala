@@ -16,12 +16,10 @@ class SeqVariableHeuristic(
                           ) extends VariableHeuristic {
   def pool: Seq[Variable] = heuristics.flatMap(_.pool).distinct
 
-  def select(state: ProblemState, candidates: Seq[Variable]): Option[Variable] = {
+  def select(state: ProblemState, candidates: Seq[Variable]): Seq[Variable] = {
     heuristics.iterator.map { h =>
       h.select(state, candidates)
-    }.collectFirst {
-      case Some(branching) => branching
-    }
+    }.find(_.nonEmpty).getOrElse(Seq())
   }
 
   def compute(s: MAC, ps: ProblemState): ProblemState = heuristics.foldRight(ps)(_.compute(s, _))

@@ -9,7 +9,7 @@ object Heuristic {
   def default(pm: ParameterManager, decision: Seq[Variable], rand: Random): Try[Heuristic] = {
     pm.getRaw("heuristic").getOrElse(classOf[CrossHeuristic]) match {
       case heuristicName: String =>
-        instantiate(pm.classInPackage(heuristicName, "concrete.heuristic"), pm, decision, rand)
+        instantiate(ParameterManager.classInPackage(heuristicName, "concrete.heuristic"), pm, decision, rand)
       case heuristicClass: Class[_] =>
         instantiate(heuristicClass, pm, decision, rand)
       case heuristic: Heuristic =>
@@ -45,3 +45,5 @@ case class NewSolutionEvent(sol: Map[Variable, Int]) extends EventObject(sol)
 case object ContradictionEvent extends EventObject(None)
 
 case class AssignmentEvent(variable: Variable*) extends EventObject(variable)
+
+case class BadDecision(decision: Decision) extends EventObject(decision)

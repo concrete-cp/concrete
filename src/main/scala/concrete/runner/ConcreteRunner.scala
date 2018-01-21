@@ -30,7 +30,7 @@ trait ConcreteRunner extends LazyLogging {
 
   def description(args: Seq[String]): String
 
-  def run(args: Array[String]): Result = {
+  def run(args: Array[String]): RunnerResult = {
     val (pm, remaining) = try {
       options(args)
     } catch {

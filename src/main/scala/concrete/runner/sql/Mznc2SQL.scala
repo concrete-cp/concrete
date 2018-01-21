@@ -93,9 +93,9 @@ object Mznc2SQL extends App {
 
                 val query =
                   sql"""
-                       |INSERT INTO "Execution" ("configId", "problemId", "iteration", "start", "status", "solution")
-                       |VALUES ($configId, $p, $iteration, now(), $sqlStatus, $solution)
-                       |ON CONFLICT ON CONSTRAINT "Execution_configId_problemId_iteration_key" DO UPDATE
+                       |INSERT INTO "Execution" ("configId", "problemId", "iteration", "start", "status", "solution", version)
+                       |VALUES ($configId, $p, $iteration, now(), $sqlStatus, $solution, 'mznc2017')
+                       |ON CONFLICT ON CONSTRAINT "Execution_configId_problemId_iteration_version_key" DO UPDATE
                        |  SET status = EXCLUDED.status, solution = EXCLUDED.solution
                        |RETURNING "executionId"
                   """.stripMargin

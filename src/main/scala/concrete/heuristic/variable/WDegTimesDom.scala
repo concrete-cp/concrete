@@ -21,12 +21,12 @@ package concrete
 package heuristic
 package variable
 
-class WDegTimesDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
-  extends ScoredVariableHeuristic(tieBreaker) with ConstraintWeighting {
+class WDegTimesDom(val pool: Seq[Variable])
+  extends ScoredVariableHeuristic with ConstraintWeighting {
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = state.wDeg(variable) * dom.size
+  def score(variable: Variable, dom: Domain, state: ProblemState): Double = state.wDeg(variable) * dom.size
 
-  override def toString = s"max-wdeg*dom then $tieBreaker"
+  override def toString = s"max-wdeg*dom"
 
   override def shouldRestart = true
 

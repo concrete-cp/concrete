@@ -8,7 +8,7 @@ import concrete.heuristic.variable.VariableHeuristic
 object SeqHeuristic {
   def extractVariableHeuristics(h: Seq[Heuristic]): Seq[VariableHeuristic] = {
     h.flatMap {
-      case CrossHeuristic(vh, _, _) => Seq(vh)
+      case CrossHeuristic(vh, _, _) => vh
       case sh: SeqHeuristic => extractVariableHeuristics(sh.heuristics)
       case _ => Seq()
     }

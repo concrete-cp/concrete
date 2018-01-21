@@ -36,16 +36,9 @@ final class RandomVar(val pool: Seq[Variable], rand: Random)
 
   override def toString = "random-var"
 
-  def select(state: ProblemState, i: Seq[Variable]): Option[Variable] = {
-    val s = i.filter(poolSet)
-
-    if (s.isEmpty) {
-      None
-    } else {
-      logger.info("Select randomly")
-      Some(s(rand.nextInt(s.size)))
-    }
-
+  def select(state: ProblemState, i: Seq[Variable]): Seq[Variable] = {
+    logger.info("Shuffle candidates")
+    rand.shuffle(i.filter(poolSet))
   }
 
   override def shouldRestart: Boolean = true

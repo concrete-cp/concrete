@@ -29,7 +29,7 @@ final class LinearLe(
 
   import IncrementalBoundPropagation._
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     val (doms, f, vars, max) = updateF(ps, mod)
     clearMod()
     if (f.lb <= 0) {

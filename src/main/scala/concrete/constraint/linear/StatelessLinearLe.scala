@@ -6,7 +6,7 @@ import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 
 object StatelessLinearLe {
-  def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager) = {
+  def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager): StatelessLinearLe = {
     val actualConstant = if (strict) constant - 1 else constant
 
     val (sf, ss, si) = Linear.sortIntervals(factors, scope)

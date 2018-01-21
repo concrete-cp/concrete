@@ -11,7 +11,7 @@ import scala.util.Random
 object BestValue {
   def apply(params: ParameterManager, rand: Random): BranchHeuristic = {
     val valueHeuristicClass: Class[_ <: BranchHeuristic] =
-      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[SmartBound])
+      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[Lexico])
 
     val fallback = BranchHeuristic(valueHeuristicClass, params, rand).get
 

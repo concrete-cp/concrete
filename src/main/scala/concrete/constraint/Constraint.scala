@@ -47,14 +47,14 @@ object Constraint {
 
 }
 
-trait StatefulConstraint[State <: AnyRef] extends Constraint {
+trait StatefulConstraint[+State <: AnyRef] extends Constraint {
   override def init(ps: ProblemState): Outcome
 
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
 
   def data(ps: ProblemState) = ps(this)
 
-  def updateState(ps: ProblemState, value: State): ProblemState = ps.updateState(this, value)
+  def updateState[S >: State <: AnyRef](ps: ProblemState, value: S): ProblemState = ps.updateState(this, value)
 }
 
 abstract class Constraint(val scope: Array[Variable])
