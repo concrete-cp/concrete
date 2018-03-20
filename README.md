@@ -34,15 +34,19 @@ Provided packages come with all required dependencies and scripts to run Concret
 
 You can also find published releases on Maven Central for easy inclusion in your Java/Scala project:
 
-    <dependency>
-        <groupId>fr.univ-valenciennes</groupId>
-        <artifactId>concrete_2.12</artifactId>
-        <version>3.6</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>fr.univ-valenciennes</groupId>
+  <artifactId>concrete_2.12</artifactId>
+  <version>3.6</version>
+</dependency>
+```
 
 sbt dependency:
 
-    libraryDependencies += "fr.univ-valenciennes" % "concrete" % "3.6"
+```sbtshell
+libraryDependencies += "fr.univ-valenciennes" % "concrete" % "3.6"
+```
     
 # Running Concrete from command line
 
@@ -50,14 +54,18 @@ The easiest way to run concrete from command-line is to use scripts provided in 
 
 To solve problems modelled using the [XCSP3](http://www.xcsp.org) language, use:
 
-    bin/x-c-s-p3-concrete FILE.xml
+```sh
+bin/x-c-s-p3-concrete FILE.xml
+```
 
 The output of this script complies with the rules of the [XCSP3 2017 Competition](http://www.xcsp.org/competition).
     
 To solve problems modelled using the [FlatZinc](http://www.minizinc.org) language, use:
 
-    bin/f-z-concrete FILE.fzn
-    
+```sh
+bin/f-z-concrete FILE.fzn
+```
+
 The output of this script complies with the rules of the [Minizinc Challenge 2017](http://www.minizinc.org/challenge.html).
 
 If you want to solve a problem modelled using the MiniZinc format, 
@@ -74,12 +82,12 @@ dependencies. Major file compression formats should be supported.
 
 Concrete's command-line runner supports the following options, both for XCSP3 and FlatZinc formats:
 
-
-    -a: output all solutions (for optimization problems, each new solution will be better than the previous one)
-    -s: output statistics about the solving (such as the number of constraint propagations or decision nodes)
-    -f: ignore solving heuristics defined in the problem files (only relevant for FlatZinc)
-    -X*: these arguments will be given to the JVM (e.g., define max heap or stack size)
-
+```sh
+-a: output all solutions (for optimization problems, each new solution will be better than the previous one)
+-s: output statistics about the solving (such as the number of constraint propagations or decision nodes)
+-f: ignore solving heuristics defined in the problem files (only relevant for FlatZinc)
+-X*: these arguments will be given to the JVM (e.g., define max heap or stack size)
+```
 
 Many options are also available to tune Concrete's search strategies, 
 but their number is too large to be listed here. For example, 
@@ -91,33 +99,42 @@ Please contact a developer if you need more information.
 
 You can run Concrete from within a JVM application with a few lines of code. For example, in Scala:
 
-    import concrete.runner._
+```scala
+import concrete._
+import runner._
     
-    // Instantiate parameter manager
-    val pm = new ParameterManager()
+// Instantiate parameter manager
+val pm = new ParameterManager()
+
+val solution: Try[Map[String, Any]] = for {
+    // Load the XCSP3 problem instance given an URL
+    problem <- XCSP3Concrete.loadCSPOMURL(url)
     
-    val solution: Try[Map[String, Any]] = for {
-        // Load the XCSP3 problem instance given an URL
-        problem <- XCSP3Concrete.loadCSPOMURL(url)
-        
-        // Alternatively, load a FZ problem
-        // problem <- FZConcrete.loadCSPOMURL(pm, url)
-        
-        // generate the solver
-        solver <- Solver(pm, problem)
-        if solver.hasNext()   
-    } yield {
-        solver.next()
-    }
+    // Alternatively, load a FZ problem
+    // problem <- FZConcrete.loadCSPOMURL(pm, url)
+    
+    // Generate the solver
+    solver <- Solver(pm, problem)
+    
+    // Decide satisfiability
+    if solver.hasNext()   
+} yield {
+    // Obtain solution
+    solver.next()
+}
+```
    
 The `ParameterManager` can be used to hold various options used by Concrete.
 For example, you can give the equivalent of the `-f` option from the command-line
 and enforce the _dom/ddeg_ variable ordering heuristic with 
 
-    val pm = new ParameterManager()
-        .updated("f", ())
-        .updated("variable.heuristic", classOf[DDegOnDom])
-           
+```scala
+import concrete._
+
+val pm = new ParameterManager()
+    .updated("f", ())
+    .updated("heuristic.variable", classOf[heuristic.variable.DDegOnDom])
+```           
     
 When the solver is generated, the original problem is transformed (compiled)
 to (hopefully best) suit the solver's capabilities. Exceptions that may occur during
