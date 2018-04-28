@@ -8,8 +8,8 @@ import org.scalatest.Inspectors
 import org.scalatest.prop.PropertyChecks
 
 /**
- * @author vion
- */
+  * @author vion
+  */
 class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
   "Min" should "filter unique candidate" in {
     val r = new Variable("r", IntDomain.ofSeq(121))
@@ -26,6 +26,46 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val mod = constraint.revise(state)
 
     mod.dom(a(1)) shouldBe Singleton(121)
+
+  }
+
+  it should "filter given case" in {
+    val r = new Variable("r", IntDomain.ofSeq(95))
+    val a = Array(
+      new Variable("a0", IntDomain.ofSeq(219)),
+      new Variable("a1", IntDomain.ofSeq(131)),
+      new Variable("a2", IntDomain.ofSeq(51, 63, 74, 112, 367)))
+
+    val problem = Problem(r +: a: _*)
+    val constraint = Min(r, a)
+    problem.addConstraint(constraint)
+    val state = problem.initState.toState
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
+    val mod = constraint.revise(state)
+
+    assert(!mod.isState)
+  }
+
+  it should "filter another given case" in {
+    val r = new Variable("r", IntDomain.ofSeq(41, 52, 64, 86, 187))
+    val a = Array(
+      new Variable("a0", IntDomain.ofSeq(334)),
+      new Variable("a1", IntDomain.ofSeq(22, 86, 87, 115, 187)),
+      new Variable("a2", IntDomain.ofSeq(22, 86, 87, 115, 252)))
+
+    val problem = Problem(r +: a: _*)
+    val constraint = Min(r, a)
+    problem.addConstraint(constraint)
+    val state = problem.initState.toState
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
+    val mod = constraint.revise(state)
+
+    forAll(r +: a) { v =>
+      assert(mod.dom(v).head >= 86)
+    }
+
 
   }
 
@@ -69,7 +109,7 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val r = new Variable("r", IntDomain.ofSeq(0))
     val a = Array(
       new Variable("a0", IntDomain.ofSeq(1)),
-      new Variable("a1", IntDomain.ofSeq(-1, 1)))
+      new Variable("a1", IntDomain.ofSeq(-3, -2)))
 
     val problem = Problem(r +: a: _*)
     val constraint = Min(r, a)

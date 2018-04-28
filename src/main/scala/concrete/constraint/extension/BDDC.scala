@@ -1,7 +1,5 @@
 package concrete.constraint.extension
 
-import java.util
-
 import bitvectors.BitVector
 import concrete._
 import concrete.constraint.{Constraint, StatefulConstraint}
@@ -9,21 +7,21 @@ import concrete.util.SparseSet
 import mdd._
 
 /* MDDRelation comes with its own timestamp */
-class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
+class BDDC(_scope: Array[Variable], val relation: BDDRelation)
   extends Constraint(_scope) with StatefulConstraint[SparseSet] {
 
   val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
   // Members declared in concrete.constraint.Removals
-  val prop: Double = bdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
+  val prop: Double = relation.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
   override def init(ps: ProblemState): Outcome = {
-    val max = bdd.bdd.fastIdentify() + 1
+    val max = relation.bdd.fastIdentify() + 1
     //println(s"********** $max **********")
     ps.updateState(this, new SparseSet(max))
   }
 
   // Members declared in concrete.constraint.Constraint
-  override def check(t: Array[Int]): Boolean = bdd.contains(t)
+  override def check(t: Array[Int]): Boolean = relation.contains(t)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
@@ -33,7 +31,8 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
     val oldGno = ps(this)
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
-    val supported = Array.fill(arity)(new util.HashSet[Int]())
+    val supported = domains.map(d => new IntDomainBuilder(d.head, 1 + d.last - d.head))
+    val cardinalities = Array.fill(arity)(0)
 
     // val unsupported = domains.map(_.to[collection.mutable.Set])
 
@@ -56,9 +55,12 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
         true
       } else if (gNo.contains(g.id)) {
         false
-      } else if (domains(i).present(g.index) && seekSupports(g.child, i + 1)) {
-        supported(i).add(g.index)
-        if (i + 1 == delta && supported(i).size == domains(i).size) {
+      } else if (domains(i).contains(g.index) && seekSupports(g.child, i + 1)) {
+        if (!supported(i)(g.index)) {
+          supported(i) += g.index
+          cardinalities(i) += 1
+        }
+        if (i + 1 == delta && cardinalities(i) == domains(i).size) {
           delta = i
         } else {
           seekSupports(g.sibling, i)
@@ -75,21 +77,22 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
     }
 
-    val sat = seekSupports(bdd.bdd, 0)
+    val sat = seekSupports(relation.bdd, 0)
     if (!sat) {
       Contradiction(scope)
     } else {
       var cs: ProblemState =
         if (gNo.size == oldGno.size) ps else ps.updateState(this, gNo)
       for (p <- 0 until delta) {
-        if (supported(p).size < domains(p).size) {
-          cs = cs.updateDomNonEmptyNoCheck(scope(p), domains(p).filter(supported(p).contains))
+        val newSize = cardinalities(p)
+        if (newSize < domains(p).size) {
+          cs = cs.updateDomNonEmptyNoCheck(scope(p), supported(p).result(newSize))
         }
       }
       cs.entailIfFree(this)
     }
   }
 
-  override def dataSize = bdd.edges
+  override def dataSize: Int = relation.edges
 
 }

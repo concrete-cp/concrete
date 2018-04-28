@@ -49,11 +49,13 @@ object Math {
     * insert T in S
     * else
     * insert J in S
+    *
+    * Note : slightly modified to pick M elements from 0..N-1
     */
   def randSet(m: Int, n: Int, rand: Random): Set[Int] = {
     val s = new mutable.HashSet[Int]
     for (j <- (n - m) until n) {
-      val t = rand.nextInt(j)
+      val t = rand.nextInt(j + 1)
       if (s(t)) {
         s += j
       } else {
@@ -61,7 +63,6 @@ object Math {
       }
     }
     s.toSet
-
   }
 
   def any2Int(v: Any): Int = {
@@ -102,7 +103,7 @@ object Math {
     * Computes the natural logarithm of a BigInteger. Works for really big
     * integers (practically unlimited)
     *
-    * @param val Argument, positive integer
+    * @param value Argument, positive integer
     * @return Natural logarithm, as in <tt>Math.log()</tt>
     */
   def logBigInteger(value: BigInt): Double = {
@@ -114,14 +115,16 @@ object Math {
   }
 
   def logSumOfExponentials(xs: Seq[Double]): Double = {
-    if (xs.lengthCompare(1) == 0) return xs.head
-    val max = xs.max
-    val sum = xs.filterNot(_.isNegInfinity).map(x => math.exp(x - max)).sum
-    max + math.log(sum)
+    if (xs.isEmpty) 0
+    else {
+      val max = xs.max
+      val sum = xs.filterNot(_.isNegInfinity).map(x => math.exp(x - max)).sum
+      max + math.log(sum)
+    }
   }
 
   def paretoMin[T](uv: Seq[T])(implicit ordering: PartialOrdering[T]): Seq[T] = {
-    uv.filter { v => uv.forall(w => ordering.lteq(v, w)) }
+    uv.filterNot { v => uv.exists(w => ordering.gt(v, w)) }
   }
 
   implicit def partialOrderingVector[T](implicit ordering: Ordering[T]): PartialOrdering[Seq[T]] =
@@ -132,4 +135,22 @@ object Math {
         (is, js).zipped.forall { case (i, j) => ordering.lteq(i, j) }
     }
 
+  def logNormalLong(rand: Random, mean: Double, stdev: Double): Long = {
+    math.round(logNormal(rand, mean, stdev))
+  }
+
+  def logNormal(rand: Random, mean: Double, stdev: Double): Double = {
+    val variance = stdev * stdev
+    val m2 = mean * mean
+    val m = math.log(m2 / math.sqrt(variance + m2))
+    val v = math.sqrt(math.log(1 + variance / m2))
+    math.exp(m + v * rand.nextGaussian())
+  }
+
+//  def main(args: Array[String]): Unit = {
+//    val r = new Random(0)
+//    for (i <- 0 until 50) {
+//      println((0 until 10).toSet -- randSet(9, 10, r))
+//    }
+//  }
 }

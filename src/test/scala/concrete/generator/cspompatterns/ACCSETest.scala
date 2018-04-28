@@ -32,9 +32,9 @@ class ACCSETest extends FlatSpec with Matchers with TryValues {
       goal(Minimize(variables.last))
     }
 
-    val solver = Solver(problem)
+    val solver = Solver(problem).get
 
-    solver.success.value.concreteProblem.constraints should have size (max + 1)
+    solver.concreteProblem.constraints should have size (max + 1)
 
   }
 

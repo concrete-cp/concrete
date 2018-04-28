@@ -2,12 +2,12 @@ package concrete.constraint.semantic
 
 
 import concrete.constraint.{BCCompanion, Constraint, Residues}
-import concrete.{Domain, Event, ProblemState, Variable}
+import concrete.{Domain, ProblemState, Variable}
 
 final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
   extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion {
 
-  def skipIntervals: Boolean = true
+  def skipIntervals: Boolean = false
 
   def check(t: Array[Int]): Boolean = t(0) == math.abs(t(1) - t(2))
 
@@ -28,13 +28,13 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
   def findValidTupleResult(val0: Int, dom1: Domain, dom2: Domain): Option[Array[Int]] = {
     if (val0 >= 0) {
       dom1
-        .find { v => dom2.present(v - val0) }
+        .find { v => dom2(v - val0) }
         .map { v =>
           Array(val0, v, v - val0)
         }
         .orElse {
           dom1
-            .find { v => dom2.present(v + val0) }
+            .find { v => dom2(v + val0) }
             .map { v =>
               Array(val0, v, v + val0)
             }
@@ -48,7 +48,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
         (v, math.abs(value - v))
       }
       .find {
-        case (_, res) => result.present(res)
+        case (_, res) => result(res)
       }
       .map {
         case (v, res) => Array(res, value, v)
@@ -61,7 +61,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
         (v, math.abs(value - v))
       }
       .find {
-        case (_, res) => result.present(res)
+        case (_, res) => result(res)
       }
       .map {
         case (v, res) => Array(res, v, value)
@@ -71,7 +71,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
   override def toString(ps: ProblemState) =
     s"${result.toString(ps)} =AC= |${v0.toString(ps)} - ${v1.toString(ps)}|"
 
-  def advise(ps: ProblemState, event: Event, position: Int): Int = {
+  def advise(ps: ProblemState, position: Int): Int = {
     val d0 = ps.card(result)
     val d1 = ps.card(v0)
     val d2 = ps.card(v1)

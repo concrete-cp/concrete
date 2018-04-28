@@ -1,24 +1,24 @@
 package concrete.heuristic.value
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.{Domain, MAC, ProblemState, Variable}
+import concrete._
 
 import scala.util.Random
 
-final class RandomBound(rand: Random) extends ValueHeuristic with LazyLogging {
+final class RandomBound(rand: Random) extends ValueSelector with LazyLogging {
 
   override def toString = "random-bound"
 
   def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def selectIndex(variable: Variable, dom: Domain): Int = {
+  override def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) = {
     val r = if (rand.nextBoolean()) {
-      dom.head
+      Singleton(candidates.head)
     } else {
-      dom.last
+      Singleton(candidates.last)
     }
     logger.info(s"Random bound is $r")
-    r
+    (ps, r)
   }
 
   def shouldRestart = true

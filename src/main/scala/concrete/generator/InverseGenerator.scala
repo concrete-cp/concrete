@@ -25,11 +25,18 @@ final class InverseGenerator(pg: ProblemGenerator, adg: AllDifferentGenerator) e
     //    println(xvars.toSeq)
     //    println(yvars.toSeq)
 
-    Seq(
-      new Inverse(xvars, yvars, xOffset, yOffset),
-      new Inverse(yvars, xvars, yOffset, xOffset),
-      new AllDifferent2C(xvars),
-      new AllDifferent2C(yvars))
+    if (yvars.length == xvars.length) {
+
+      Seq(
+        new Inverse(xvars, yvars, xOffset, yOffset),
+        new Inverse(yvars, xvars, yOffset, xOffset),
+        new AllDifferent2C(xvars),
+        new AllDifferent2C(yvars))
+    } else {
+      Seq(
+        new Inverse(xvars, yvars, xOffset, yOffset)
+      )
+    }
 
   }
 

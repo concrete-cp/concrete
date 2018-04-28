@@ -44,20 +44,21 @@ final class EqTest extends FlatSpec with Matchers with PropertyChecks {
     val v0 = new Variable("v0", IntDomain(0 to 10))
     val v1 = new Variable("v1", IntDomain(10 to 20))
     forAll { b: Int =>
-      val c = new EqACFast(v0, b, v1)
-      val pb = Problem(v0, v1)
-      pb.addConstraint(c)
-      c.register(new AdviseCount)
-      val ps = pb.initState.toState
-      c.eventAll(ps)
+      whenever (b < Int.MaxValue - 20) {
+        val c = new EqACFast(v0, b, v1)
+        val pb = Problem(v0, v1)
+        pb.addConstraint(c)
+        c.register(new AdviseCount)
+        val ps = pb.initState.toState
+        c.eventAll(ps)
 
-      val r = c.consistent(ps)
-      if (0 <= b && b <= 20) {
-        assert(r.isState)
-      } else {
-        assert(!r.isState)
+        val r = c.consistent(ps)
+        if (0 <= b && b <= 20) {
+          assert(r.isState)
+        } else {
+          assert(!r.isState)
+        }
       }
-
     }
   }
 
@@ -79,7 +80,7 @@ final class EqTest extends FlatSpec with Matchers with PropertyChecks {
 
     for (s <- solutions) {
       val v = s("result")
-      assert(v == false)
+      assert(v == 0)
     }
 
   }

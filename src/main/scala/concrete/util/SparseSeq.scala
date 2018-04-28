@@ -1,5 +1,6 @@
 package concrete.util
 
+import scala.collection.SeqLike
 import scala.collection.mutable.ArrayBuffer
 
 object SparseSeq {
@@ -8,7 +9,7 @@ object SparseSeq {
 
 class SparseSeq[A](
     val values: ArrayBuffer[A],
-    override val length: Int) extends Seq[A] {
+    override val length: Int) extends Seq[A] with SeqLike[A, Seq[A]] {
 
   def this() = this(new ArrayBuffer, 0)
 
@@ -27,6 +28,23 @@ class SparseSeq[A](
   def +(i: A): SparseSeq[A] = {
     values += i
     new SparseSeq(values, size + 1)
+  }
+
+  def partitionLeft(f: A => Boolean): (SparseSeq[A], Seq[A]) = {
+    val bf = Seq.newBuilder[A]
+    var newSize = size
+    var i = newSize - 1
+    while (i >= 0) {
+      val v = values(i)
+      if (!f(v)) {
+        newSize -= 1
+        values(i) = values(newSize)
+        values(newSize) = v
+        bf += v
+      }
+      i -= 1
+    }
+    (new SparseSeq(values, newSize), bf.result())
   }
 
   override def filter(f: A => Boolean): SparseSeq[A] = {
@@ -48,5 +66,7 @@ class SparseSeq[A](
   override def isEmpty: Boolean = length == 0
 
   def iterator: Iterator[A] = values.iterator.take(size)
+
+  override def lengthCompare(l: Int): Int = Ordering.Int.compare(length, l)
 
 }

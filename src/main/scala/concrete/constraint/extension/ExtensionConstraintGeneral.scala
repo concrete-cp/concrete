@@ -19,10 +19,7 @@
 
 package concrete.constraint.extension;
 
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Variable
+import concrete._
 import bitvectors.BitVector
 import concrete.constraint.Residues
 
@@ -38,7 +35,7 @@ final class ExtensionConstraintGeneral(
     set(tuple, status = false)
   }
 
-  def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
+  def removeTuples(base: Array[Int]): Int = ??? //tuples(base).count(removeTuple)
 
   override def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
@@ -73,5 +70,7 @@ final class ExtensionConstraintGeneral(
   }
 
   override def dataSize: Int = matrix.size
+
+  override def advise(problemState: ProblemState, event: Event, pos: Int): Int = advise(problemState, pos)
 
 }

@@ -3,9 +3,9 @@ package concrete
 import bitvectors.BitVector
 import concrete.util.Interval
 import cspom.Statistic
-import mdd.MiniSet
 
-import scala.collection.TraversableView
+import scala.collection.immutable.{SortedSet, TreeSet}
+import scala.collection.{SortedSetLike, mutable}
 
 object Domain {
   @Statistic
@@ -16,8 +16,27 @@ object Domain {
   }
 }
 
-abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with IterableLike[Int, Domain] {
-  //override def newBuilder: Builder[Int, Domain] = ???
+class DomainBuilder extends mutable.Builder[Int, Domain] {
+  private val set = TreeSet.newBuilder[Int]
+
+  override def +=(elem: Int): DomainBuilder.this.type = {
+    set += elem
+    this
+  }
+
+  override def clear(): Unit = set.clear
+
+  override def result(): Domain = {
+    IntDomain.ofTreeSet(set.result())
+  }
+}
+
+abstract class Domain extends SortedSet[Int] with SortedSetLike[Int, Domain] {
+  def ordering: Ordering[Int] = Ordering.Int
+
+  override def newBuilder: mutable.Builder[Int, Domain] = new DomainBuilder
+
+  override def empty: Domain = EmptyIntDomain
 
   def next(i: Int): Int
 
@@ -31,67 +50,9 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
     if (i <= head) None else Some(prev(i))
   }
 
-  def head: Int //= next(0)
-  def last: Int
-
-  def headOption: Option[Int] = if (isEmpty) None else Some(head)
-
-  def foreach[S](f: Int => S): Unit
-
-  def forall(p: Int => Boolean): Boolean = {
-    foreach { x =>
-      if (!p(x)) {
-        return false
-      }
-    }
-    true
-  }
-
-  def find(p: Int => Boolean): Option[Int] = {
-    foreach { x =>
-      if (p(x)) return Some(x)
-    }
-    None
-  }
-
-  def exists(p: Int => Boolean): Boolean = {
-    foreach { x =>
-      if (p(x)) return true
-    }
-    false
-  }
-
-  def filter(p: Int => Boolean): Domain
-
-  def isEmpty: Boolean
-
-  def nonEmpty: Boolean = !isEmpty
-
-  def view: Traversable[Int] = new TraversableView[Int, Domain] {
-    protected def underlying: Domain = Domain.this
-
-    override def foreach[U](f: Int => U): Unit = Domain.this.foreach(f)
-
-    override def isEmpty: Boolean = Domain.this.isEmpty
-  }
-
-  def present(value: Int): Boolean
-
   def median: Int
 
-  //  override def contains[A >: Int](value: A) = present(value.asInstanceOf[Int])
-  //
-  //  override def indices = throw new AssertionError
-
-  def remove(value: Int): Domain
-
-  def removeIfPresent(value: Int): Domain = {
-    if (present(value)) {
-      remove(value)
-    } else {
-      this
-    }
-  }
+  def +(elem: Int): Domain = throw new UnsupportedOperationException
 
   def assign(value: Int): Domain
 
@@ -105,6 +66,14 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
 
   def removeAfter(lb: Int): Domain
 
+  override def from(from: Int): Domain = removeUntil(from)
+
+  override def to(to: Int): Domain = removeAfter(to)
+
+  override def until(until: Int): Domain = removeFrom(until)
+
+  override def range(from: Int, until: Int): Domain = this & (from, until - 1)
+
   /**
     * @param ub
     * @return Removes all indexes up to given upper bound.
@@ -115,11 +84,25 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
 
   def removeItv(from: Int, to: Int): Domain
 
-  def span: Interval // = Interval(head, last)
+  def span: Interval
+
+  def spanFrom(from: Int): Option[Interval] = spanSlice(from = Some(from))
+  def spanTo(to: Int): Option[Interval] = spanSlice(to = Some(to))
+
+  def spanSlice(from: Option[Int] = None, to: Option[Int] = None): Option[Interval] = {
+    for {
+      lb <- from.map(f => nextOption(f - 1)).getOrElse(Some(head))
+      ub <- to.map(t => prevOption(t + 1)).getOrElse(Some(last))
+      i <- Interval.option(lb, ub)
+    } yield {
+      i
+    }
+  }
 
   def singleValue: Int
 
-  def &(a: Int, b: Int): Domain // = removeUntil(a).removeAfter(b)
+  def &(a: Int, b: Int): Domain
+
   def &(i: Interval): Domain = this & (i.lb, i.ub)
 
   def &(d: Domain): Domain
@@ -128,34 +111,28 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
 
   def --(d: Domain): Domain = d match {
     case EmptyIntDomain | BooleanDomain.EMPTY => this
-    case s@(_: Singleton | BooleanDomain.TRUE | BooleanDomain.FALSE) => removeIfPresent(s.singleValue)
+    case s@(_: Singleton | BooleanDomain.TRUE | BooleanDomain.FALSE) => this - s.head
     case i: IntervalDomain => removeItv(i.head, i.last)
     case _ if this disjoint d => this
-    case _ => filter(!d.present(_))
+    case _ => this.filterNot(d)
   }
 
-  def disjoint(d: Domain): Boolean // = (this & d).isEmpty
+  def disjoint(d: Domain): Boolean
 
-
-  //  = {
-  //    last < d.head || head > d.last || forall(v => !d.present(v))
-  //  }
+  def rangeImpl(from: Option[Int], to: Option[Int]): Domain = {
+    val f = from.map(removeUntil).getOrElse(this)
+    to.map(f.removeAfter).getOrElse(f)
+  }
 
   def subsetOf(d: Domain): Boolean
-
-  //def intersects(bv: BitVector): Int = bv.intersects(toBitVector)
-  //def intersects(bv: BitVector, part: Int): Boolean = bv.intersects(toBitVector, part)
 
   def convex: Boolean
 
   def toBitVector(offset: Int): BitVector
-
-  def size: Int
 
   override def equals(o: Any): Boolean = this eq o.asInstanceOf[AnyRef]
 
   def filterBounds(f: Int => Boolean): Domain
 
   def shift(o: Int): Domain
-
 }

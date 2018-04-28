@@ -22,5 +22,9 @@ class MathTest extends FlatSpec with Matchers {
 
   }
 
+  "ceilDiv" should "correctly compute" in {
+    Math.ceilDiv(-12, 35) shouldBe 0
+  }
+
 
 }

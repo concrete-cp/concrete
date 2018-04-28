@@ -111,7 +111,7 @@ class ElementVal(val result: Variable, val index: Variable, val valuesOpt: Array
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val res = ps.dom(result)
 
-    ps.filterDom(index)(i => res.present(values(i)))
+    ps.filterDom(index)(i => res(values(i)))
       //      .andThen { ps =>
       //        val iDom = ps.dom(index).view.map(values)
       //        val offset = iDom.min
@@ -123,7 +123,7 @@ class ElementVal(val result: Variable, val index: Variable, val valuesOpt: Array
       //      }
       .andThen { ps =>
       val iDom = ps.dom(index)
-      ps.filterDom(result)(v => indices(v - offset).exists(iDom.present))
+      ps.filterDom(result)(v => indices(v - offset).exists(iDom))
     }
       .entailIf(this, _.dom(index).isAssigned)
   }
@@ -155,7 +155,7 @@ class ElementRI(val resultIndex: Variable, val vars: Array[Variable]) extends Co
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     ps.filterDom(resultIndex) { i =>
-      ps.dom(vars(i)).present(i)
+      ps.dom(vars(i)).contains(i)
     }.andThen { ps =>
       if (ps.dom(resultIndex).isAssigned) {
         val value = ps.dom(resultIndex).singleValue
@@ -173,7 +173,7 @@ class ElementRI(val resultIndex: Variable, val vars: Array[Variable]) extends Co
   * Standard bound-consistency Element constraint
   */
 class ElementBC(val result: Variable, val index: Variable, val vars: Array[Variable])
-  extends Constraint(result +: index +: vars.filter(_ ne null)) with Element with BC {
+  extends Constraint(result +: index +: vars.filter(_ ne null)) with Element with BC with FixPoint {
 
   def advise(ps: ProblemState, pos: Int): Int = 4 * ps.card(index)
 
@@ -196,6 +196,10 @@ class ElementBC(val result: Variable, val index: Variable, val vars: Array[Varia
         }
       }
 
+  }
+
+  override def revise(ps: ProblemState, modified: BitVector): Outcome = {
+    fixPoint(ps, shave(_))
   }
 
   def simpleEvaluation: Int = 2
@@ -275,17 +279,9 @@ class ElementWatch(val result: Variable,
       ps.filterDom(index) { i => checkIndexWatches(ps, i, rDom) }
     } else {
       // Result is not modified, only check indices that have been touched
-      var iDom = ps.dom(index)
-      var m = mod.nextSetBit(2)
-      while (m >= 0) {
-        val p = pos2vars(m)
-        if (iDom.present(p) && !checkIndexWatches(ps, p, rDom)) {
-          iDom = iDom.remove(p)
-        }
-
-        m = mod.nextSetBit(m + 1)
+      ps.filterDom(index) { p =>
+        !mod(p + 2) || checkIndexWatches(ps, p, rDom)
       }
-      ps.updateDom(index, iDom)
     })
       .andThen { ps =>
         val iDom = ps.dom(index)
@@ -296,12 +292,12 @@ class ElementWatch(val result: Variable,
         } else {
           if (mod(1)) {
             // Indices have been modified
-            for (i <- resultWatches.indices if !iDom.present(i)) {
+            for (i <- resultWatches.indices if !iDom(i)) {
               for (w <- resultWatches(i)) {
                 // Watches must be recomputed
                 findResultWatch(ps, w, iDom) match {
                   case Some(p) => resultWatches(p) ::= w
-                  case None => rDom.removeIfPresent(w)
+                  case None =>  rDom -= w
                 }
 
               }
@@ -330,7 +326,7 @@ class ElementWatch(val result: Variable,
 
 
     resultWatches(mod) = resultWatches(mod).filter { w =>
-      (dom.present(w) && iDom.present(mod)) || {
+      (dom(w) && iDom(mod)) || {
         // Watch is invalid, seek another one
         findResultWatch(ps, w, iDom) match {
           case Some(i) =>
@@ -338,7 +334,7 @@ class ElementWatch(val result: Variable,
             resultWatches(i) ::= w
 
           case None =>
-            filtered = filtered.removeIfPresent(w)
+            filtered -= w
         }
         false
       }
@@ -347,11 +343,11 @@ class ElementWatch(val result: Variable,
     filtered
   }
 
-  private def findResultWatch(ps: ProblemState, v: Int, indices: Domain) = indices.find(i => ps.dom(vars(i)).present(v))
+  private def findResultWatch(ps: ProblemState, v: Int, indices: Domain) = indices.find(i => ps.dom(vars(i)).contains(v))
 
   private def checkIndexWatches(ps: ProblemState, i: Int, rDom: Domain): Boolean = {
     val watch = indexWatches(i)
-    if (ps.dom(vars(i)).present(watch) && rDom.present(watch)) {
+    if (ps.dom(vars(i)).contains(watch) && rDom(watch)) {
       true
     } else {
       findIndexWatch(ps, i, rDom) match {

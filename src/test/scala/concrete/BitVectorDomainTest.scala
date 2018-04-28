@@ -22,7 +22,7 @@ class BitVectorDomainTest extends FlatSpec with Matchers {
   }
 
   it should "shave" in {
-    val bv = IntDomain.ofBitVector(0, BitVector(Seq(0, 10, 50, 70, 100)), 5)
+    val bv = IntDomain.ofSeq(0, 10, 50, 70, 100)
     bv.removeTo(10).view should contain theSameElementsAs Seq(50, 70, 100)
 
     bv.removeTo(100) shouldBe 'empty

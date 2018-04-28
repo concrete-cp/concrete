@@ -11,8 +11,6 @@ import cspom.util.{IntInterval, RangeSet}
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -99,44 +97,32 @@ object AllDiff extends ProblemCompiler with LazyLogging {
   //  }
 
   def apply(cspom: CSPOM): Delta = {
-    val expressions = new mutable.HashMap[CSPOMExpression[_], Int]
-    val expr = new ArrayBuffer[CSPOMExpression[_]]
-    val neighbors = new ArrayBuffer[Set[Int]]
-    for (c <- cspom.constraints; args <- DIFF_CONSTRAINT(c); Seq(a1, a2) <- args.combinations(2)) {
-      val i1 = expressions.getOrElseUpdate(a1, {
-        val i = neighbors.length
-        expr += a1
-        neighbors += Set()
-        i
-      })
-      val i2 = expressions.getOrElseUpdate(a2, {
-        val i = neighbors.length
-        expr += a2
-        neighbors += Set()
-        i
-      })
-      neighbors(i1) += i2
-      neighbors(i2) += i1
-    }
+    val edges = cspom.constraints.flatMap(DIFF_CONSTRAINT).toSeq
+    val expressions = edges.flatten.distinct.toArray
+    val neighbors = computeNeighbors(edges, expressions)
 
-    val ranges = expr.zipWithIndex.collect {
-      case (IntExpression(e), i) => i -> IntExpression.implicits.ranges(e)
-    }
+    // addNeighbors(neighbors, expressions)
 
-    for (Seq((i1, r1), (i2, r2)) <- ranges.combinations(2) if (r1 & r2).isEmpty) {
-      logger.info(s"Additional neighbors ${expr(i1)} != ${expr(i2)}")
-      neighbors(i1) += i2
-      neighbors(i2) += i1
-    }
-
-    val cliques = BronKerbosch2(neighbors).sortBy(-_.size)
+    val cliques = BronKerbosch2(neighbors).filter(_.size > 2).sortBy(-_.size)
 
     cliques.foldLeft(Delta.empty) { (d, c) =>
-      d ++ newAllDiff(c.map(expr), cspom)
+      d ++ newAllDiff(c.map(expressions), cspom)
     }
   }
 
-  def BronKerbosch2(neighbors: IndexedSeq[Set[Int]]): Seq[Set[Int]] = {
+  private def computeNeighbors(edges: Seq[Seq[CSPOMExpression[_]]], expressions: Array[CSPOMExpression[_]]): Array[Set[Int]] = {
+    val indices = expressions.zipWithIndex.toMap
+    val neighbors = Array.fill(expressions.length)(Set.newBuilder[Int])
+    for (e <- edges; Seq(a1, a2) <- e.combinations(2)) {
+      val i1 = indices(a1)
+      val i2 = indices(a2)
+      neighbors(i1) += i2
+      neighbors(i2) += i1
+    }
+    neighbors.map(_.result())
+  }
+
+  private def BronKerbosch2(neighbors: IndexedSeq[Set[Int]]): Seq[Set[Int]] = {
 
     var C: Seq[Set[Int]] = Seq()
 
@@ -144,6 +130,7 @@ object AllDiff extends ProblemCompiler with LazyLogging {
 
       if (p.isEmpty && x.isEmpty) {
         // report R as a max clique
+        logger.debug(s"new clique of size ${r.size}: $r")
         C :+= r
       } else {
         //choose a pivot vertex u in P ⋃ X
@@ -151,7 +138,7 @@ object AllDiff extends ProblemCompiler with LazyLogging {
 
         var pr = p
         var xr = x
-        for (v <- pr if !neighbors(u).contains(v)) {
+        for (v <- p if !neighbors(u).contains(v)) {
           // BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
           recurse(r + v, pr.intersect(neighbors(v)), xr.intersect(neighbors(v)))
           pr -= v
@@ -204,19 +191,6 @@ object AllDiff extends ProblemCompiler with LazyLogging {
     }
   }
 
-  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
-    ALLDIFF_CONSTRAINT(constraint).orElse {
-      if (constraint.function == 'sum && constraint.result.isTrue) {
-        val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
-
-        if (mode == SumLT && constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2)) {
-          Some(vars)
-        } else {
-          None
-        }
-      } else None
-    }
-
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = {
     if (constraint.function == 'alldifferent && constraint.result.isTrue) {
       Some(constraint.arguments)
@@ -234,6 +208,19 @@ object AllDiff extends ProblemCompiler with LazyLogging {
       }
     } else None
   }
+
+  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
+    ALLDIFF_CONSTRAINT(constraint).orElse {
+      if (constraint.function == 'sum && constraint.result.isTrue) {
+        val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
+
+        if (mode == SumLT && constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2)) {
+          Some(vars)
+        } else {
+          None
+        }
+      } else None
+    }
 
   def selfPropagation = false
 

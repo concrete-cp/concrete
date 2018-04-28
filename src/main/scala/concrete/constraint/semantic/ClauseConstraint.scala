@@ -132,13 +132,13 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
   private def seekWatch(ps: ProblemState, from: Int): Int = {
     var i = from
     while (i < posLength) {
-      if (ps.dom(scope(i)).present(1)) {
+      if (ps.dom(scope(i)).contains(1)) {
         return i
       }
       i += 1
     }
     while (i < arity) {
-      if (ps.dom(scope(i)).present(0)) {
+      if (ps.dom(scope(i)).contains(0)) {
         return i
       }
       i += 1
@@ -182,9 +182,9 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
 
   private def canBeTrue(ps: ProblemState, p: Int) = {
     if (p < posLength) {
-      ps.dom(scope(p)).present(1)
+      ps.dom(scope(p)).contains(1)
     } else {
-      ps.dom(scope(p)).present(0)
+      ps.dom(scope(p)).contains(0)
     }
   }
 

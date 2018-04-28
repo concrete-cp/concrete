@@ -47,6 +47,7 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
     s"(+)(${vars.map(_.toString(ps)).mkString(", ")})"
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
+    logger.trace("watches are {}, {}", watch1, watch2)
     val w1 = if (ps.dom(vars(watch1)).isAssigned) {
       seekWatch(ps, watch2)
     } else {
@@ -93,7 +94,8 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
     var c = 0
     var i = arity - 1
     while (i >= 0) {
-      if (ps.dom(vars(i)) eq BooleanDomain.TRUE) {
+      val d = ps.dom(vars(i))
+      if (d.isAssigned && d.contains(1)) {
         c += 1
       }
       i -= 1

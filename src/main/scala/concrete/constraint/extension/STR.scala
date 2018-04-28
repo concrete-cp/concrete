@@ -83,12 +83,12 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
 
   def findSupport(scope: Array[Domain], p: Int, i: Int) =
-    iterator.find(t => t(p) == i && t.indices.forall(p => scope(p).present(t(p))))
+    iterator.find(t => t(p) == i && t.indices.forall(p => scope(p).contains(t(p))))
 
   def contains(t: Array[Int]): Boolean = {
     var i = bound - 1
     while (i >= 0) {
-      if (Arrays.equals(t, array(i))) return true
+      if (util.Arrays.equals(t, array(i))) return true
       i -= 1
     }
     false
@@ -113,7 +113,7 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
 
   @tailrec
   private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
-    modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
+    modified.isEmpty || (doms(modified.head).contains(t(modified.head)) && valid(modified.tail, doms, t))
   }
 }
 

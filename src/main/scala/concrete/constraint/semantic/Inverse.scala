@@ -3,7 +3,8 @@ package concrete.constraint.semantic
 import bitvectors.BitVector
 import concrete.{Event, Outcome, ProblemState, Variable}
 import concrete.constraint.{Constraint, StatefulConstraint}
-import concrete.util.Boxed
+
+import scala.collection.mutable.ArrayBuffer
 
 
 /**
@@ -14,7 +15,7 @@ import concrete.util.Boxed
   * y(j) != i => x(i) != j is enforced
   */
 final class Inverse(x: Array[Variable], y: Array[Variable], xOffset: Int, yOffset: Int) extends Constraint(x ++ y)
-  with StatefulConstraint[Boxed[BitVector]] {
+  with StatefulConstraint[BitVector] {
 
   //  {
   //    val groups = scope.groupBy(identity).filter(_._2.size > 1)
@@ -22,8 +23,8 @@ final class Inverse(x: Array[Variable], y: Array[Variable], xOffset: Int, yOffse
   //  }
 
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = {
-    val fx = problemState(this)
-    val card = fx.bv.cardinality
+    val bv = problemState(this)
+    val card = bv.cardinality
     card * card
   }
 
@@ -34,40 +35,52 @@ final class Inverse(x: Array[Variable], y: Array[Variable], xOffset: Int, yOffse
     }
   }
 
-  def init(ps: ProblemState): Outcome = ps.updateState(this, Boxed(BitVector.filled(x.length)))
+  def init(ps: ProblemState): Outcome = ps.updateState(this, BitVector.filled(x.length))
 
   def revise(problemState: ProblemState, mod: BitVector): Outcome = {
     //println(s"$mod of ${toString(problemState)}")
     // fx contains "free variables"
-    var fx = problemState(this).bv
 
-    // Check whether variables have been assigned
-    problemState.fold(mod.filter(_ < x.length)) { (ps, xPos) =>
-      val dom = ps.dom(x(xPos))
-      if (dom.isAssigned) {
-        fx -= xPos
+    val xMod = new ArrayBuffer[Int]()
 
-        val xVal = dom.singleValue
+    // Contains unassigned variables
+    var frees = problemState(this)
 
-        val yPos = xVal - yOffset
-
-        val yVal = xPos + xOffset
-
-        ps.tryAssign(y(yPos), yVal)
-      } else {
-        ps
+    problemState
+      .fold(frees) { (ps, xPos) =>
+        // First filter X variables
+        val res = ps.filterDom(x(xPos))(v => ps.dom(y(v - yOffset)).contains(xPos + xOffset))
+        if (res ne ps) {
+          xMod += xPos
+        }
+        res
       }
-    }
-      .fold(fx) { (ps, xPos) =>
-        ps.filterDom(x(xPos))(v => ps.dom(y(v - yOffset)).present(xPos + xOffset))
-      }
-      .updateState(this, Boxed(fx))
+      .fold(mod.until(x.length) ++ xMod) { (ps, xPos) =>
+        // Check whether variables in X have been assigned, filter variables in
+        // Y accordingly
+        val dom = ps.dom(x(xPos))
+        if (dom.isAssigned) {
+          frees -= xPos
 
+          val xVal = dom.singleValue
+
+          val yPos = xVal - yOffset
+
+          val yVal = xPos + xOffset
+
+          ps.tryAssign(y(yPos), yVal)
+        } else {
+          ps
+        }
+      }
+      .updateState(this, frees)
   }
 
   override def toString(ps: ProblemState): String = {
-    s"inverse $xOffset/${x.map(ps.dom(_).toString).mkString(", ")} and $yOffset/${y.map(ps.dom(_).toString).mkString(", ")} fx = ${ps(this).bv}"
+    s"inverse $xOffset/${x.map(ps.dom(_).toString).mkString(", ")} and $yOffset/${y.map(ps.dom(_).toString).mkString(", ")} fx = ${ps(this)}"
   }
 
   def simpleEvaluation: Int = 2
+
+
 }

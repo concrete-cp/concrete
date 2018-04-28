@@ -1,101 +1,133 @@
 package concrete.constraint.semantic
 
+import bitvectors.BitVector
 import concrete._
 import concrete.constraint._
 import concrete.util.Interval
 
 object Div {
+
+  def splitRealDiv(i0: Interval, i1: Interval): (Option[Interval], Option[Interval]) = {
+    val negative = i1.to(-1).flatMap(i0 / _)
+    val positive = i1.from(1).flatMap(i0 / _)
+    (negative, positive)
+  }
+
   /**
-    * Must use another division rules than one defined in Interval
+    * Performs integer division (warning, operation / in Interval performs standard rounded division)
     */
-  def div(i0: Interval, i1: Interval): Option[Interval] = {
+  def intDiv(i0: Interval, i1: Interval): Interval = {
+    val Interval(a, b) = i0
+    val Interval(c, d) = i1
 
-    if (i1.contains(0) && i0.lb <= 0 && i0.ub >= 0) {
-      None
-    } else if (i1 == Interval(0, 0) && (i0.lb > 0 || i0.ub < 0)) {
-      throw new ArithmeticException
-    } else if (i1.lb < 0 && i1.ub > 0 && (i0.lb > 0 || i0.ub < 0)) {
-      val max = math.max(Math.abs(i0.lb), Math.abs(i0.ub))
-      Some(Interval(-max, max))
-    } else if (i1.lb == 0 && i1.ub != 0 && (i0.lb > 0 || i0.ub < 0)) {
-      div(i0, Interval(1, i1.ub))
-    } else if (i1.lb != 0 && i1.ub == 0 && (i0.lb > 0 || i0.ub < 0)) {
-      div(i0, Interval(i1.lb, -1))
-    } else {
-      val Interval(a, b) = i0
-      val Interval(c, d) = i1
+    val ac = a / c
+    val ad = a / d
+    val bc = b / c
+    val bd = b / d
 
-      val ac = a / c
-      val ad = a / d
-      val bc = b / c
-      val bd = b / d
+    val l = ac min ad min bc min bd
 
-      val l = math.min(ac, math.min(ad, math.min(bc, bd)))
+    val u = ac max ad max bc max bd
 
-      val u = math.max(ac, math.max(ad, math.max(bc, bd)))
-
-      Some(Interval(l, u))
-    }
+    Interval(l, u)
   }
 
   def reminder(xSpan: Interval, ySpan: Interval): Interval = {
+    val ub = ySpan.abs.ub - 1
     if (xSpan.lb >= 0) {
-      Interval(0, math.max(math.abs(ySpan.lb), math.abs(ySpan.ub)) - 1)
+      Interval(0, ub)
     } else if (xSpan.ub < 0) {
-      Interval(-math.max(Math.abs(ySpan.lb), math.abs(ySpan.ub)) + 1, 0)
+      Interval(-ub, 0)
     } else {
-      Interval(math.min(math.min(ySpan.lb, -ySpan.lb), math.min(ySpan.ub, -ySpan.ub)) + 1,
-        math.max(math.max(ySpan.lb, -ySpan.lb), math.max(ySpan.ub, -ySpan.ub)) - 1)
+      Interval(-ub, ub)
     }
+  }
+
+  def remove0Bound(dom: Interval): Option[Interval] = dom.except(0).map {
+    case Left(i) => i
+    case Right((i1, i2)) => i1 span i2
   }
 }
 
-///**
-// * @author vion
-// * x / y = z
-// * x = z * y + x % y
-// */
-class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC {
+/**
+  * @author vion
+  *         x ÷ y = z (integer division)
+  *
+  *
+  *
+  *         Filtering is done on the property that x = y * (x ÷ y) + x % y
+  *
+  *         x ÷ y is computed by Div.div
+  *         x % y is computed by Div.reminder
+  */
+class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC with ItvArrayFixPoint {
+  val ops = Array(reviseX(_), reviseY(_), reviseZ(_))
+
   def check(t: Array[Int]): Boolean = {
-    t(0) / t(1) == t(2)
+    t(1) != 0 && t(0) / t(1) == t(2)
   }
 
   def advise(ps: ProblemState, pos: Int) = 3
 
-  def init(ps: ProblemState): Outcome = ps.remove(y, 0)
+  def init(ps: ProblemState): Outcome = Div.remove0Bound(ps.span(y))
+    .map(ps.shaveDom(y, _))
+    .getOrElse(Contradiction(y))
 
-  override def shave(ps: ProblemState): Outcome = {
-
-    val x = ps.span(this.x)
-    val y = ps.span(this.y)
-    val z = ps.span(this.z)
-
-    val reminder = Div.reminder(x, y)
-
-    Div.div(x, y).map(ps.shaveDom(this.z, _))
-      .getOrElse(ps)
-      .andThen { ps =>
-        Div.div(x - reminder, z).map(ps.shaveDom(this.y, _))
-          .getOrElse(ps)
-      }
-      .andThen { ps =>
-
-        val xBounds = z * y
-
-        ((x - xBounds) intersect reminder)
-          .map(r => ps.shaveDom(this.x, xBounds + r))
-          .getOrElse(Contradiction(this.x))
-        //
-        //        if (reminderMin > rMin) rMin = reminderMin
-        //        if (reminderMax < rMax) rMax = reminderMax
-        //        if (rMin > rMax)
-        //          Contradiction
-        //        else
-        //          ps.shaveDom(this.x, xBounds.lb + rMin, xBounds.ub + rMax)
-      }
-  }
+  def revise(ps: ProblemState, mod: BitVector): Outcome = fixPoint(ps)
 
   def simpleEvaluation: Int = 1
+
+  private def reviseZ(doms: Array[Domain]): Option[Interval] = {
+    val x = doms(0).span
+    val pos = doms(1).spanFrom(1).map(Div.intDiv(x, _))
+    val neg = doms(1).spanTo(-1).map(Div.intDiv(x, _))
+    // println(s"Two parts: $pos, $neg")
+    Interval.unionSpan(neg, pos)
+  }
+
+  private def reviseY(doms: Array[Domain]): Option[Interval] = {
+    // y = (x - x % y)/z
+    val y = doms(1).span
+    val x = doms(0).span
+
+    val dividend = x - Div.reminder(x, y)
+    // Z is split in three parts : < 0, > 0 and = 0
+    // println(dividend)
+
+    val pos = doms(2).spanFrom(1)
+      .flatMap(dividend / _)
+      .flatMap(y.intersect)
+
+    val neg = doms(2).spanTo(-1)
+      .flatMap(dividend / _)
+      .flatMap(y.intersect)
+
+    // For Z to be = 0, Y needs to be >/< |X|.lb
+    val zero = if (doms(2).contains(0)) {
+      val lb = x.abs.lb + 1
+      val y0Pos = doms(1).spanFrom(lb).flatMap(_.intersect(y))
+      val y0Neg = doms(1).spanTo(-lb).flatMap(_.intersect(y))
+      //println(s"Four parts: $pos, $neg, $y0Pos, $y0Neg")
+      Interval.unionSpan(y0Pos, y0Neg)
+    } else {
+      //println(s"Two parts: $pos, $neg")
+      None
+    }
+
+
+    Interval.unionSpan(
+      Interval.unionSpan(pos, neg),
+      zero)
+  }
+
+  private def reviseX(doms: Array[Domain]): Option[Interval] = {
+    // x = z * y + x % y
+    val x = doms(0).span
+    val y = doms(1).span
+    val z = doms(2).span
+    val r = Div.reminder(x, y)
+    Some(z * y + r)
+  }
 }
 
 
@@ -106,26 +138,15 @@ class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
   * @param v1
   * @param result
   */
-class DivAC(v0: Variable, v1: Variable, result: Variable, val skipIntervals: Boolean = true) extends Constraint(v0, v1, result) with Residues with TupleEnumerator
+class DivAC(v0: Variable, v1: Variable, result: Variable, val skipIntervals: Boolean = true) extends Constraint(v0, v1, result) with Residues
+  with TupleEnumerator
   with BCCompanion {
 
   def check(t: Array[Int]): Boolean = {
     t(1) != 0 && t(0) / t(1) == t(2)
   }
 
-  //  override def revise(state: ProblemState, modified: BitVector): Outcome = {
-  //    super.revise(state, modified)
-  //      .andThen { r =>
-  //        if (intervalsOnly(state) && !intervalsOnly(r)) {
-  //          println(diff(state, r))
-  //        }
-  //        r
-  //      }
-  //
-  //  }
-
-
-  override def advise(ps: ProblemState, event: Event, pos: Int): Int = {
+  override def advise(ps: ProblemState, pos: Int): Int = {
     val d0 = ps.card(result)
     val d1 = ps.card(v0)
     val d2 = ps.card(v1)
@@ -135,16 +156,17 @@ class DivAC(v0: Variable, v1: Variable, result: Variable, val skipIntervals: Boo
 
   override def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]] = {
     position match {
-      case 0 => doms(1).find(y => y != 0 && doms(2).present(value / y)).map(y => Array(value, y, value / y))
-      case 1 => if (value == 0) None else doms(0).find(x => doms(2).present(x / value)).map(x => Array(x, value, x / value))
+      case 0 => doms(1).find(y => y != 0 && doms(2).contains(value / y)).map(y => Array(value, y, value / y))
+      case 1 => if (value == 0) None else doms(0).find(x => doms(2).contains(x / value)).map(x => Array(x, value, x / value))
       case 2 =>
         //println(s"Searching for a support of result = $value")
+
         for {
           b <- doms(1)
           r <- if (signum(value) == signum(b)) 0 until math.abs(b) else 0 until -math.abs(b) by -1
         } {
           val a = b * value + r
-          if (doms(0).present(a)) {
+          if (doms(0).contains(a)) {
             //println(s"Found $a = $b * $value + $r")
             return Some(Array(a, b, value))
           }

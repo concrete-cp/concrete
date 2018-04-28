@@ -14,9 +14,11 @@ class ScoredVariableHeuristicTest extends FlatSpec with Matchers {
   "Scored Variable Heuristic" should "select smallest variable with random tie breaking" in {
     val variables = Array.tabulate(10)(n => new Variable(n.toString, IntDomain(0 to 10)))
 
-    val h = new Dom(variables)
 
     val problem = new Problem(variables)
+
+    val h = new Dom(variables)
+
     val state = h.compute(null, problem.initState.toState)
 
     val select = List.fill(100)(h.select(state, variables))

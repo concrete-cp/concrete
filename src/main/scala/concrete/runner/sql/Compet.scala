@@ -30,17 +30,19 @@ object Compet extends App {
 
   implicit val getConfigResult: GetResult[Config] = GetResult(r => Config(r.<<, r.<<, r.<<))
 
-  val problemQuery = sql"""
+  val problemQuery = {
+    sql"""
         SELECT "problemId", display, "nbVars", "nbCons", nature, coalesce(string_agg("problemTag", ','), '') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
         -- WHERE name ~ '^instances/mznc2017'
         GROUP BY "problemId"
         """.as[Problem]
+  }
 
   val executionQuery = {
     sql"""
     SELECT "problemId", "configId", iteration, status, solution, totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3
-    FROM "Execution" where iteration=0  and "configId" >= 0
+    FROM "Execution" where iteration=0 -- and "configId" >= 0
     """.as[Execution]
   }
 
@@ -235,8 +237,16 @@ object Compet extends App {
             case _ if e.status == "UNSAT" => UNSAT
 
             case nature: Optimize =>
-              val variable = nature.variable
-              val result = e.solution.flatMap(_.split("\n").filter(s => variable.exists(s.startsWith)).lastOption).map(_.split("=|;")(1).trim.toInt)
+              // val variable = nature.variable
+              val result =
+                e.solution.flatMap(_.split("\n").filter(_.contains("=")).lastOption).map { l =>
+                  try {
+                    l.split("=|;")(1).trim.toInt
+                  } catch {
+                    case exc: Exception => throw new IllegalStateException(s"Unable to parse solution from $l", exc)
+                  }
+                }
+
               //require(!solved || result.nonEmpty, s"$status but empty result $result")
               if (e.status == "SAT*") {
                 Optimal(result.get)

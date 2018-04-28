@@ -5,29 +5,29 @@ import java.util.concurrent.TimeoutException
 import com.typesafe.scalalogging.LazyLogging
 import concrete._
 import concrete.filter.Filter
-import concrete.heuristic.{DeadEnd, Decision}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable.TreeSet
 import scala.util.Random
 
-class BestCost(pm: ParameterManager, rand: Random) extends BranchHeuristic with LazyLogging {
+class BestCost(pm: ParameterManager, rand: Random) extends ValueSelector with LazyLogging {
   private val boundsOnly = pm.getOrElse("bestcost.boundsOnly", 100)
   private var objective: Goal = _
   private var filter: Filter = _
 
   override def toString: String = "best-cost"
 
-  def branch(variable: Variable, domain: Domain, ps: ProblemState): (Decision, Decision) = {
+  def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) = {
     var bestScore = Int.MaxValue
-    val bestValues = new ArrayBuffer[Int]()
-
+    val bestValues = TreeSet.newBuilder[Int] //new ArrayBuffer[Int]()
 
     def checkValue(v: Int) = {
       if (Thread.interrupted()) throw new TimeoutException("Timeout while computing best cost")
       val test = ps.assign(variable, v)
 
       filter.reduceAfter(Seq((variable, Assignment)), test) match {
-        case _: Contradiction => false
+        case _: Contradiction =>
+          logger.info(s"$variable <- $v is not SAC")
+          false
 
         case filteredState: ProblemState =>
           val s = score(filteredState)
@@ -45,36 +45,37 @@ class BestCost(pm: ParameterManager, rand: Random) extends BranchHeuristic with 
       }
     }
 
+    val domain = ps.dom(variable)
+
     val newDomain = if (domain.size >= boundsOnly) {
-      domain.filterBounds(checkValue)
+      domain.filterBounds(v => !candidates(v) || checkValue(v))
     } else {
-      domain.filter(checkValue)
+      domain.filter(v => !candidates(v) || checkValue(v))
     }
 
-    if (domain ne newDomain) {
-      logger.info(s"Bestcost filtered ${variable.toString(ps)} to $newDomain")
-    }
 
-    if (newDomain.isEmpty) {
-      (DeadEnd(variable), DeadEnd())
+    val state = if (newDomain.isEmpty) {
+      Contradiction(variable)
     } else {
-
-      /**
-        * TODO: best state must be recomputed, improving this would require all data structures
-        * to be fully persistent
-        */
-      val bestValue = bestValues(rand.nextInt(bestValues.size))
-      assignBranch(ps.updateDomNonEmpty(variable, newDomain), variable, bestValue)
+      Event(domain, newDomain)
+        .map { e =>
+          logger.info(s"Bestcost filtered ${variable.toString(ps)} to $newDomain")
+          ps.updateDom(variable, newDomain)
+            .andThen { s =>
+              filter.reduceAfter(Seq((variable, e)), s)
+            }
+        }
+        .getOrElse {
+          ps
+        }
     }
 
-    //
-    //    val b2 = domain.remove(bestValue)
-    //
-    //    new Branch(
-    //      bestState, Seq(),
-    //      ps.updateDomNonEmptyNoCheck(variable, b2), Seq((variable, InsideRemoval(domain, b2))),
-    //      s"${variable.toString(ps)} = $bestValue",
-    //      s"${variable.toString(ps)} /= $bestValue")
+    /**
+      * TODO: best state must be recomputed, improving this would require all data structures
+      * to be fully persistent
+      */
+    (state, IntDomain.ofTreeSet(bestValues.result()))
+
   }
 
 

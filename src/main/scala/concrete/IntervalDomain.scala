@@ -22,32 +22,27 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def prev(i: Int): Int = if (i <= span.lb) throw new NoSuchElementException else i - 1
 
-  // def copy = this
+  override def spanSlice(from: Option[Int], to: Option[Int]): Option[Interval] = {
+    val lb = from.map(span.from).getOrElse(spanOption)
+    lb.flatMap(s => to.map(s.to).getOrElse(lb))
+  }
+
+  def spanOption = Some(span)
 
   def isAssigned = false
 
-  def remove(index: Int): IntDomain = {
-    assert(present(index))
+  def -(index: Int): IntDomain = {
+
     if (index == span.lb) {
       IntDomain.ofInterval(span.lb + 1, span.ub)
-    }
-    else if (index == span.ub) {
+    } else if (index == span.ub) {
       IntDomain.ofInterval(span.lb, span.ub - 1)
-    }
-    else {
-      toBVDomain.remove(index)
+    } else if (contains(index)) {
+      toBVDomain - index
+    } else {
+      this
     }
 
-  }
-
-  /**
-    * @param index
-    * index to test
-    * @return true iff index is present
-    */
-  def present(index: Int): Boolean = {
-    Domain.checks += 1
-    span.contains(index)
   }
 
   def removeFrom(lb: Int): IntDomain =
@@ -107,14 +102,10 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
-  override def head: Int = span.lb
-
-  override def last: Int = span.ub
-
   override def toString: String = s"[$head, $last]"
 
   def subsetOf(d: IntDomain): Boolean = d match {
-    case d: BitVectorDomain => (head to last).forall(d.present)
+    case d: BitVectorDomain => (head to last).forall(d)
     case d: IntervalDomain => head >= d.head && last <= d.last
   }
 
@@ -134,7 +125,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def &(d: Domain): Domain = d match {
     case id: IntervalDomain => this & id.span
-    case s: Singleton => if (present(s.singleValue)) s else EmptyIntDomain
+    case s: Singleton => if (contains(s.head)) s else EmptyIntDomain
     case EmptyIntDomain => EmptyIntDomain
     case b: BooleanDomain => b & this
     case _ =>
@@ -145,6 +136,18 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
         domain
       }
   }
+
+  /**
+    * @param index
+    * index to test
+    * @return true iff index is present
+    */
+  def contains(index: Int): Boolean = {
+    Domain.checks += 1
+    span.contains(index)
+  }
+
+  override def size: Int = span.size
 
   def disjoint(d: Domain): Boolean = last < d.head || head > d.last
 
@@ -184,7 +187,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
   }
 
   def |(value: Int): IntDomain = {
-    if (present(value)) {
+    if (contains(value)) {
       this
     } else {
       if (value == head - 1) {
@@ -207,15 +210,17 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
+  override def head: Int = span.lb
 
-
-  def size: Int = span.size
+  override def last: Int = span.ub
 
   def convex = true
 
   override def isEmpty = false
 
   def iterator: Iterator[Int] = span.allValues.iterator
+
+  def keysIteratorFrom(start: Int): Iterator[Int] = (start to last).iterator
 
   override def foreach[U](f: Int => U): Unit = {
     span.allValues.foreach(f)

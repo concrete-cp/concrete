@@ -1,6 +1,6 @@
 package concrete
 
-import bitvectors.{BitVector, BitVectorBuilder}
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.util.{CacheOne, Interval}
 
@@ -10,6 +10,9 @@ final class TreeSetDomain(val set: TreeSet[Int])
   extends IntDomain with LazyLogging {
 
   lazy val span = Interval(head, last)
+
+  def spanOption: Option[Interval] = Some(span)
+
   override val head: Int = set.head
 
   override val last: Int = set.last
@@ -37,12 +40,18 @@ final class TreeSetDomain(val set: TreeSet[Int])
   }
 
   override def filterBounds(f: Int => Boolean): IntDomain = {
-    ???
+    val filtLeft = set.dropWhile(v => !f(v))
+
+    val it = filtLeft.toSeq.reverseIterator
+    var count = 0
+    while (it.hasNext && !f(it.next)) count += 1
+
+    IntDomain.ofTreeSet(filtLeft.dropRight(count))
   }
 
-  def remove(index: Int): IntDomain = {
-    assert(present(index))
-    IntDomain.ofTreeSet(set - index)
+  def -(index: Int): IntDomain = {
+    val newSet = set - index
+    if (set eq newSet) this else IntDomain.ofTreeSet(newSet)
   }
 
   def removeFrom(lb: Int): IntDomain = {
@@ -102,7 +111,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     head >= d.head && last <= d.last && {
       d match {
         case _: IntervalDomain => true
-        case _ => set.forall(d.present)
+        case _ => set.forall(d)
       }
     }
 
@@ -116,11 +125,11 @@ final class TreeSetDomain(val set: TreeSet[Int])
   def toBitVector(offset: Int): BitVector = {
     offsetBV(offset, {
       logger.info(s"generating BV for $this offset $offset")
-      val bvb = new BitVectorBuilder(last - offset + 1)
+      val bvb = new java.util.BitSet(last - offset + 1)
       for (i <- set) {
-        bvb += i - offset
+        bvb.set(i - offset)
       }
-      bvb.result()
+      BitVector(bvb)
     })
 
   }
@@ -130,7 +139,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     case s: Singleton => s.disjoint(this)
     case EmptyIntDomain => true
     case b: BooleanDomain => b.disjoint(this)
-    case _ => head > d.last || last < d.head || !set.exists(d.present)
+    case _ => head > d.last || last < d.head || !set.exists(d)
   }
 
   override def |(d: Domain): Domain = {
@@ -143,7 +152,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
   }
 
   def |(value: Int): IntDomain = {
-    if (present(value)) {
+    if (contains(value)) {
       this
     } else {
       IntDomain.ofTreeSet(set + value)
@@ -154,7 +163,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     * @param value to test
     * @return true iff value is present
     */
-  def present(value: Int): Boolean = {
+  def contains(value: Int): Boolean = {
     Domain.checks += 1
     set(value)
   }
@@ -174,13 +183,13 @@ final class TreeSetDomain(val set: TreeSet[Int])
       case EmptyIntDomain | BooleanDomain.EMPTY | _: Singleton => assert(size > 1); false
       case d: BooleanDomain => head >= d.head && last <= d.last
       case id: IntervalDomain => (this & id.span).size == size
-      case _ => last <= d.last && set.forall(d.present)
+      case _ => last <= d.last && set.forall(d)
     }
   }
 
   override def &(d: Domain): Domain = d match {
     case id: IntervalDomain => this & id.span
-    case s: Singleton => if (present(s.singleValue)) s else EmptyIntDomain
+    case s: Singleton => if (contains(s.head)) s else EmptyIntDomain
     case bd: BitVectorDomain => bd.filter(set)
     case EmptyIntDomain => EmptyIntDomain
     case b: BooleanDomain => b & this
@@ -198,5 +207,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
   def median: Int = iterator.drop(size / 2).next
 
   def iterator: Iterator[Int] = set.iterator
+
+  override def keysIteratorFrom(start: Int): Iterator[Int] = set.keysIteratorFrom(start)
 
 }

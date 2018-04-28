@@ -40,7 +40,7 @@ trait CumulativeChecker extends Constraint with LazyLogging {
  */
 
 class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b)
-    with BC with CumulativeChecker {
+    with BC with CumulativeChecker with FixPoint {
 
   def nbTasks: Int = s.length
 
@@ -151,8 +151,6 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
         fixPoint(ps, s.indices, { (ps, i) => filter(ps, ps.dom(b).last, i) })
       }
   }
-
-  override def shave(state: ProblemState): Outcome = throw new IllegalStateException()
 
   def simpleEvaluation: Int = 3
 

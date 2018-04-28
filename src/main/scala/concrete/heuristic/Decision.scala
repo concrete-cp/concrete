@@ -22,7 +22,7 @@ case class Remove(variable: Variable, value: Int) extends Decision {
 
   def apply(ps: ProblemState): (Outcome, Seq[(Variable, Event)]) = {
     val domain = ps.dom(variable)
-    val removed = domain.removeIfPresent(value)
+    val removed = domain - value
     (ps.updateDom(variable, removed), Seq((variable, InsideRemoval(domain, removed))))
   }
 }
@@ -45,4 +45,12 @@ case class DeadEnd(cause: Variable*) extends Decision {
   override def toString: String = "dead-end" + cause.mkString("(", ", ", ")")
 
   def apply(ps: ProblemState): (Outcome, Seq[(Variable, Event)]) = (Contradiction(cause), Seq())
+}
+
+case object Continue extends Decision {
+  def toString(ps: ProblemState): String = toString
+
+  override def toString: String = "continue"
+
+  def apply(ps: ProblemState): (Outcome, Seq[(Variable, Event)]) = (ps, Seq())
 }

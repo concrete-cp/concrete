@@ -16,9 +16,11 @@ object BinPacking {
   }
 }
 
-class BinPacking private(load: Array[Variable], offset: Int, assignments: Array[Variable],
-                         weight: Array[Int]) extends Constraint(load ++ assignments)
-  with FixPoint {
+class BinPacking private(load: Array[Variable],
+                         offset: Int,
+                         assignments: Array[Variable],
+                         weight: Array[Int])
+  extends Constraint(load ++ assignments) with FixPoint {
 
   private val totalWeights = weight.sum
 

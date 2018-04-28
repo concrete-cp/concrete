@@ -20,7 +20,7 @@
 package concrete
 package constraint
 
-import bitvectors.{BitVector, BitVectorBuilder}
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.heuristic.Weighted
 import concrete.priorityqueues.{DLNode, Identified, PTag}
@@ -28,23 +28,13 @@ import concrete.priorityqueues.{DLNode, Identified, PTag}
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import java.util
 
 object Constraint {
-
-  //  private val cId = new ThreadLocal[Int];
-  //  cId.set(0)
-  //
-  //  def next(): Int = {
-  //    val r = cId.get
-  //    cId.set(r + 1)
-  //    r
-  //  }
-
   val UNARY = 1
   val BINARY = 2
   val TERNARY = 3
   val NP = 7
-
 }
 
 trait StatefulConstraint[+State <: AnyRef] extends Constraint {
@@ -77,21 +67,21 @@ abstract class Constraint(val scope: Array[Variable])
   }
   val positionInVariable: Array[Int] = Array.fill(arity)(-1)
 
-  private var modified: BitVectorBuilder = _
+  private var modified: util.BitSet = _
 
   private var timestamp = -1
 
   private var _id: Int = -1
 
   override def register(ac: AdviseCount): this.type = {
-    modified = new BitVectorBuilder(arity)
+    modified = new util.BitSet(arity)
     super.register(ac)
   }
 
   def revise(problemState: ProblemState, modified: BitVector): Outcome
 
   final def consistent(ps: ProblemState): Outcome = {
-    consistent(ps, modified)
+    consistent(ps, BitVector(modified))
   }
 
   def consistent(problemState: ProblemState, modified: Traversable[Int]): Outcome = {
@@ -112,8 +102,8 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   def clearMod(): BitVector = {
-    val result = modified.result()
-    modified = new BitVectorBuilder(arity) //= BitVector.empty // Arrays.fill(removals, -1)
+    val result = BitVector(modified)
+    modified.clear() //= BitVector.empty // Arrays.fill(removals, -1)
     result
   }
 
@@ -128,9 +118,9 @@ abstract class Constraint(val scope: Array[Variable])
     scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
   }"
 
-  if (logger.underlying.isWarnEnabled & !scope.distinct.sameElements(scope)) {
-    logger.warn(s"$this has duplicates in its scope")
-  }
+//  if (logger.underlying.isWarnEnabled && !scope.distinct.sameElements(scope)) {
+//    logger.warn(s"$this has duplicates in its scope")
+//  }
 
   def skip(modified: BitVector): Int = {
     val head = modified.nextSetBit(0)
@@ -157,26 +147,9 @@ abstract class Constraint(val scope: Array[Variable])
   override def hashCode: Int = id
 
   @tailrec
-  final def controlTuplePresence(problemState: ProblemState, tuple: Array[Int], i: Int = arity - 1): Boolean = {
+  final def ctp(doms: Array[Domain], tuple: Array[Int], i: Int = arity - 1): Boolean = {
     /* Need high optimization */
-
-    i < 0 || (problemState.dom(scope(i)).present(tuple(i)) && controlTuplePresence(problemState, tuple, i - 1))
-
-  }
-
-  @tailrec
-  final def controlTuplePresence(problemState: ProblemState, tuple: Array[Int], mod: List[Int]): Boolean = {
-    /* Need high optimization */
-
-    if (mod eq Nil) {
-      assert(controlTuplePresence(problemState, tuple), tuple.mkString("(", ", ", ")") +
-        " is not in " + this)
-      true
-    } else {
-      val i = mod.head
-      problemState.dom(scope(i)).present(tuple(i)) && controlTuplePresence(problemState, tuple, mod.tail)
-    }
-
+    i < 0 || (doms(i).contains(tuple(i)) && ctp(doms, tuple, i - 1))
   }
 
   /**
@@ -205,7 +178,7 @@ abstract class Constraint(val scope: Array[Variable])
         timestamp = adviseCount
       }
 
-      modified += pos
+      modified.set(pos)
     }
     eval
   }
@@ -293,7 +266,9 @@ abstract class Constraint(val scope: Array[Variable])
           false
         case finalState: ProblemState =>
           if (!scope.forall(v => ps.dom(v) eq finalState.dom(v))) {
-            logger.error(s"${toString(ps)}} was revised (-> ${toString(finalState)})")
+            logger.error(s"${toString(ps)}} was revised (-> ${
+              diff(ps, finalState).map { case (v, (_, a)) => s"$v <- $a" }.mkString(", ")
+            })")
             false
           } else if (!(adv < 0 || ps.entailed.hasInactiveVar(this) == finalState.entailed.hasInactiveVar(this))) {
             logger.error(s"${toString(ps)}: entailment detected")
@@ -332,7 +307,5 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   protected def advise(problemState: ProblemState, event: Event, pos: Int): Int
-
-  //def entailable: Boolean = true
 
 }

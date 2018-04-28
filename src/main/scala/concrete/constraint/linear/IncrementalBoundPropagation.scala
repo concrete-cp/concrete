@@ -50,7 +50,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
   }
 
-  def initData(ps: ProblemState) = {
+  def initData(ps: ProblemState): ProblemState = {
     val doms = ps.doms(scope)
     val f = (doms, factors).zipped.map(_.span * _).reduce(_ + _) - constant
     val maxI = size(doms.head, factors.head)
@@ -83,17 +83,17 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
       /* Entailed */
       val rm = if (i < 0) max else math.max(max, is(i))
       //require(i < 0 || rm <= is(i))
-      PFiltered(hasChanged, true, f, vars, rm)
+      PFiltered(hasChanged, entailed = true, f, vars, rm)
       //if (i < 0) max else math.max(max, is(i)))
     } else if (f.lb > 0) {
       PContradiction
     } else if (i < 0) {
-      PFiltered(hasChanged, false, f, vars, max)
+      PFiltered(hasChanged, entailed = false, f, vars, max)
     } else if (is(i) <= -f.lb) {
       /* Short-circuit */
       val rm = math.max(max, is(i))
       //require(rm <= is(i), (max, rm, doms.toSeq, factors.toSeq, is.toSeq))
-      PFiltered(hasChanged, false, f, vars, rm)
+      PFiltered(hasChanged, entailed = false, f, vars, rm)
     } else {
       val dom = doms(i)
 

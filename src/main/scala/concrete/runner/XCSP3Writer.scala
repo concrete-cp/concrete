@@ -18,10 +18,10 @@ class XCSP3Writer(val pm:ParameterManager, problem:String, val stats: Statistics
   }
 
 
-  def printSolution(sol: String, obj: Option[Any]) {
+  def printSolution(sol: String, obj: Seq[(String, Any)]) {
     writeStats()
-    for (o <- obj) {
-      Console.println(s"o $o")
+    for ((_, v) <- obj) {
+      Console.println(s"o $v")
     }
   }
 

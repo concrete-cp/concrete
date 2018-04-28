@@ -2,23 +2,20 @@ package concrete.heuristic.variable
 
 import java.util.EventObject
 
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete._
 
 import scala.collection.mutable.ArrayBuffer
 
 abstract class ScoredVariableHeuristic extends VariableHeuristic with LazyLogging {
-  private val poolSet = pool.toSet
+  private val poolSet = BitVector(pool.map(_.id))
 
   def select(state: ProblemState, i: Seq[Variable]): Seq[Variable] = {
-    selectTied(i.view.filter(poolSet), state)
-  }
-
-  def selectTied(i: Traversable[Variable], state: ProblemState): Seq[Variable] = {
     var bs = Double.NegativeInfinity
     val candidates = new ArrayBuffer[Variable]()
 
-    for (current <- i) {
+    for (current <- i if poolSet(current.id)) {
       val s = score(current, state.dom(current), state)
       if (s >= bs) {
         if (s > bs) {

@@ -1,8 +1,9 @@
 package concrete.constraint.semantic
 
 
-import concrete.constraint.{Constraint, ConstraintComparator, Residues, TupleEnumerator}
-import concrete.{BooleanDomain, IntDomain, Problem, Variable}
+import concrete.constraint._
+import concrete._
+import concrete.util.Interval
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
@@ -31,6 +32,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks {
     }
   }
 
+  private val itvDom = for (lb <- Gen.choose(-100, 100); ub <- Gen.choose(lb, 100)) yield Interval(lb, ub)
 
   it should "find allowed tuple" in {
     val r = new Variable("r", IntDomain.ofInterval(0, 3))
@@ -46,5 +48,27 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks {
 
     tuple(2) should be <= 1
 
+  }
+
+  "MulBC" should "filter the same as enumerators" in {
+
+    forAll(itvDom, itvDom, itvDom) { (x: Interval, y: Interval, z: Interval) =>
+      val vx = new Variable("x", IntDomain.ofInterval(x))
+      val vy = new Variable("y", IntDomain.ofInterval(y))
+      val vz = new Variable("z", IntDomain.ofInterval(z))
+
+      ConstraintComparator.compareSubset(
+        Array(vx, vy, vz),
+        new MulBC(vx, vy, vz),
+        new Constraint(Array(vx, vy, vz)) with BoundResidues with TupleEnumerator {
+          def check(t: Array[Int]): Boolean = t(0) == t(1) * t(2)
+
+          override def init(ps: ProblemState): Outcome = ps
+        })
+      //
+      //      val Revised(mod2, _, _) = c2.revise(mod)
+      //      forAll(mod zip mod2) { case (m1, m2) => m1 should be theSameInstanceAs m2 }
+      //      println(s"$domains $mod $mod2")
+    }
   }
 }

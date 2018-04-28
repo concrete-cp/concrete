@@ -69,8 +69,8 @@ final class AllDifferent2C(scope: Array[Variable], val except: Set[Int] = Set())
           if (i != head) {
             val v = scope(i)
             val od = state.dom(v)
-            if (od.present(value)) {
-              val nd = od.remove(value)
+            if (od(value)) {
+              val nd = od - value
 
               if (od ne nd) {
                 if (nd.isEmpty) return Contradiction(v)

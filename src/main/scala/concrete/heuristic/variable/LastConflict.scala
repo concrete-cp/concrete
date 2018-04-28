@@ -5,14 +5,14 @@ import java.util.EventObject
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete.heuristic.{Assign, BadDecision}
-import concrete.{MAC, Outcome, ProblemState, Variable}
+import concrete._
 
 import scala.collection.mutable
 
-class LastConflict(val pool: Seq[Variable]) extends VariableHeuristic with LazyLogging {
-  val K = 2
-  val testingSet = new mutable.HashSet[Variable]()
-  var candidate: Option[Variable] = None
+class LastConflict(pm: ParameterManager, val pool: Seq[Variable]) extends VariableHeuristic with LazyLogging {
+  private val K: Int = pm.getOrElse("lastconflict.size", 1)
+  private val testingSet = new mutable.HashSet[Variable]()
+  private var candidate: Option[Variable] = None
 
   override def select(state: ProblemState, candidates: Seq[Variable]): Seq[Variable] = {
     logger.info(s"Testing set: $testingSet, candidate: $candidate")
@@ -46,4 +46,6 @@ class LastConflict(val pool: Seq[Variable]) extends VariableHeuristic with LazyL
     }
     state
   }
+
+  override def toString: String = s"lc-$K"
 }

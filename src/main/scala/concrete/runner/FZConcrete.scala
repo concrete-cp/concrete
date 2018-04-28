@@ -8,6 +8,7 @@ import concrete._
 import concrete.generator.FailedGenerationException
 import concrete.generator.cspompatterns.FZPatterns
 import concrete.heuristic._
+import concrete.heuristic.branch.{BranchHeuristic, IntervalBranch, RevSplit, Split}
 import concrete.heuristic.value._
 import concrete.heuristic.variable._
 import cspom.CSPOM.seq2CSPOMSeq
@@ -91,7 +92,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
-  override def outputCSPOM(cspom: ExpressionMap, sol: Map[String, Any], obj: Option[Any]): String = {
+  override def outputCSPOM(cspom: ExpressionMap, sol: CSPOMSolution, obj: Option[Variable]): String = {
     val out: Iterable[String] = outputVars.map {
       n => s"$n = ${bool2int(cspom, n, sol)} ;"
     } ++ outputArrays.map {
@@ -228,11 +229,11 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       val FZAnnotation(assignmentannotation, _) = aa
 
       val valh: BranchHeuristic = assignmentannotation match {
-        case "indomain" => new Lexico()
-        case "indomain_min" => new Lexico()
-        case "indomain_max" => new RevLexico()
-        case "indomain_median" => new MedValue()
-        case "indomain_random" => new RandomValue(rand)
+        case "indomain" => new ValueHeuristic()
+        case "indomain_min" => new ValueHeuristic()
+        case "indomain_max" => new ValueHeuristic(new RevLexico())
+        case "indomain_median" => new ValueHeuristic(new MedValue())
+        case "indomain_random" => new ValueHeuristic(new RandomValue(rand))
         case "indomain_split" => new Split()
         case "indomain_reverse_split" => new RevSplit()
         case "indomain_interval" => new IntervalBranch()

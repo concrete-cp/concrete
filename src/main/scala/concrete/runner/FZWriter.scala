@@ -17,7 +17,7 @@ class FZWriter(val params: ParameterManager, val problem: String, val stats: Sta
 
 
 
-  def printSolution(sol: String, obj: Option[Any]) {
+  def printSolution(sol: String, obj: Seq[(String, Any)]) {
     Console.println(sol)
     for (o <- obj) {
       Console.println("% objective = " + o)

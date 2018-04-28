@@ -10,7 +10,7 @@ final class SumAC(
     val skipIntervals: Boolean = true) extends Linear(constant, factors, scope, mode) with Residues with TupleEnumerator with BCCompanion {
 
   override def advise(ps: ProblemState, event: Event, i: Int): Int = {
-    if (skip(ps)) -1 else super[TupleEnumerator].advise(ps, event, i)
+    if (skip(ps)) -1 else advise(ps, i)
   }
 
   override def sizeThreshold: Int = Int.MaxValue

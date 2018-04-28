@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
 import cspom.compiler.{ConstraintCompiler, VariableCompiler}
-import cspom.util.{Infinitable, IntInterval, RangeSet}
+import cspom.util.{Finite, Infinitable, IntInterval, RangeSet}
 import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.{IntExpression, SimpleExpression}
 
@@ -17,7 +17,7 @@ object ModDomains extends VariableCompiler('mod) {
       val ii1 = IntExpression.coerce(i1)
 
       try {
-        val ub = ii1.abs.upperBound
+        val ub = ii1.abs.upperBound - Finite(1)
         val result: RangeSet[Infinitable] = RangeSet(IntInterval(-ub, ub))
         Seq(
           r -> ConstraintCompiler.reduceDomain(ir, result))

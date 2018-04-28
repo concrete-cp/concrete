@@ -118,7 +118,7 @@ object CSPOMDriver {
   }
 
   implicit class CSPOMSeqOperations[+A](e: CSPOMSeq[A]) {
-    def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) =
+    def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM): SimpleExpression[_] =
       problem.defineFree(r => CSPOMConstraint(r)('element)(e, idx))
 
     def cmin(implicit problem: CSPOM): SimpleExpression[A] =
@@ -129,12 +129,12 @@ object CSPOMDriver {
       problem.define(new FreeVariable().asInstanceOf[SimpleExpression[A]])(
         r => CSPOMConstraint(r)('max)(e: _*))
 
-    def <=[B >: A](that: CSPOMSeq[B])(implicit problem: CSPOM) = {
+    def <=[B >: A](that: CSPOMSeq[B])(implicit problem: CSPOM): SimpleExpression[Boolean] = {
       require(e.size == that.size)
       problem.defineBool(r => CSPOMConstraint(r)('lexleq)(e, that))
     }
 
-    def contains[B >: A](v: SimpleExpression[B])(implicit problem: CSPOM) =
+    def contains[B >: A](v: SimpleExpression[B])(implicit problem: CSPOM): SimpleExpression[Boolean] =
       problem.defineBool(r => CSPOMConstraint(r)('in)(v, e))
   }
 
@@ -155,8 +155,9 @@ object CSPOMDriver {
 
     def +(other: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] = {
       problem.defineInt(r =>
-        CSPOMConstraint('sum)(Seq(1, 1, -1), Seq(e, other, r), CSPOMConstant(0)) withParam
-          ("mode" -> "eq"))
+        linear(Seq(e, other, r), Seq(1, 1, -1), "eq", 0))
+//        CSPOMConstraint('sum)(Seq(1, 1, -1), Seq(e, other, r), CSPOMConstant(0)) withParam
+//          ("mode" -> "eq"))
     }
 
     def -(other: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] = {

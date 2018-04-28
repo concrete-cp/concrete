@@ -1,6 +1,6 @@
 package concrete
 
-import bitvectors.{BitVector, BitVectorBuilder}
+import bitvectors.BitVector
 import concrete.util.Interval
 import cspom.util._
 
@@ -32,30 +32,13 @@ object IntDomain {
         builder ++= asSet
         new TreeSetDomain(builder.result())
       } else {
-        val bvb = new BitVectorBuilder(ub - offset + 1)
+        val bvb = new java.util.BitSet(ub - offset + 1)
         for (FiniteIntInterval(l, u) <- d.contents) {
           bvb.set(l - offset, u - offset + 1)
         }
-        new BitVectorDomain(offset, bvb.result(), size)
+        new BitVectorDomain(offset, BitVector(bvb), size)
       }
     }
-//
-//    offset - ub - 1 match {
-//      case 0 => EmptyIntDomain
-//      case 1 => Singleton(offset)
-//      case _ =>
-//        if (d.isConvex) {
-//          ofInterval()
-//        }
-//        val bvb = new BitVectorBuilder(ub - offset + 1)
-//        var s = 0
-//        for (FiniteIntInterval(l, u) <- d.ranges) {
-//          bvb.set(l - offset, u - offset + 1)
-//          s += u - l + 1
-//        }
-//        val bv = bvb.result()
-//        ofBitVector(offset, bv, s)
-//    }
   }
 
   def apply(r: Range): IntDomain =
@@ -63,7 +46,9 @@ object IntDomain {
       ofInterval(r.start, r.last)
     } else {
       val offset = r.start
-      ofBitVector(offset, BitVector(0 to r.end - offset by r.step), r.size)
+      val builder = new IntDomainBuilder(offset)
+      for (v <- r) builder += v - offset
+      builder.result(r.size)
     }
 
   def ofBitVector(offset: Int, bv: BitVector, s: Int): IntDomain = s match {
@@ -113,9 +98,9 @@ object IntDomain {
         } else if (s.toDouble / span < TREE_SET_THRESHOLD) {
           new TreeSetDomain(set)
         } else {
-          val bvb = new BitVectorBuilder(span)
-          for (i <- set) bvb += i - lb
-          new BitVectorDomain(lb, bvb.result(), s)
+          val bvb = new java.util.BitSet(span)
+          for (i <- set) bvb.set(i - lb)
+          new BitVectorDomain(lb, BitVector(bvb), s)
         }
     }
   }
@@ -125,7 +110,7 @@ object IntDomain {
 abstract class IntDomain extends Domain {
 
   final def assign(value: Int): Singleton = {
-    assert(present(value), s"tried to assign to $value which is not present")
+    assert(contains(value), s"tried to assign to $value which is not present")
     assert(!isAssigned, s"domain is already assigned to $value")
     //if (present(value)) 
     Singleton(value)

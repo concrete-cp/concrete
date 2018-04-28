@@ -37,7 +37,7 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
     mdd.findSupport(scope, 2, 4).value shouldBe Array(1, 3, 4)
     mdd.findSupport(scope, 2, 5) should contain oneOf(Array(1, 2, 5), Array(2, 3, 5))
 
-    scope(1) = scope(1).remove(2)
+    scope(1) -= 2
 
     mdd.findSupport(scope, 0, 0) shouldBe None
     mdd.findSupport(scope, 0, 1).value shouldBe Array(1, 3, 4)

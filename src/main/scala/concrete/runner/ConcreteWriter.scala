@@ -10,12 +10,12 @@ trait ConcreteWriter {
 
   def stats: StatisticsManager
 
-  def solution(solution: String, obj: Option[Any]): Unit = {
+  def solution(solution: String, obj: Seq[(String, Any)]): Unit = {
     lastSolution = Some(solution)
     printSolution(solution, obj)
   }
 
-  def printSolution(solution: String, obj: Option[Any]): Unit
+  def printSolution(solution: String, obj: Seq[(String, Any)]): Unit
 
   def error(e: Throwable): Unit
 

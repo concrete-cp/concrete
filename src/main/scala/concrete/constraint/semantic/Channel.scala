@@ -3,17 +3,16 @@ package constraint
 package semantic
 
 import bitvectors.BitVector
-import concrete.util.Boxed
 
 /**
   * Constraint x(i) = j <=> x(j) = i
   */
 final class Channel(x: Array[Variable], offset: Int) extends Constraint(x)
-  with StatefulConstraint[Boxed[BitVector]] {
+  with StatefulConstraint[BitVector] {
 
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = {
     val fx = problemState(this)
-    val card = fx.bv.cardinality
+    val card = fx.cardinality
     card * card
   }
 
@@ -28,12 +27,12 @@ final class Channel(x: Array[Variable], offset: Int) extends Constraint(x)
     ps.fold(x) { (ps, v) =>
       ps.shaveDom(v, offset, offset + x.length - 1)
     }
-      .updateState(this, Boxed(BitVector.filled(x.length)))
+      .updateState(this, BitVector.filled(x.length))
 
   def revise(problemState: ProblemState, mod: BitVector): Outcome = {
     //println(s"$mod of ${toString(problemState)}")
     // fx contains "free variables"
-    var fx = problemState(this).bv
+    var fx = problemState(this)
 
     // Check whether variables have been assigned
     problemState.fold(mod) { (ps, p) =>
@@ -49,14 +48,14 @@ final class Channel(x: Array[Variable], offset: Int) extends Constraint(x)
       }
     }
       .fold(fx) { (ps, p) =>
-        ps.filterDom(x(p))(v => ps.dom(x(v - offset)).present(p + offset))
+        ps.filterDom(x(p))(v => ps.dom(x(v - offset)).contains(p + offset))
       }
-      .updateState(this, Boxed(fx))
+      .updateState(this, fx)
 
   }
 
   override def toString(ps: ProblemState): String = {
-    s"channel $offset/${x.map(ps.dom(_).toString).mkString(", ")} fx = ${ps(this).bv}"
+    s"channel $offset/${x.map(ps.dom(_).toString).mkString(", ")} fx = ${ps(this)}"
   }
 
   def simpleEvaluation: Int = 2

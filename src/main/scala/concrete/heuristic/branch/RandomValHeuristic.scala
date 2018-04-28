@@ -1,17 +1,17 @@
-package concrete
-package heuristic
-package value
+package concrete.heuristic.branch
 
 import java.util.EventObject
 
 import com.typesafe.scalalogging.LazyLogging
+import concrete._
+import concrete.heuristic.Decision
 
 import scala.util.Random
 
 class RandomValHeuristic(heuristics: Seq[BranchHeuristic], factors: Seq[Double], rand: Random)
   extends BranchHeuristic with LazyLogging {
 
-  def branch(v: Variable, dom: Domain, ps: ProblemState): (Decision, Decision) = {
+  def branch(v: Variable, dom: Domain, ps: ProblemState): Either[Outcome, (ProblemState, Decision, Decision)] = {
     var totalFact: Double = 0.0
     val r = rand.nextDouble()
 
@@ -28,7 +28,7 @@ class RandomValHeuristic(heuristics: Seq[BranchHeuristic], factors: Seq[Double],
     heuristics.foldLeft(state)((ps, h) => h.compute(s, ps))
   }
 
-  override def shouldRestart: Boolean = heuristics.size > 1 || heuristics.exists(_.shouldRestart)
+  override def shouldRestart: Boolean = heuristics.lengthCompare(1) > 0 || heuristics.exists(_.shouldRestart)
 
   override def toString: String = s"Random ${(heuristics, factors).zipped.mkString(", ")}"
 

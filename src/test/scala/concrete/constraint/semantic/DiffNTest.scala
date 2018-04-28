@@ -3,7 +3,6 @@ package concrete.constraint.semantic
 import com.typesafe.scalalogging.LazyLogging
 import concrete._
 import concrete.constraint.AdviseCount
-import concrete.heuristic.value.Lexico
 import cspom._
 import cspom.variable.IntVariable
 import org.scalatest.{FlatSpec, Matchers, OptionValues}
@@ -54,29 +53,30 @@ class DiffNTest extends FlatSpec with Matchers with OptionValues with LazyLoggin
     import CSPOMDriver._
 
     val n = 20
-    val dxs = IndexedSeq.fill(n)(1 + r.nextInt(5))
-    val dys = IndexedSeq.fill(n)(1 + r.nextInt(5))
+    val sizes = IndexedSeq.fill(n)(
+      Seq(1 + r.nextInt(5), 1 + r.nextInt(5)))
+
     val cspom = CSPOM { implicit problem =>
 
-      val maxX = IntVariable(0 until 100) as "maxX"
-      val maxY = IntVariable(0 until 100) as "maxY"
+      val max = Seq(IntVariable(0 until 100) as "maxX",
+       IntVariable(0 until 100) as "maxY")
 
-      ctr(maxX === maxY)
+      ctr(max(0) === max(1))
       // val obj = (maxX * maxY) as "obj"
 
-      val xs = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"x$i")
-      val ys = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"y$i")
+      val coordinates = Seq.tabulate(n)(i =>
+        Seq(IntVariable(0 until 100) as s"x$i",
+          IntVariable(0 until 100) as s"y$i"))
 
-      for (i <- 0 until n) {
-        ctr(xs(i) + dxs(i) <= maxX)
-        ctr(ys(i) + dys(i) <= maxY)
+      for (i <- 0 until n; dim <- 0 until 2) {
+        ctr(coordinates(i)(dim) + sizes(i)(dim) <= max(dim))
       }
 
-      ctr(CSPOMConstraint('diffn_cumulative)(xs, ys, dxs, dys))
+      ctr(CSPOMConstraint('diffn)(coordinates.map(seq2CSPOMSeq(_)), sizes.map(seq2CSPOMSeq(_))))
 
-      goal(CSPOMGoal.Minimize(maxX))
+      goal(CSPOMGoal.Minimize(max(0)))
     }
-    val pm = new ParameterManager().updated("heuristic.value", classOf[Lexico])
+    val pm = new ParameterManager().updated("heuristic.value", Seq())
     val solver = Solver(cspom, pm).get
 
     val stats = new StatisticsManager

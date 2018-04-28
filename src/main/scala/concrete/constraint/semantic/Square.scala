@@ -3,9 +3,10 @@ package constraint
 package semantic
 
 import bitvectors.BitVector
+import concrete.util.Interval
 
 final class SquareBC(val x: Variable, val y: Variable)
-  extends Constraint(Array(x, y)) with BC {
+  extends Constraint(Array(x, y)) with BC with ItvArrayFixPoint {
 
   val simpleEvaluation = 2
 
@@ -20,9 +21,13 @@ final class SquareBC(val x: Variable, val y: Variable)
 
   def check(t: Array[Int]): Boolean = t(0) == t(1) * t(1)
 
-  override def shave(ps: ProblemState): Outcome = {
-    ps.shaveDom(x, ps.span(y).sq)
-      .shaveDom(y, ps.span(x).sqrt)
+  private def reviseX(itv: Array[Domain]): Option[Interval] = Some(itv(1).span.sq)
+  private def reviseY(itv: Array[Domain]): Option[Interval] = Some(itv(0).span.sqrt)
+
+  val ops = Array(reviseX(_), reviseY(_))
+
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
+    fixPoint(ps)
   }
 
   override def toString(ps: ProblemState) = s"${x.toString(ps)} =BC= ${y.toString(ps)}²"
@@ -65,12 +70,12 @@ final class SquareAC(val x: Variable, val y: Variable)
 
   private def consistentX(xValue: Int, yDomain: Domain) = {
     Square.sqrt(xValue).exists { root =>
-      yDomain.present(root) || yDomain.present(-root)
+      yDomain(root) || yDomain(-root)
     }
   }
 
   private def consistentY(yValue: Int, xDomain: Domain) = {
-    math.abs(yValue) < Square.MAX_SQUARE && xDomain.present(yValue * yValue)
+    math.abs(yValue) < Square.MAX_SQUARE && xDomain(yValue * yValue)
   }
 
   override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {

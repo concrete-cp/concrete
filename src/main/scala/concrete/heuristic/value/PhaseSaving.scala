@@ -2,33 +2,35 @@ package concrete
 package heuristic
 package value
 
-final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
+import java.util.EventObject
 
-  private var previous: Array[Int] = _
+import scala.collection.mutable
 
-  def this(params: ParameterManager) = this {
-    val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-      params.classInPackage("phasesaving.heuristic", "concrete.heuristic.value", classOf[Lexico])
-    valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
-  }
+final class PhaseSaving() extends ValueSelector {
+
+  private val previous = new mutable.HashMap[Variable, Int]()
 
   override def toString = "phase-saving"
 
-  def compute(s: MAC, ps: ProblemState): ProblemState = {
-    previous = s.problem.variables.map(v => heuristic.selectIndex(v, v.initDomain))
-    heuristic.compute(s, ps)
-  }
+  def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def selectIndex(variable: Variable, domain: Domain): Int = {
-    val value = previous(variable.id)
-    if (domain.present(value)) {
-      value
-    } else {
-      val selected = heuristic.selectIndex(variable, domain)
-      previous(variable.id) = selected
-      selected
-    }
+  override def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) = {
+    val selection = previous.get(variable)
+      .filter(candidates)
+      .map(Singleton(_))
+      .getOrElse(candidates)
+
+    (ps, selection)
   }
 
   def shouldRestart = false
+
+  override def event[S <: Outcome](e: EventObject, ps: S): S = {
+    e match {
+      case ae: AssignmentEvent =>
+        for (e: (Variable, Int) <- (ae.variable, ae.value).zipped) previous += e
+      case _ =>
+    }
+    ps
+  }
 }

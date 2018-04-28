@@ -41,6 +41,8 @@ class IntRectangle(
   }
 
   def mbr: Rectangle = asRectangle
+
+  override def isDoublePrecision: Boolean = false
 }
 
 case class RectangleBounds(minDx: Int, minDy: Int, minX: Int, maxX: Int, minY: Int, maxY: Int) extends Ordered[RectangleBounds] {
@@ -69,10 +71,11 @@ trait DiffNChecker {
   def check(tuple: Array[Int]): Boolean = {
     val Seq(x, y, dx, dy) = tuple.grouped(nbRectangles).toSeq
 
-    (0 until nbRectangles).combinations(2).forall {
-      case Seq(i, j) =>
+    (0 until nbRectangles).forall { i =>
+      (0 until i).forall { j =>
         x(i) + dx(i) <= x(j) || y(i) + dy(i) <= y(j) ||
           x(j) + dx(j) <= x(i) || y(j) + dy(j) <= y(i)
+      }
     }
   }
 
@@ -131,7 +134,7 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
 }
 
 class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys: Array[Variable]) extends Constraint(xs ++ ys ++ dxs ++ dys)
-  with StatefulConstraint[(RTree[Int, IntRectangle], Vector[Option[(Int, IntRectangle)]])] with BC with DiffNChecker {
+  with StatefulConstraint[(RTree[Int, IntRectangle], Vector[Option[(Int, IntRectangle)]])] with BC with DiffNChecker with FixPoint {
   assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
 
   def advise(problemState: ProblemState, pos: Int): Int = nbRectangles

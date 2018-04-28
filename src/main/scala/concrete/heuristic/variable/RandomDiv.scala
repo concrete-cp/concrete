@@ -8,8 +8,10 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
 
-class RandomDiv(val pool: Seq[Variable], factor: Double, rand: Random)
+class RandomDiv(val pm: ParameterManager, val pool: Seq[Variable], rand: Random)
   extends VariableHeuristic with LazyLogging {
+
+  private val factor: Double = pm.getOrElse("variable.randomDiv", 0.1)
 
   private val poolSet: Set[Variable] = pool.toSet
 

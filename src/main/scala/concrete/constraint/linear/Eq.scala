@@ -6,6 +6,7 @@ import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.extension.BinaryExt
 import concrete.generator.ACBC
+import concrete.util.Interval
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
@@ -32,7 +33,7 @@ final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constr
 
     ps.dom(r) match {
       case BooleanDomain.UNKNOWNBoolean =>
-        if (dx.present(y)) {
+        if (dx(y)) {
           if (dx.isAssigned) {
             // Necessarily grounded to the same value since not disjoint
             ps.updateDomNonEmpty(r, BooleanDomain.TRUE)
@@ -180,9 +181,9 @@ final class EqACNeg private[linear](
     val yDom = ps.dom(y)
     val r = (xDom.span + yDom.span).contains(b) && (
       if (xDom.size < yDom.size) {
-        xDom.exists(xv => yDom.present(b - xv))
+        xDom.exists(xv => yDom(b - xv))
       } else {
-        yDom.exists(yv => xDom.present(b - yv))
+        yDom.exists(yv => xDom(b - yv))
       })
 
     if (r) ps else Contradiction(scope)
@@ -190,10 +191,10 @@ final class EqACNeg private[linear](
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val domY = ps.dom(y)
-    ps.filterDom(x)(xv => domY.present(b - xv))
+    ps.filterDom(x)(xv => domY(b - xv))
       .andThen { ps =>
         val domX = ps.dom(x)
-        ps.filterDom(y)(yv => domX.present(b - yv))
+        ps.filterDom(y)(yv => domX(b - yv))
       }
 
   }
@@ -209,9 +210,10 @@ final class EqACNeg private[linear](
   */
 
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
-  extends Constraint(Array(x, y)) with BC with LazyLogging {
+  extends Constraint(Array(x, y)) with BC with LazyLogging with ItvArrayFixPoint {
 
   val simpleEvaluation = 2
+  val ops = if (neg) Array(reviseXNeg(_), reviseYNeg(_)) else Array(reviseXPos(_), reviseYPos(_))
 
   def init(ps: ProblemState): ProblemState = ps
 
@@ -226,20 +228,8 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   def check(t: Array[Int]): Boolean = (if (neg) -t(0) else t(0)) + b == t(1)
 
-  override def shave(ps: ProblemState): Outcome = {
-    if (neg) {
-      // -x + b = y <=> x = -y + b
-      ps.shaveDom(x, -ps.span(y) + b)
-        .shaveDom(y, -ps.span(x) + b)
-
-    } else {
-      // x + b = y <=> x = y - b
-      ps.shaveDom(x, ps.span(y) - b)
-        .shaveDom(y, ps.span(x) + b)
-
-    }
-
-  }
+  override def revise(ps: ProblemState, mod: BitVector): Outcome =
+    fixPoint(ps)
 
   override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     val xSpan = ps.span(x)
@@ -254,4 +244,14 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   } =BC= ${y.toString(ps)}"
 
   def advise(ps: ProblemState, p: Int) = 3
+
+  // x + b = y <=> x = y - b
+  private def reviseXPos(doms: Array[Domain]): Option[Interval] = Some(doms(1).span - b)
+
+  private def reviseYPos(doms: Array[Domain]): Option[Interval] = Some(doms(0).span + b)
+
+  // -x + b = y <=> x = -y + b
+  private def reviseXNeg(doms: Array[Domain]): Option[Interval] = Some(-doms(1).span + b)
+
+  private def reviseYNeg(doms: Array[Domain]): Option[Interval] = Some(-doms(0).span + b)
 }

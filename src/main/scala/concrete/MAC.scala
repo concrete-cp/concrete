@@ -28,23 +28,23 @@ import concrete.constraint.semantic.NoGoods
 import concrete.filter.{ACC, Filter}
 import concrete.heuristic._
 import concrete.heuristic.restart.{Geometric, NoRestarts, RestartStrategy}
-import concrete.heuristic.value.Lexico
 import concrete.util.SparseSeq
 import cspom.{Statistic, StatisticsManager}
 import org.scalameter.{Key, MeasureBuilder, Quantity}
 
 import scala.annotation.{elidable, tailrec}
+import scala.collection.mutable
 import scala.util.{Random, Try}
 
 object MAC {
-  def apply(prob: Problem, params: ParameterManager): Try[MAC] = {
+  def apply(prob: Problem, decisionVariables: Seq[Variable], params: ParameterManager): Try[MAC] = {
 
     val rand = {
       val seed = params.getOrElse("randomseed", 0L) + params.getOrElse("iteration", 0)
       new Random(seed)
     }
 
-    for (h <- Heuristic.default(params, prob.variables, rand)) yield {
+    for (h <- Heuristic.default(params, decisionVariables, rand)) yield {
       new MAC(prob, params, h)
     }
   }
@@ -52,8 +52,6 @@ object MAC {
 
 final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristic) extends Solver(prob, params) with LazyLogging {
 
-
-  private lazy val finishAssignments = new Lexico()
   val filterClass: Class[_ <: Filter] = params.getOrElse("mac.filter", classOf[ACC])
   val measureMem: Boolean = params.getOrElse("mac.measureMem", false)
   val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params)
@@ -103,30 +101,40 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       ngCons.clearInactive()
       var positive: List[Assign] = Nil
 
+
       if (superNG) {
         if (history.nonEmpty) {
+
+          val variables = new mutable.HashSet[Variable]()
+          variables ++= problem.variables
+
           for ((h, Seq(s1: ProblemState, s2: ProblemState)) <- (history.reverse.tail, stack.reverse.sliding(2).toSeq).zipped) {
             var i = 0
             //println("new level")
             //println(h)
-            val decision = h.last match {
-              case a: Assign => a
-            }
-            positive ::= decision
-            //println(decision)
-            for (v <- problem.variables) {
-              val d1 = s1.dom(v)
-              val d2 = s2.dom(v)
-              if (d1 ne d2) {
-                if (ngCons.addNoGood(positive, v, d2).isDefined) {
-                  i += 1
-                } else {
-                  return
+            h.last match {
+              case decision: Assign =>
+                positive ::= decision
+                variables -= decision.variable
+                //println(decision)
+                for (v <- variables) {
+                  val d1 = s1.dom(v)
+                  val d2 = s2.dom(v)
+                  if (d1 ne d2) {
+                    if (ngCons.addNoGood(positive, v, d2).isDefined) {
+                      i += 1
+                    } else {
+                      return
+                    }
+                    //println(s"$v: $d1 -> $d2")
+                  }
                 }
-                //println(s"$v: $d1 -> $d2")
-              }
+                logger.info(s"Learned $i nogoods of size ${positive.size + 1}")
+
+              case Continue =>
             }
-            logger.info(s"Learned $i nogoods of size ${positive.size + 1}")
+
+
           }
         }
 
@@ -154,7 +162,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
            stack: Stack,
            maxBacktracks: Option[Int], nbAssignments: Int): (SolverResult, Stack, Option[Int], Int) = {
 
-
     val filtering = stack.current.andThen(s => filter.reduceAfter(modified, optimConstraint, s))
 
     filtering match {
@@ -163,6 +170,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
         if (stack.noRightStack) {
           (UNSAT, Stack(c), maxBacktracks, nbAssignments)
         } else {
+          // Backtrack
           for (level <- stack.decisionHistory.headOption; decision <- level.lastOption) {
             heuristic.event(BadDecision(decision), c)
           }
@@ -183,37 +191,42 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
         (RESTART, stack.copy(current = fs), maxBacktracks, nbAssignments)
 
       case fs: ProblemState =>
-        val futureVariables = fs.getData[Seq[Variable]](this)
+        val futureVariables = fs.getData[SparseSeq[Variable]](this)
 
-        val (assigned, candidates) = futureVariables.partition(v => fs.dom(v).isAssigned)
+        // println(futureVariables.map(_.toString(fs)))
+
+        val (candidates, assigned) = futureVariables.partitionLeft(v => !fs.dom(v).isAssigned)
 
         val filteredState =
-          heuristic.event(AssignmentEvent(assigned: _*), fs).updateData(this, candidates)
+          heuristic.event(AssignmentEvent(assigned, assigned.map(fs.dom(_).head)), fs).updateData(this, candidates)
 
-        heuristic.branch(filteredState, candidates)
-          .orElse {
+        val decisions = heuristic.branch(filteredState, candidates)
+
+        decisions match {
+          case Left(c: Contradiction) => mac(Seq(), stack.copy(current = c), maxBacktracks, nbAssignments)
+          case Left(s: ProblemState) =>
             // Find unassigned variables
+            problem.variables.find(v => !s.dom(v).isAssigned) match {
+              case Some(variable) =>
+                val d = s.dom(variable)
+                logger.info(s"Unassigned variable $variable")
+                val b1 = Assign(variable, d.head)
+                val b2 =  Remove(variable, d.head)
+                logger.info(s"${stack.size}: ${b1.toString(s)}")
 
-            problem.variables.find(v => !filteredState.dom(v).isAssigned)
-              .map { v =>
-                logger.info(s"Assigning unassigned variable $v")
-                finishAssignments.branch(v, filteredState.dom(v), filteredState)
-              }
-          } match {
-          case None =>
-            require(problem.variables.forall(v => filteredState.dom(v).isAssigned),
-              s"Unassigned variables in:\n${problem.toString(filteredState)}")
+                val (newStack, modified) = stack.push(s, b1, b2)
+                mac(modified, newStack, maxBacktracks, nbAssignments + 1)
 
-            controlSolution(filteredState)
+              case None =>
+                controlSolution(s)
+                (SAT(extractSolution(s)), stack.copy(current = s), maxBacktracks, nbAssignments)
+            }
+          case Right((s, b1, b2)) =>
+            logger.info(s"${stack.size}: ${b1.toString(s)}")
 
-            (SAT(extractSolution(filteredState)), stack.copy(current = filteredState), maxBacktracks, nbAssignments)
-          case Some((b1, b2)) =>
-            logger.info(s"${stack.size}: ${b1.toString(filteredState)}")
-
-            val (newStack, modified) = stack.push(filteredState, b1, b2)
+            val (newStack, modified) = stack.push(s, b1, b2)
             mac(modified, newStack, maxBacktracks, nbAssignments + 1)
         }
-
 
     }
   }
@@ -303,6 +316,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   def nextSolution(): SolverResult = try {
 
     logger.info(heuristic.toString)
+    logger.info(s"nextSolution with restart = $restart, firstRun = $firstRun, goal = ${problem.goal}, currentStack = $currentStack")
 
     val sol = if (restart) {
       logger.info("RESTART")
@@ -358,6 +372,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   }
 
   override def toString: String = "maintain generalized arc consistency - iterative"
+
 
   @elidable(elidable.ASSERTION)
   private def controlSolution(ps: ProblemState): Unit = {

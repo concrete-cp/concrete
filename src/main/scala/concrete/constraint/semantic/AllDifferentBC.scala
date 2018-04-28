@@ -1,15 +1,12 @@
 package concrete.constraint.semantic
 
-;
-
 import bitvectors.BitVector
-import concrete.{Contradiction, Outcome, ProblemState, Variable}
-import concrete.constraint.{BC, Constraint}
-import concrete.util.Interval
+import concrete._
+import concrete.constraint.{BC, Constraint, FixPoint}
 
 import scala.annotation.tailrec
 
-final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
+final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker with FixPoint {
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
@@ -19,7 +16,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
   private val minsorted = intervals.clone
   private val maxsorted = intervals.clone
   val simpleEvaluation = 3
-  private val doms: Array[Interval] = new Array(arity)
+  private val doms: Array[Domain] = new Array(arity)
   private val eval: Int = {
     (31 - Integer.numberOfLeadingZeros(arity)) * arity
   }
@@ -29,12 +26,10 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
   def init(ps: ProblemState): ProblemState = ps
 
-  override def shave(state: ProblemState): Outcome = throw new IllegalStateException()
-
   override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     var i = arity - 1
     while (i >= 0) {
-      doms(i) = ps.span(scope(i))
+      doms(i) = ps.dom(scope(i))
       i -= 1
     }
 
@@ -53,7 +48,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     array(j) = tmp
   }
 
-  private def qSortMax(doms: Array[Interval], array: Array[HInterval], from: Int, to: Int) {
+  private def qSortMax(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int) {
     if (from < to) {
       val pivotIndex = (from + to) / 2
       val pivot = array(pivotIndex).ub(doms)
@@ -77,7 +72,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     }
   }
 
-  private def qSortMin(doms: Array[Interval], array: Array[HInterval], from: Int, to: Int) {
+  private def qSortMin(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int) {
     if (from < to) {
       val pivotIndex = (from + to) / 2
       val pivot = array(pivotIndex).lb(doms)
@@ -101,7 +96,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     }
   }
 
-  private def sortIt(doms: Array[Interval]) {
+  private def sortIt(doms: Array[Domain]) {
     qSortMin(doms, minsorted, 0, minsorted.length - 1)
     qSortMax(doms, maxsorted, 0, maxsorted.length - 1)
 
@@ -120,8 +115,11 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         }
         minsorted(i).minrank = nb
 
-        if (i < arity - 1) proceed(minsorted(i + 1).lb(doms), max, i + 1, j)
-        else proceed(min, max, i + 1, j)
+        if (i < arity - 1) {
+          proceed(minsorted(i + 1).lb(doms), max, i + 1, j)
+        } else {
+          proceed(min, max, i + 1, j)
+        }
       } else {
         if (max != last) {
           nb += 1
@@ -161,7 +159,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     if (tab(i) > i) pathmax(tab, tab(i))
     else i
 
-  private def filterLower(ps: ProblemState, doms: Array[Interval]): Outcome = {
+  private def filterLower(ps: ProblemState, doms: Array[Domain]): Outcome = {
 
     var mod = ps
 
@@ -198,7 +196,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         val w = pathmax(h, h(x))
         val p = maxsorted(i).p
         val dom = mod.dom(scope(p)).removeUntil(bounds(w))
-        doms(p) = dom.span
+        doms(p) = dom
         mod = mod.updateDomNonEmpty(scope(p), dom)
         pathset(h, x, w, w)
       }
@@ -212,7 +210,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     mod
   }
 
-  private def filterUpper(ps: ProblemState, doms: Array[Interval]): Outcome = {
+  private def filterUpper(ps: ProblemState, doms: Array[Domain]): Outcome = {
     var mod = ps
     var i = nbBounds
     while (i >= 0) {
@@ -248,7 +246,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         if (dom.isEmpty) {
           return Contradiction(Seq(scope(i)))
         } else {
-          doms(p) = dom.span
+          doms(p) = dom
           mod = mod.updateDomNonEmpty(scope(p), dom)
         }
         pathset(h, x, w, w)
@@ -268,8 +266,8 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
     def variable = scope(p)
 
-    def lb(doms: Array[Interval]): Int = doms(p).lb
+    def lb(doms: Array[Domain]): Int = doms(p).head
 
-    def ub(doms: Array[Interval]): Int = doms(p).ub
+    def ub(doms: Array[Domain]): Int = doms(p).last
   }
 }

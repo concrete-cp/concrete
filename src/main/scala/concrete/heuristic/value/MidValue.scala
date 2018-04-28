@@ -4,16 +4,16 @@ package value
 
 import cspom.UNSATException
 
-final class MidValue() extends ValueHeuristic {
+final class MidValue() extends ValueSelector {
 
   override def toString = "middle"
 
   def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def selectIndex(variable: Variable, domain: Domain): Int = {
-    val middle = (domain.head + domain.last) / 2
-    (domain.prevOption(middle), domain.nextOption(middle)) match {
-      case (None, None)    => throw new UNSATException(s"$domain is empty")
+  override def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) = {
+    val middle = (candidates.head + candidates.last) / 2
+    val actualmid = (candidates.prevOption(middle), candidates.nextOption(middle)) match {
+      case (None, None) => throw new UNSATException(s"$candidates is empty")
       case (Some(b), None) => b
       case (None, Some(a)) => a
       case (Some(b), Some(a)) =>
@@ -26,7 +26,7 @@ final class MidValue() extends ValueHeuristic {
           b
         }
     }
-
+    (ps, Singleton(actualmid))
   }
 
   def shouldRestart = false

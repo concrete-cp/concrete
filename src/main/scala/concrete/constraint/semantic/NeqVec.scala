@@ -63,7 +63,7 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
         } else {
           ps.dom(scope(i - size))
         }
-        if (dom2.present(value)) {
+        if (dom2(value)) {
           singleFreeVariable(ps, i + 1, single)
         } else {
           DISJ

@@ -100,15 +100,15 @@ final class ReifiedConstraint(
   }
 
   override def toString(ps: ProblemState) =
-    s"${controlVariable.toString(ps)} => ${constraint.toString(ps)}" // / != (${negativeConstraint.toString(ps)})";
+    s"${if (neg) "¬" else ""}${controlVariable.toString(ps)} => ${constraint.toString(ps)}" // / != (${negativeConstraint.toString(ps)})";
 
   override def check(t: Array[Int]): Boolean = {
-    t.last == 0 || constraint.check(t.dropRight(1))
+    t.last == (if (neg) 1 else 0) || constraint.check(t.dropRight(1))
   }
 
   //var controlRemovals = 0
 
-  override def toString = s"$controlVariable => $constraint"
+  override def toString = s"${if (neg) "¬" else ""}$controlVariable => $constraint"
 
   override def register(ac: AdviseCount): this.type = {
     constraint.register(ac)

@@ -4,12 +4,14 @@ import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.util.Interval
 
-import scala.collection.mutable.HashMap
+import scala.collection.mutable
 
 object Singleton {
-  private val cache = new HashMap[Int, Singleton]
+  private val cache = new mutable.HashMap[Int, Singleton]
 
-  def apply(v: Int): Singleton = cache.getOrElseUpdate(v, new Singleton(v))
+  def apply(v: Int): Singleton = {
+    cache.getOrElseUpdate(v, new Singleton(v))
+  }
 }
 
 final class Singleton private(val singleValue: Int) extends IntDomain with LazyLogging {
@@ -19,7 +21,9 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
   var requestedOffset: Int = _
   var requestedBV: BitVector = _
 
-  def size = 1
+  def spanOption = Some(span)
+
+  def length = 1
 
   override def head: Int = singleValue
 
@@ -50,9 +54,9 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     * index to test
     * @return true iff index is present
     */
-  def present(i: Int): Boolean = i == singleValue
+  def contains(i: Int): Boolean = i == singleValue
 
-  def remove(i: Int): IntDomain = {
+  def -(i: Int): IntDomain = {
     if (singleValue == i) EmptyIntDomain else this
   }
 
@@ -110,7 +114,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
 
   def &(d: Domain): Domain = d match {
     case bd: BooleanDomain => bd & this
-    case _ if d.present(singleValue) => this
+    case _ if d(singleValue) => this
     case _ => EmptyIntDomain
   }
 
@@ -145,13 +149,17 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
       requestedBV
     }
 
-  def apply(i: Int): Int = if (i == 0) singleValue else throw new IndexOutOfBoundsException
+  // override def apply(i: Int): Int = if (i == 0) singleValue else throw new IndexOutOfBoundsException
 
   //
   //  override def intersects(bv: BitVector, part: Int) = bv(value)
   def convex = true
 
   override def isEmpty = false
+
+  def keysIteratorFrom(start: Int): Iterator[Int] = {
+    if (start <= singleValue) iterator else Iterator.empty
+  }
 
   def iterator: Iterator[Int] = Iterator.single(singleValue)
 
@@ -162,7 +170,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
   def shift(o: Int): Singleton = if (o == 0) this else
     Singleton(singleValue + o)
 
-  def disjoint(d: Domain): Boolean = !d.present(singleValue)
+  def disjoint(d: Domain): Boolean = !d(singleValue)
 
-  def subsetOf(d: Domain): Boolean = d.present(singleValue)
+  def subsetOf(d: Domain): Boolean = d(singleValue)
 }

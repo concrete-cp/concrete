@@ -6,46 +6,27 @@ import java.util.EventObject
 
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.util.Random
-
-object BestValue {
-  def apply(params: ParameterManager, rand: Random): BranchHeuristic = {
-    val valueHeuristicClass: Class[_ <: BranchHeuristic] =
-      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[Lexico])
-
-    val fallback = BranchHeuristic(valueHeuristicClass, params, rand).get
-
-    val bestValue = new BestValue(fallback)
-
-    params.get[Double]("bestvalue.proba") match {
-      case Some(proba) => new RandomValHeuristic(Seq(bestValue, fallback), Seq(proba, 1.0 - proba), rand)
-      case None => bestValue
-    }
-  }
-}
-
-final class BestValue(fallback: BranchHeuristic) extends BranchHeuristic with LazyLogging {
+final class BestValue() extends ValueSelector with LazyLogging {
 
   private var best: Map[Variable, Int] = Map()
 
-  override def toString = s"best or $fallback"
+  override def toString = s"best-value"
 
   def compute(s: MAC, ps: ProblemState): ProblemState = {
-    require(s.problem.variables.zipWithIndex.forall { case (v, i) => v.id == i })
-
-    fallback.compute(s, ps)
+    assert(s.problem.variables.zipWithIndex.forall { case (v, i) => v.id == i })
+    ps
   }
 
-  def branch(variable: Variable, domain: Domain, ps: ProblemState): (Decision, Decision) = {
+  def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) = {
     best.get(variable)
-      .filter(domain.present)
+      .filter(candidates)
       .map { i =>
-        logger.info(s"assigning value from best solution $i")
-        assignBranch(ps, variable, i)
+        logger.info(s"value from best solution $i")
+        (ps, Singleton(i): Domain)
       }
       .getOrElse {
-        logger.info(s"not present in $variable $domain, fallback")
-        fallback.branch(variable, domain, ps)
+        logger.info(s"not present in $candidates, fallback")
+        (ps, candidates)
       }
   }
 

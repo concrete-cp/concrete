@@ -51,7 +51,7 @@ class Member(variable: Variable, set: Array[Variable]) extends Constraint(variab
       arity
     } else {
       Option(watched.get(position)) match {
-        case Some(w) if problemState.dom(scope(position)).present(w) => -1
+        case Some(w) if problemState.dom(scope(position)).contains(w) => -1
         case _ => arity
       }
 
@@ -65,7 +65,7 @@ class Member(variable: Variable, set: Array[Variable]) extends Constraint(variab
   def init(ps: ProblemState): Outcome = ps
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     def findNewSupport(i: Int) = {
-      (1 until arity).find(j => ps.dom(scope(j)).present(i)) match {
+      (1 until arity).find(j => ps.dom(scope(j)).contains(i)) match {
         case Some(s) =>
           watches.put(i, s)
           watched.put(s, i)
@@ -77,7 +77,7 @@ class Member(variable: Variable, set: Array[Variable]) extends Constraint(variab
     ps.filterDom(variable) { i =>
       Option(watches.get(i))
         .map { j =>
-          ps.dom(scope(j)).present(i) || {
+          ps.dom(scope(j)).contains(i) || {
             watched.remove(j)
             findNewSupport(i)
           }

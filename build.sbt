@@ -8,7 +8,7 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.7-SNAPSHOT"
+version := "3.7"
 
 scalaVersion := "2.12.4"
 
@@ -20,18 +20,18 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.20-SNAPSHOT",
-	"org.postgresql" % "postgresql" % "42.1.4",
-	"com.typesafe.slick" %% "slick" % "3.2.1",
-	"com.typesafe" % "config" % "1.3.2",
-  "org.scalatest" %% "scalatest" % "3.0.4" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.8.2" % "test",
-	"com.github.davidmoten" % "rtree" % "0.8.0.4"
+	"fr.univ-valenciennes" %% "cspom" % "2.21",
+	"org.postgresql" % "postgresql" % "42.2.2",
+	"com.typesafe.slick" %% "slick" % "3.2.3",
+	"com.typesafe" % "config" % "1.3.3",
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+	"org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+	"com.storm-enroute" %% "scalameter" % "0.9" % "test",
+	"com.github.davidmoten" % "rtree" % "0.8.5"
 	)
 
 scalacOptions ++= Seq(
-  "-Xdisable-assertions",
+ "-Xdisable-assertions",
 	"-deprecation"
 //	"-unchecked", 
 ,	"-Xlint" 

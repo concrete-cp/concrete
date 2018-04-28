@@ -42,7 +42,8 @@ object Solver {
       cspom <- CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
       pg = new ProblemGenerator(pm)
       (problem, variables) <- pg.generate(cspom)
-      solver <- apply(problem, pm)
+      solver <- apply(problem,
+        problem.variables.filter(x => cspom.expressionMap.expression(x.name).isDefined), pm)
     } yield {
       solver.statistics.register("compiler", CSPOMCompiler)
       solver.statistics.register("generator", pg)
@@ -51,17 +52,17 @@ object Solver {
     }
   }
 
-  def apply(problem: Problem, pm: ParameterManager): Try[Solver] = {
+  def apply(problem: Problem, decisionVariables: Seq[Variable], pm: ParameterManager): Try[Solver] = {
     val solverClass: Class[_ <: Solver] =
       pm.classInPackage("solver", "concrete", classOf[MAC])
 
     solverClass
-      .getMethod("apply", classOf[Problem], classOf[ParameterManager])
-      .invoke(null, problem, pm)
+      .getMethod("apply", classOf[Problem], classOf[Seq[_]], classOf[ParameterManager])
+      .invoke(null, problem, decisionVariables, pm)
       .asInstanceOf[Try[Solver]]
   }
 
-  def apply(problem: Problem): Try[Solver] = apply(problem, new ParameterManager)
+  def apply(problem: Problem): Try[Solver] = apply(problem, problem.variables, new ParameterManager)
 }
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {

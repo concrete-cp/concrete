@@ -151,8 +151,6 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
       revisions += 1
 
-      //println(constraint.id)
-
       constraint.revise(s) match {
         case c: Contradiction =>
 

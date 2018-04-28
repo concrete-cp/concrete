@@ -7,6 +7,7 @@ import concrete.IntDomain
 import concrete.ProblemState
 import concrete.Variable
 import concrete.Domain
+import concrete.heuristic.branch.IntervalBranch
 
 /**
  * @author vion
@@ -21,9 +22,9 @@ class IntervalBranchTest extends FlatSpec with Matchers {
     v.id = 0
     val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManager(Seq(v)))
 
-    val h = new concrete.heuristic.value.IntervalBranch()
+    val h = new IntervalBranch()
 
-    val (b1, b2) = h.branch(v, d, ps)
+    val Right((_, b1, b2)) = h.branch(v, d, ps)
 
     b1(ps)._1.dom(v).view should contain theSameElementsAs (0 to 1)
     b2(ps)._1.dom(v).view should contain theSameElementsAs (10 to 15)
@@ -37,9 +38,9 @@ class IntervalBranchTest extends FlatSpec with Matchers {
     v.id = 0
     val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManager(Seq(v)))
 
-    val h = new concrete.heuristic.value.IntervalBranch()
+    val h = new IntervalBranch()
 
-    val (b1, b2) = h.branch(v, d, ps)
+    val Right((_, b1, b2)) = h.branch(v, d, ps)
 
     b1(ps)._1.dom(v).view should contain theSameElementsAs (0 to 2)
     b2(ps)._1.dom(v).view should contain theSameElementsAs (3 to 5)

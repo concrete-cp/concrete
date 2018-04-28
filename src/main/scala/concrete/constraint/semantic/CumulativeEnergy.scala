@@ -2,6 +2,8 @@ package concrete
 package constraint
 package semantic
 
+import bitvectors.BitVector
+
 object Task {
   def apply(ps: ProblemState, s: Variable, d: Variable, h: Variable): Task = {
     val sDom = ps.dom(s)
@@ -28,7 +30,7 @@ case class Task(d: Variable, h: Variable, slb: Int, dlb: Int, eub: Int, hlb: Int
   */
 
 class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable], b: Variable) extends Constraint(s ++ d ++ h :+ b)
-  with BC with CumulativeChecker {
+  with BC with CumulativeChecker with FixPoint {
 
   val tasks = new Array[Task](s.length)
 
@@ -38,7 +40,9 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
 
   def init(ps: ProblemState): Outcome = ps
 
-  override def shave(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = fixPoint(ps, shave(_))
+
+  final def shave(ps: ProblemState): Outcome = {
     val tasks = Array.tabulate(s.length) { i =>
       Task(ps, s(i), d(i), h(i))
     }

@@ -2,7 +2,7 @@ package concrete.runner
 
 import java.net.URL
 
-import concrete.ParameterManager
+import concrete.{CSPOMSolution, ParameterManager, Variable}
 import concrete.generator.cspompatterns.XCSPPatterns
 import cspom.compiler.CSPOMCompiler
 import cspom.xcsp.XCSPParser
@@ -10,7 +10,7 @@ import cspom.{CSPOM, CSPOMGoal, ExpressionMap, WithParam}
 
 import scala.util.{Failure, Success, Try}
 
-object XCSPConcrete extends CSPOMRunner with App {
+object XCSP2Concrete extends CSPOMRunner with App {
 
   var file: URL = _
 
@@ -41,7 +41,7 @@ object XCSPConcrete extends CSPOMRunner with App {
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
-  override def outputCSPOM(cspom: ExpressionMap, solution: Map[String, Any], obj: Option[Any]): String = {
+  override def outputCSPOM(cspom: ExpressionMap, solution: CSPOMSolution, obj: Option[Variable]): String = {
     declaredVariables.map(v => s"$v = ${solution(v)}").mkString("\n")
   }
 

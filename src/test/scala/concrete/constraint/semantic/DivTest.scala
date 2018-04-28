@@ -2,6 +2,7 @@ package concrete.constraint.semantic
 
 import concrete._
 import concrete.constraint._
+import concrete.util.Interval
 import org.scalacheck.Gen
 import org.scalatest.{FlatSpec, Inspectors, Matchers}
 import org.scalatest.prop.PropertyChecks
@@ -36,26 +37,27 @@ class DivTest extends FlatSpec with Matchers with PropertyChecks {
   }
 
   it should "filter division by zero" in {
-        val x = new Variable("x", Singleton(0))
-        val y = new Variable("y", Singleton(0))
-        val z = new Variable("z", Singleton(0))
+    val x = new Variable("x", Singleton(0))
+    val y = new Variable("y", Singleton(0))
+    val z = new Variable("z", Singleton(0))
 
-        val problem = Problem(x, y, z)
-        val constraint = new DivAC(x, y, z, skipIntervals = false)
-        problem.addConstraint(constraint)
-        constraint.register(new AdviseCount)
+    val problem = Problem(x, y, z)
+    val constraint = new DivAC(x, y, z, skipIntervals = false)
+    problem.addConstraint(constraint)
+    constraint.register(new AdviseCount)
 
-        problem.initState
-          .andThen { state =>
-            constraint.eventAll(state)
-            constraint.revise(state)
-          } shouldBe a [Contradiction]
+    problem.initState
+      .andThen { state =>
+        constraint.eventAll(state)
+        constraint.revise(state)
+      } shouldBe a[Contradiction]
 
 
-        // mod.dom(z).view should contain theSameElementsAs Seq(zv)
+    // mod.dom(z).view should contain theSameElementsAs Seq(zv)
   }
 
-  private val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
+
+  private val dom = Gen.nonEmptyListOf(Gen.choose(-100, 100))
 
   it should "filter the same as enumerators" in {
 
@@ -93,6 +95,28 @@ class DivTest extends FlatSpec with Matchers with PropertyChecks {
         val mod = constraint.revise(state)
 
         mod.dom(z).view should contain theSameElementsAs Seq(zv)
+    }
+  }
+
+
+  private val itvDom = for (lb <- Gen.choose(-100, 100); ub <- Gen.choose(lb, 100)) yield Interval(lb, ub)
+
+  it should "shave the same as enumerator" in {
+    PropertyChecks.forAll(itvDom, itvDom, itvDom) { (x, y, z) =>
+      val vx = new Variable("x", IntDomain.ofInterval(x))
+      val vy = new Variable("y", IntDomain.ofInterval(y))
+      val vz = new Variable("z", IntDomain.ofInterval(z))
+
+      val c = new DivBC(vx, vy, vz)
+
+      ConstraintComparator.compareSubset(
+        Array(vx, vy, vz),
+        c,
+        new Constraint(vx, vy, vz) with TupleEnumerator with BoundResidues {
+          def check(t: Array[Int]): Boolean = c.check(t)
+
+          override def init(ps: ProblemState): Outcome = ps
+        })
     }
   }
 }

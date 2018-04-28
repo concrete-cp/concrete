@@ -94,6 +94,8 @@ object SQLWriter {
 
     def name = column[String]("name")
 
+    def display = column[Option[String]]("display")
+
     def d = column[Option[Double]]("d")
 
     def k = column[Option[Double]]("k")
@@ -111,8 +113,6 @@ object SQLWriter {
     def idxName = index("idxName", name, unique = true)
 
     def idxDisplay = index("idxDisplay", display, unique = true)
-
-    def display = column[Option[String]]("display")
   }
 
   class Config(tag: Tag) extends Table[(Int, String, Option[String])](tag, "Config") {
@@ -122,9 +122,9 @@ object SQLWriter {
 
     def description = column[Option[String]]("description")
 
-    def config = column[String]("config")
-
     def idxMd5 = index("idxConfig", config, unique = true)
+
+    def config = column[String]("config")
   }
 
   implicit val localDateToDate: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
@@ -134,8 +134,6 @@ object SQLWriter {
 
   class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, String, LocalDateTime, Option[LocalDateTime], Option[String], String, Option[String])](tag, "Execution") {
     def * = (executionId, configId, problemId, iteration, version, start, end, hostname, status, solution)
-
-    def version = column[String]("version")
 
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
 
@@ -151,15 +149,17 @@ object SQLWriter {
 
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
 
+    def configId = column[Int]("configId")
+
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
 
     def idxVCP = index("idxVCP", (configId, problemId, iteration, version), unique = true)
 
+    def version = column[String]("version")
+
     def problemId = column[Int]("problemId")
 
     def iteration = column[Int]("iteration")
-
-    def configId = column[Int]("configId")
   }
 
   class ProblemTag(tag: Tag) extends Table[(String, Int)](tag, "ProblemTag") {
@@ -167,9 +167,9 @@ object SQLWriter {
 
     def problemTag = column[String]("problemTag")
 
-    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
-
     def problemId = column[Int]("problemId")
+
+    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
 
     def pkPT = primaryKey("pkPT", (problemTag, problemId))
   }
@@ -179,13 +179,13 @@ object SQLWriter {
 
     def value = column[Option[String]]("value")
 
-    def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
-
-    def pk = primaryKey("pkS", (name, executionId))
-
     def executionId = column[Int]("executionId")
 
     def name = column[String]("name")
+
+    def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
+
+    def pk = primaryKey("pkS", (name, executionId))
   }
 
 }
@@ -263,18 +263,12 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
   }
 
 
-  def printSolution(solution: String, obj: Option[Any]) {
-    addSolution(solution, executionId)
-  }
-
-  def error(thrown: Throwable) {
-
-    val errors = toString(thrown)
-
-    System.err.println(errors)
-
-    addSolution(errors, executionId)
-
+  def printSolution(solution: String, obj: Seq[(String, Any)]) {
+    if (params.contains("sql.verboseSolution")) {
+      addSolution(solution, executionId)
+    } else if (obj.nonEmpty) {
+      addSolution(obj.map { case (x, v) => s"$x = $v" }.mkString("\n"), executionId)
+    }
   }
 
   private def addSolution(solution: String, executionId: Int) = {
@@ -289,6 +283,16 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
       }
 
     Await.ready(f, Duration.Inf)
+  }
+
+  def error(thrown: Throwable) {
+
+    val errors = toString(thrown)
+
+    System.err.println(errors)
+
+    addSolution(errors, executionId)
+
   }
 
   private def toString(t: Throwable) = {

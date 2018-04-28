@@ -35,12 +35,12 @@ final class IntDomainTest extends FlatSpec with Matchers with PropertyChecks {
 
   it should "detect presence" in {
     val domain = IntDomain.ofSeq(0, 1)
-    assert(domain.present(0))
+    assert(domain(0))
 
-    val d2 = domain.remove(0);
-    assert(!d2.present(0));
+    val d2 = domain - 0
+    assert(!d2(0))
 
-    assert(domain.present(0));
+    assert(domain(0))
   }
 
   it should "split" in {

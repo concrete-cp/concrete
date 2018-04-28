@@ -5,14 +5,13 @@ package it
 import java.net.URL
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.generator.ProblemGenerator
-import concrete.generator.cspompatterns.{ConcretePatterns, FZPatterns, XCSPPatterns}
+import concrete.generator.cspompatterns.{FZPatterns, XCSPPatterns}
 import concrete.heuristic.variable._
 import concrete.runner.{XCSP3Concrete, XCSP3SolutionChecker}
 import cspom.CSPOM.Parser
 import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc.FlatZincFastParser
-import cspom.variable.CSPOMVariable
+import cspom.variable.{CSPOMExpression, CSPOMVariable}
 import cspom.xcsp.XCSP3Parser
 import cspom.{CSPOM, UNSATException}
 import org.scalatest._
@@ -165,12 +164,19 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "OpenStacks-m2-pb-10-10-1.xml.xz" -> ((5, 1.0)),
 
     "Rack-r1.xml.xz" -> ((550, 1.0)),
+    "Queens-view-8.xml.xz" -> ((92, 1.0)),
+    "TestOrdered.xml.xz" -> ((66, 1.0)),
+    "TestSumView.xml.xz" -> ((21, 1.0)),
+    "CoveringArray-3-04-2-09.xml.xz" -> ((true, 1.0)),
+
+    "GolombRuler-a3-7annot.xml.xz" -> ((25, 1.0)),
 
     // Long
+    "Crossword-lex-vg-4-4.xml.xz" -> ((1068610, 0.001)),
     "Crossword-lex-vg-4-6.xml.xz" -> ((4749, 0.1)),
     "Crossword-lex-vg-4-7.xml.xz" -> ((125, 1.0)),
     "Crossword-lex-vg-4-8.xml.xz" -> ((1, 1.0)),
-    "CoveringArray-3-04-2-08.xml.xz" -> ((80640, 1.0)),
+    "CoveringArray-3-04-2-08.xml.xz" -> ((80640, 0.1)),
 
     "bdd-15-21-2-2713-79-01.xml.xz" -> ((0, 1.0)),
     "MarketSplit-01.xml.xz" -> ((true, 1.0)),
@@ -179,8 +185,8 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "Steiner3-07.xml.xz" -> ((151200, .001)),
 
     //Uses unimplemented circuit constraint
-    //"Mario-easy-2.xml.xz" -> ((628, 1.0)),
-    //"Tpp-3-3-20-1.xml.xz" -> ((126, 1.0))
+    "Mario-easy-2.xml.xz" -> ((628, 1.0)),
+    "Tpp-3-3-20-1.xml.xz" -> ((126, 1.0))
   )
 
 
@@ -198,11 +204,11 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     .map { case (pb, (nbsol, test)) => (pb, (nbsol, 0.0)) }
 
   private val pm = new ParameterManager()
-  private val parameters = pm.updated("heuristic.variable", classOf[LastConflict] +: VariableHeuristic.default) //.updated("f", Unit).updated("heuristic.value", classOf[BestCost])
+  private val parameters = pm //.updated("heuristic.variable", classOf[LastConflict] +: VariableHeuristic.default) //.updated("f", Unit).updated("heuristic.value", classOf[BestCost])
 
   for ((p, (r, test)) <-
-       lecoutrePB ++
-     problemBank //.slice(7,8)
+         lecoutrePB ++
+           problemBank //.slice(3,4) //.slice(7,8)
   ) {
 
     describe(p) {
@@ -234,6 +240,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
     "MarketSplit-01.xml.xz",
     "QueenAttacking-05.xml.xz",
     "QueenAttacking-05_X2.xml.xz",
+    "QueenAttacking-04_X2.xml.xz",
     "Steiner3-07.xml.xz",
     "SocialGolfers-5-4-3-cp.xml.xz",
     "PrizeCollecting-15-3-5-0.xml.xz",
@@ -252,18 +259,14 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
     it("should find solutions", Seq(SlowTest).filter(_ => slow(name)): _*) {
 
       val result: Try[_] = for {
+
         parser <- Try(CSPOM.autoParser(url).get)
-        cspom <- CSPOM.load(url, parser)
-          .flatMap(compile(parser, _))
-          .flatMap(CSPOMCompiler.compile(_, ConcretePatterns(pm)))
-        pg = new ProblemGenerator(pm)
-        (problem, variables) <- pg.generate(cspom)
-        concrete <- Solver(problem, pm)
+        cspom <- CSPOM.load(url, parser).flatMap(compile(parser, _))
+        solver <- Solver(cspom, pm)
+
       } yield {
-        concrete.statistics.register("compiler", CSPOMCompiler)
-        concrete.statistics.register("generator", pg)
-        val solver = new CSPOMSolver(concrete, cspom.expressionMap, variables)
-        val declared = cspom.goal.get.getSeqParam("variables")
+
+        val declared = cspom.goal.get.getSeqParam[(String, CSPOMExpression[_])]("variables").map(_._1)
         val desc = solver.optimizes match {
           case Some(v) => s"should find optimal value $expectedResult for ${cspom.namesOf(v)}"
           case None if expectedResult == true => s"should be satisfiable"
@@ -300,7 +303,8 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
 
       result.recover {
-        case _: UNSATException =>
+        case e: UNSATException if expectedResult == false =>
+          fail(s"Encountered $e on satisfiable problem")
       }
         .get
 

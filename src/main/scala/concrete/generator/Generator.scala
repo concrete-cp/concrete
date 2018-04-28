@@ -1,7 +1,5 @@
 package concrete.generator
 
-;
-
 import concrete.{BooleanDomain, IntDomain, Variable}
 import concrete.constraint.Constraint
 import cspom.CSPOMConstraint
@@ -96,12 +94,12 @@ object Generator {
       case _ => fail(s"Sequence expected, $variable found")
     }
 
-  final def cspom2concreteSeq[A](variable: CSPOMExpression[A])(implicit variables: Map[CSPOMVariable[_], Variable]) = cspom2concrete(variable) match {
+  final def cspom2concreteSeq[A](variable: CSPOMExpression[A])(implicit variables: Map[CSPOMVariable[_], Variable]): Seq[C2Conc] = cspom2concrete(variable) match {
     case Sequence(s, _) => s
     case _ => fail(s"Sequence expected, $variable found")
   }
 
-  final def cspom2concreteSeqVar[A](e: CSPOMExpression[A])(implicit variables: Map[CSPOMVariable[_], Variable]) = cspom2concreteSeq(e) map {
+  final def cspom2concreteSeqVar[A](e: CSPOMExpression[A])(implicit variables: Map[CSPOMVariable[_], Variable]): Seq[Variable] = cspom2concreteSeq(e) map {
     case Var(v) => v
     case a: C2Conc => fail(s"Variable expected, $a found")
   }

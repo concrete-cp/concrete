@@ -1,7 +1,7 @@
-package concrete
-package heuristic
-package value
+package concrete.heuristic.branch
 
+import concrete._
+import concrete.heuristic.Decision
 
 
 final class IntervalBranch() extends BranchHeuristic {
@@ -12,7 +12,7 @@ final class IntervalBranch() extends BranchHeuristic {
 
   def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def branch(variable: Variable, domain: Domain, ps: ProblemState): (Decision, Decision) = {
+  override def branch(variable: Variable, domain: Domain, ps: ProblemState): Either[Outcome, (ProblemState, Decision, Decision)] = {
     if (domain.convex) {
       split.branch(variable, domain, ps)
     } else {
@@ -22,7 +22,7 @@ final class IntervalBranch() extends BranchHeuristic {
         i = j
         j = domain.next(i)
       }
-      Split.splitAt(variable, domain, j, ps)
+      Right(Split.splitAt(variable, domain, j, ps))
     }
   }
 

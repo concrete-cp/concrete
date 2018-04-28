@@ -19,18 +19,25 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
   def check(t: Array[Int]): Boolean = t(0) - t(1) != c
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
-    revise(ps, v0, ps.dom(v1), c)
-      .andThen { ps0: ProblemState =>
-        revise(ps0, v1, ps0.dom(v0), -c)
-      }
-      .entailIf(this, ch => !ch.dom(v0).span.intersects(ch.dom(v1).span + c))
-  }
-
-  private def revise(ps: ProblemState, variable: Variable, otherVar: Domain, c: Int): Outcome = {
-    if (otherVar.isAssigned) {
-      ps.removeIfPresent(variable, otherVar.singleValue + c)
+    val d0 = ps.dom(v0)
+    if (d0.isAssigned) {
+      ps.removeIfPresent(v1, d0.head - c).entail(this)
     } else {
-      ps
+      val d1 = ps.dom(v1)
+
+      if (d1.isAssigned) {
+        val v = d1.head + c
+        if (d0(v)) {
+          ps.updateDom(v0, d0 - v).entail(this)
+        } else {
+          ps.entail(this)
+        }
+
+      } else if (!d0.span.intersects(d1.span + c)) {
+        ps.entail(this)
+      } else {
+        ps
+      }
     }
   }
 
@@ -107,13 +114,15 @@ final class NeqReif(val r: Variable, val x: Variable, val y: Variable) extends C
           }
 
       case BooleanDomain.TRUE =>
-        (if (dx.isAssigned) ps.removeIfPresent(y, dx.head) else ps)
-          .andThen { ps =>
-            if (dy.isAssigned) ps.removeIfPresent(x, dy.head) else ps
-          }
-          .entailIf(this, ps =>
-            ps.dom(x) disjoint ps.dom(y))
-
+        if (dx.isAssigned) {
+          ps.removeIfPresent(y, dx.head).entail(this)
+        } else if (dy.isAssigned) {
+          ps.removeIfPresent(x, dy.head).entail(this)
+        } else if (dx disjoint dy) {
+          ps.entail(this)
+        } else {
+          ps
+        }
     }
   }
 

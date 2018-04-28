@@ -5,21 +5,36 @@ import concrete.util.Interval
 
 object BooleanDomain {
 
+  def apply(constant: Boolean): BooleanDomain = if (constant) TRUE else FALSE
+
+  def apply(): BooleanDomain = UNKNOWNBoolean
+
   case object UNKNOWNBoolean extends BooleanDomain {
-    val bitVector = BitVector.filled(2)
+    val bitVector: BitVector = BitVector.filled(2)
+    val as01: IntDomain = new IntervalDomain(0, 1)
+
     def singleValue = throw new IllegalStateException
+
     override def toString = "[f, t]"
+
     override def size = 2
+
     override def head = 0
+
     override def last = 1
-    def next(i: Int) = if (i == 0) 1 else if (i < 0) 0 else throw new NoSuchElementException
-    def prev(i: Int) = if (i == 1) 0 else if (i > 1) 1 else throw new NoSuchElementException
-    def present(i: Int) = {
+
+    def next(i: Int): Int = if (i == 0) 1 else if (i < 0) 0 else throw new NoSuchElementException
+
+    def prev(i: Int): Int = if (i == 1) 0 else if (i > 1) 1 else throw new NoSuchElementException
+
+    def contains(i: Int): Boolean = {
       Domain.checks += 1
       i == 0 || i == 1
     }
+
     def canBe(b: Boolean) = true
-    def removeFrom(lb: Int) =
+
+    def removeFrom(lb: Int): BooleanDomain =
       if (lb <= 0) {
         EMPTY
       } else if (lb == 1) {
@@ -28,7 +43,7 @@ object BooleanDomain {
         this
       }
 
-    def removeAfter(lb: Int) =
+    def removeAfter(lb: Int): BooleanDomain =
       if (lb < 0) {
         EMPTY
       } else if (lb == 0) {
@@ -37,7 +52,7 @@ object BooleanDomain {
         this
       }
 
-    def removeTo(ub: Int) =
+    def removeTo(ub: Int): BooleanDomain =
       if (ub >= 1) {
         EMPTY
       } else if (ub == 0) {
@@ -46,7 +61,7 @@ object BooleanDomain {
         this
       }
 
-    def removeUntil(ub: Int) =
+    def removeUntil(ub: Int): BooleanDomain =
       if (ub > 1) {
         EMPTY
       } else if (ub == 1) {
@@ -55,136 +70,192 @@ object BooleanDomain {
         this
       }
 
-    def remove(value: Int) = value match {
+    def -(value: Int): BooleanDomain = value match {
       case 0 => TRUE
       case 1 => FALSE
       case _ => throw new AssertionError("Out of bounds")
     }
 
-    override def filter(f: Int => Boolean) =
+    override def filter(f: Int => Boolean): BooleanDomain = {
       if (f(0)) {
         if (f(1)) {
           this
         } else {
           FALSE
         }
+      } else if (f(1)) {
+        TRUE
       } else {
-        TRUE.filter(f)
+        EMPTY
       }
+    }
 
-    val as01 = IntDomain.ofInterval(0, 1)
-    val span = Interval(0, 1)
-
-    def union(bd: BooleanDomain) = UNKNOWNBoolean
+    def union(bd: BooleanDomain): UNKNOWNBoolean.type = UNKNOWNBoolean
 
     def median = 1
 
     def isAssigned = false
 
-    def disjoint(d: Domain) = !(d.present(0) || d.present(1))
+    def disjoint(d: Domain): Boolean = !(d(0) || d(1))
 
-    def shift(o: Int) = new IntervalDomain(o, o + 1)
-    def subsetOf(d: Domain): Boolean = d.present(0) && d.present(1)
+    def shift(o: Int): Domain = as01.shift(o)
+
+    def subsetOf(d: Domain): Boolean = d(0) && d(1)
   }
 
   case object TRUE extends BooleanDomain {
-    val bitVector = BitVector.empty + 1
+    val bitVector: BitVector = BitVector.empty + 1
+    val as01 = Singleton(1)
+
     override def toString = "[t]"
-    def size = 1
+
+    def length = 1
+
     def singleValue = 1
+
     override def head = 1
+
     override def last = 1
+
     def next(i: Int) = throw new NoSuchElementException
+
     def prev(i: Int) = throw new NoSuchElementException
-    def present(i: Int) = {
+
+    def contains(i: Int): Boolean = {
       Domain.checks += 1
       i == 1
     }
-    def canBe(b: Boolean) = b
-    def removeFrom(lb: Int) = if (lb <= 1) EMPTY else this
-    def removeAfter(lb: Int) = if (lb < 1) EMPTY else this
-    def removeTo(ub: Int) = if (ub >= 1) EMPTY else this
-    def removeUntil(ub: Int) = if (ub > 1) EMPTY else this
-    def remove(value: Int) = if (value == 1) EMPTY else this
-    val as01 = Singleton(1)
-    override def filter(f: Int => Boolean) = if (f(1)) this else EMPTY
-    val span = Interval(1, 1)
-    def union(bd: BooleanDomain) = bd match {
+
+    def canBe(b: Boolean): Boolean = b
+
+    def removeFrom(lb: Int): BooleanDomain = if (lb <= 1) EMPTY else this
+
+    def removeAfter(lb: Int): BooleanDomain = if (lb < 1) EMPTY else this
+
+    def removeTo(ub: Int): BooleanDomain = if (ub >= 1) EMPTY else this
+
+    def removeUntil(ub: Int): BooleanDomain = if (ub > 1) EMPTY else this
+
+    def -(value: Int): BooleanDomain = if (value == 1) EMPTY else this
+
+    override def filter(f: Int => Boolean): BooleanDomain = if (f(1)) this else EMPTY
+
+    def union(bd: BooleanDomain): BooleanDomain = bd match {
       case FALSE | UNKNOWNBoolean => UNKNOWNBoolean
       case _ => TRUE
     }
+
     def median = 1
+
     def isAssigned = true
-    def disjoint(d: Domain) = !d.present(1)
+
+    def disjoint(d: Domain): Boolean = !d(1)
+
     def shift(o: Int) = Singleton(o + 1)
-    def subsetOf(d:Domain) = d.present(1)
+
+    def subsetOf(d: Domain): Boolean = d(1)
   }
 
   case object FALSE extends BooleanDomain {
-    val bitVector = BitVector.empty + 0
-    override val toString = "[f]"
-    def size = 1
+    override def toString = "[f]"
+    val bitVector: BitVector = BitVector.filled(1)
+    val as01 = Singleton(0)
+
+    def length = 1
+
     def singleValue = 0
+
     override def head = 0
+
     override def last = 0
+
     def next(i: Int) = throw new NoSuchElementException
+
     def prev(i: Int) = throw new NoSuchElementException
-    def present(i: Int) = {
+
+    def contains(i: Int): Boolean = {
       Domain.checks += 1
       i == 0
     }
-    def canBe(b: Boolean) = !b
-    def removeFrom(lb: Int) = if (lb <= 0) EMPTY else this
-    def removeAfter(lb: Int) = if (lb < 0) EMPTY else this
-    def removeTo(ub: Int) = if (ub >= 0) EMPTY else this
-    def removeUntil(ub: Int) = if (ub > 0) EMPTY else this
-    def remove(value: Int) = if (value == 0) EMPTY else this
-    val as01 = Singleton(0)
-    override def filter(f: Int => Boolean) = if (f(0)) this else EMPTY
-    val span = Interval(0, 0)
-    def union(bd: BooleanDomain) = bd match {
+
+    def canBe(b: Boolean): Boolean = !b
+
+    def removeFrom(lb: Int): BooleanDomain = if (lb <= 0) EMPTY else this
+
+    def removeAfter(lb: Int): BooleanDomain = if (lb < 0) EMPTY else this
+
+    def removeTo(ub: Int): BooleanDomain = if (ub >= 0) EMPTY else this
+
+    def removeUntil(ub: Int): BooleanDomain = if (ub > 0) EMPTY else this
+
+    def -(value: Int): BooleanDomain = if (value == 0) EMPTY else this
+
+    override def filter(f: Int => Boolean): BooleanDomain = if (f(0)) this else EMPTY
+
+    def union(bd: BooleanDomain): BooleanDomain = bd match {
       case TRUE | UNKNOWNBoolean => UNKNOWNBoolean
       case _ => FALSE
     }
+
     def median = 0
+
     def isAssigned = true
-    def disjoint(d: Domain) = !d.present(0)
+
+    def disjoint(d: Domain): Boolean = !d(0)
+
     def shift(o: Int) = Singleton(o)
-    def subsetOf(d: Domain): Boolean = d.present(0)
+
+    def subsetOf(d: Domain): Boolean = d(0)
   }
 
   case object EMPTY extends BooleanDomain {
-    val bitVector = BitVector.empty
-    override val toString = "[]"
-    def size = 0
+    override def toString = "[]"
+    val bitVector: BitVector = BitVector.empty
+    val as01: IntDomain = EmptyIntDomain
+
+    def length = 0
+
     def singleValue = throw new NoSuchElementException
+
     override def head = throw new NoSuchElementException
+
     override def last = throw new NoSuchElementException
+
     def next(i: Int) = throw new NoSuchElementException
+
     def prev(i: Int) = throw new NoSuchElementException
-    def present(i: Int) = {
+
+    def contains(i: Int): Boolean = {
       Domain.checks += 1
       false
     }
+
     def canBe(b: Boolean) = false
-    def removeFrom(lb: Int) = this
-    def removeAfter(lb: Int) = this
-    def removeTo(ub: Int) = this
-    def removeUntil(ub: Int) = this
-    def remove(v: Int) = this
-    val as01 = EmptyIntDomain
-    override def filter(f: Int => Boolean) = this
-    def span = throw new NoSuchElementException
-    def union(bd: BooleanDomain) = bd
+
+    def removeFrom(lb: Int): BooleanDomain = this
+
+    def removeAfter(lb: Int): BooleanDomain = this
+
+    def removeTo(ub: Int): BooleanDomain = this
+
+    def removeUntil(ub: Int): BooleanDomain = this
+
+    def -(v: Int): BooleanDomain = this
+
+    override def filter(f: Int => Boolean): BooleanDomain = this
+
+    def union(bd: BooleanDomain): BooleanDomain = bd
+
     def median = throw new NoSuchElementException
+
     def isAssigned = throw new UnsupportedOperationException
+
     def disjoint(d: Domain): Boolean = true
-    def shift(o: Int) = this
+
+    def shift(o: Int): BooleanDomain = this
+
     def subsetOf(d: Domain) = true
   }
-
-  def apply(constant: Boolean): BooleanDomain = if (constant) TRUE else FALSE
-  def apply(): BooleanDomain = UNKNOWNBoolean
 
 }
 
@@ -196,9 +267,9 @@ sealed trait BooleanDomain extends Domain {
 
   def as01: IntDomain
 
-  def assign(value: Int) = {
+  def assign(value: Int): BooleanDomain = {
     assert(0 <= value && value < 2)
-    assert(present(value))
+    assert(contains(value))
     if (value == 0) {
       BooleanDomain.FALSE
     } else {
@@ -209,31 +280,40 @@ sealed trait BooleanDomain extends Domain {
 
   def bitVector: BitVector
 
-  def toBitVector(offset: Int) = {
+  def toBitVector(offset: Int): BitVector = {
     bitVector.shift(-offset)
   }
 
-  def &(lb: Int, ub: Int) = removeUntil(lb).removeAfter(ub)
+  def &(lb: Int, ub: Int): Domain = removeUntil(lb).removeAfter(ub)
 
-  def &(d: Domain) = filter(i => d.present(i))
+  def &(d: Domain): Domain = filter(d)
 
   def union(bd: BooleanDomain): BooleanDomain
 
-  def |(d: Domain) = d match {
+  def |(d: Domain): Domain = d match {
     case bd: BooleanDomain => this union bd
-    case d => as01 | d
+    case other => as01 | other
   }
 
-  def filterBounds(f: Int => Boolean) = filter(f)
+  def filterBounds(f: Int => Boolean): Domain = filter(f)
 
-  def removeItv(from: Int, to: Int) = {
-    val r0 = if (from <= 0 && 0 <= to) remove(0) else this
-    if (from <= 1 && 1 <= to) r0.remove(1) else r0
+  def removeItv(from: Int, to: Int): Domain = {
+    val r0 = if (from <= 0 && 0 <= to) this - 0 else this
+    if (from <= 1 && 1 <= to) r0 - 1 else r0
   }
 
-  def isEmpty = this eq BooleanDomain.EMPTY
+  override def isEmpty: Boolean = this eq BooleanDomain.EMPTY
 
-  def foreach[S](f: Int => S): Unit = as01.foreach(f)
+  override def foreach[S](f: Int => S): Unit = as01.foreach(f)
+
+  def iterator: Iterator[Int] = as01.iterator
+
+  def keysIteratorFrom(start: Int): Iterator[Int] = as01.keysIteratorFrom(start)
+
+  def span: Interval = as01.span
+
+  override def spanSlice(from: Option[Int], until: Option[Int]): Option[Interval] =
+    as01.spanSlice(from, until)
 
 }
 

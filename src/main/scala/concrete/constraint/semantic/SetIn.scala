@@ -16,8 +16,8 @@ class SetIn(val r: Variable, val v: Variable, val c: Domain)
   def simpleEvaluation: Int = 1
 
   def check(t: Array[Int]): Boolean = t(0) match {
-    case 1 => c.present(t(1))
-    case 0 => !c.present(t(1))
+    case 1 => c(t(1))
+    case 0 => !c(t(1))
     case _ => sys.error(s"${t(0)} must be boolean")
   }
 
@@ -33,7 +33,7 @@ class SetIn(val r: Variable, val v: Variable, val c: Domain)
           ps
         }
       case BooleanDomain.TRUE => ps.intersectDom(v, c).entail(this)
-      case BooleanDomain.FALSE => ps.filterDom(v)(!c.present(_)).entail(this)
+      case BooleanDomain.FALSE => ps.filterDom(v)(!c(_)).entail(this)
     }
   }
 

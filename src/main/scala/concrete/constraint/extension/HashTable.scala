@@ -76,7 +76,7 @@ final class HashTable(val table: ArraySet[Int]) extends Relation {
 
   def findSupport(scope: Array[Domain], p: Int, i: Int) = {
     table.find(t =>
-      t(p) == i && t.indices.forall(i => scope(i).present(t(i))))
+      t(p) == i && t.indices.forall(i => scope(i).contains(t(i))))
   }
 
   def iterator = table.iterator
@@ -91,7 +91,7 @@ final class HashTable(val table: ArraySet[Int]) extends Relation {
 
   @tailrec
   private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
-    modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
+    modified.isEmpty || (doms(modified.head).contains(t(modified.head)) && valid(modified.tail, doms, t))
   }
 }
 

@@ -22,12 +22,23 @@ object SeqHeuristic {
 
 final class SeqHeuristic(val heuristics: Seq[Heuristic]) extends Heuristic {
 
-  def branch(state: ProblemState, candidates: Seq[Variable]): Option[(Decision, Decision)] = {
-    heuristics.iterator.map { h =>
-      h.branch(state, candidates)
-    }.collectFirst {
-      case Some(branching) => branching
+  def branch(state: ProblemState, candidates: Seq[Variable]): Either[Outcome, (ProblemState, Decision, Decision)] = {
+
+    val it = heuristics.iterator
+
+    def findBranch(ps: ProblemState): Either[Outcome, (ProblemState, Decision, Decision)] = {
+      if (it.hasNext) {
+        it.next().branch(ps, candidates) match {
+          case r: Right[_, _] => r
+          case Left(s: ProblemState) => findBranch(s)
+          case e => e
+        }
+      } else {
+        Left(ps)
+      }
     }
+
+    findBranch(state)
   }
 
   override def toString: String = heuristics.mkString("SeqHeuristic(", ", ", ")")

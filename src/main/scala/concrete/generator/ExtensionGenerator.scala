@@ -10,20 +10,24 @@ import mdd._
 
 class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
 
-  private val consType = params.getOrElse("relationAlgorithm", "BDDC")
-  private val ds = params.getOrElse("relationStructure", "BDD")
+  private val algorithm = params.getOrElse("relationAlgorithm", "BDDC")
+  private val structure = params.getOrElse("relationStructure", "BDD")
   private val relationCache = new IdMap[MDD, Relation]()
 
   def params: ParameterManager = pg.pm
 
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
 
-    val solverVariables = extensionConstraint.arguments.map(cspom2concrete1D(_)).toList
+    val solverVariables = extensionConstraint.arguments.map(cspom2concrete1D).toList
 
-    val Some(relation: cspom.extension.MDDRelation) = extensionConstraint.params.get("relation")
+    val Some(mdd) = extensionConstraint.params.get("relation")
+      .map {
+        case r: cspom.extension.MDDRelation => r.mdd
+      }
+
     val Some(init: Boolean) = extensionConstraint.params.get("init")
 
-    if (relation.isEmpty) {
+    if (mdd.isEmpty) {
       if (init) {
         Seq()
       } else {
@@ -31,37 +35,33 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
       }
     } else {
       val scope = solverVariables.map(_.asVariable(pg)).toArray
+      val domains = scope.map(_.initDomain).toList
+      val density = domains.foldLeft(mdd.lambda().toDouble)(_ / _.span.size)
 
-      val matrix = generateMatrix(scope, relation.mdd, init)
+      val constraint = scope.length match {
+        case 1 =>
+          // Unary constraint
+          new UnaryExt(scope.head, new MDDMatrix(mdd, init))
 
-      val constraint = matrix match {
-        case m: Matrix2D => BinaryExt(scope, m)
-        case m: TupleTrieSet if scope.length == 1 => new UnaryExt(scope.head, m)
+        case 2 if density > 0.01 =>
+          // Binary case
+          val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
+            domains(0).head, domains(1).head, init)
+          matrix.setAll(mdd, !init)
+          BinaryExt(scope, matrix)
 
-        case m: TupleTrieSet if m.initialContent == false => {
-          consType match {
-            case "MDDC" =>
-              new MDDC(scope, m.relation.asInstanceOf[MDDRelation])
+        case _ if !init && algorithm != "General" =>
+          // Positive table constraint
+          val relation = generateRelation(mdd)
+          generateConstraint(scope, relation)
 
-            case "BDDC" =>
-              new BDDC(scope, m.relation.asInstanceOf[BDDRelation])
+        case _ =>
+          new ExtensionConstraintGeneral(new MDDMatrix(mdd, init), true, scope)
 
-            case "Reduce" =>
-              val r: Relation = m.relation //.copy
 
-              logger.info(s"Relation stats: ${scope.map(_.initDomain.size).sum} ${scope.length} ${r.edges} ${r.lambda} ${r.depth}")
-
-              new ReduceableExt(scope, r)
-
-            case "Find" =>
-              new FindSupportExt(scope, m.relation)
-
-            case "General" =>
-              new ExtensionConstraintGeneral(m, true, scope)
-          }
-        }
-        case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
       }
+
+
 
       //println(extensionConstraint + " -> " + constraint);
       Seq(constraint)
@@ -69,34 +69,25 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
     }
   }
 
-  private[concrete] def generateMatrix(variables: Seq[Variable], relation: MDD, init: Boolean): Matrix = {
-    logger.info(s"Generating matrix for $relation, $variables")
-    val domains = variables.map(_.initDomain).toList
+  private def generateConstraint(scope: Array[Variable], relation: Relation): Constraint = {
+    logger.debug(s"Relation stats: ${scope.map(_.initDomain.size).sum} ${scope.length} ${relation.edges} ${relation.lambda} ${relation.depth}")
+    algorithm match {
+      case "MDDC" =>
+        new MDDC(scope, relation.asInstanceOf[MDDRelation])
 
-    val density = domains.foldLeft(relation.lambda().toDouble)(_ / _.span.size)
+      case "BDDC" =>
+        new BDDC(scope, relation.asInstanceOf[BDDRelation])
 
-    relation.depth().collect {
-      case 2 if density > .01 =>
-        val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
-          domains(0).head, domains(1).head, init)
-        matrix.setAll(relation, !init)
+      case "Reduce" =>
+        new ReduceableExt(scope, relation)
 
-
-      case 1 if init =>
-        new TupleTrieSet(new MDDRelation(relation), init)
-      case _ if ds == "Matrix" =>
-        val matrix = new MatrixGeneral(domains.map(_.span.size).toArray, domains.map(_.head).toArray, init)
-        matrix.setAll(relation, !init)
-      //      case _ =>
-      //        new TupleTrieSet(generateRelation(domains.length, relation), init)
+      case "Find" =>
+        new FindSupportExt(scope, relation)
     }
-      .getOrElse {
-        new TupleTrieSet(generateRelation(relation), init)
-      }
   }
 
   private def generateRelation(relation: MDD): Relation = {
-    ds match {
+    structure match {
       case "MDD" => relationCache.getOrElseUpdate(relation, new MDDRelation(relation))
       case "BDD" => relationCache.getOrElseUpdate(relation, new BDDRelation(BDD(relation).reduce()))
       case "STR" => relationCache.getOrElseUpdate(relation, STR(relation.toArrayArray)).asInstanceOf[STR].copy

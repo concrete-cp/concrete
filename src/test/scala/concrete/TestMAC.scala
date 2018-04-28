@@ -67,7 +67,7 @@ class TestMAC extends FlatSpec with Matchers {
     it should s"solve queens-$size" taggedAs SlowTest in {
       val problem = qp(size)
 
-      val solver = MAC(problem, pm).get
+      val solver = MAC(problem, problem.variables, pm).get
 
       val stats = new StatisticsManager
       stats.register("mac", solver)

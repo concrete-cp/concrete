@@ -27,14 +27,17 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
     ???
   }
 
-  def contains(t: Array[Int]): Boolean = bdd.contains(t)
+  def contains(t: Array[Int]): Boolean = {
+    // logger.warn("BDDRelation.contains was called")
+    bdd.contains(t)
+  }
 
   def vertices: Int = bdd.vertices()
 
   def depth: Int = bdd.depth(new IdMap())
 
   def filterTrie(doms: Array[Domain], modified: List[Int]): BDDRelation = {
-    val m = bdd.filterTrie(doms.asInstanceOf[Array[MiniSet]], modified)
+    val m = bdd.filterTrie(doms.asInstanceOf[Array[Set[Int]]], modified)
 
     //    assert(m.forall { sup =>
     //      sup.zipWithIndex.forall {
@@ -53,10 +56,10 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   }
 
   override def supported(doms: Array[Domain]): Array[util.HashSet[Int]] = {
-    bdd.supported(doms.asInstanceOf[Array[MiniSet]])
+    bdd.supported(doms.asInstanceOf[Array[Set[Int]]])
   }
 
-  override def isEmpty = bdd.isEmpty
+  override def isEmpty: Boolean = bdd.isEmpty
 
   override def toString = s"link, $edges e for $lambda t"
 
@@ -64,12 +67,12 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
 
   // def copy: BDDRelation = this
 
-  override def size = {
+  override def size: Int = {
     require(lambda.isValidInt)
     lambda.toInt
   }
 
-  def iterator = bdd.iterator.map(_.toArray)
+  def iterator: Iterator[Array[Int]] = bdd.iterator.map(_.toArray)
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
 

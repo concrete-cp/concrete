@@ -3,7 +3,7 @@ package heuristic
 
 import java.util.EventObject
 
-import concrete.heuristic.value.BranchHeuristic
+import concrete.heuristic.branch.BranchHeuristic
 import concrete.heuristic.variable._
 
 import scala.util.{Random, Try}
@@ -25,7 +25,7 @@ final case class CrossHeuristic(
                                  shouldRestart: Boolean) extends Heuristic {
 
 
-  def branch(state: ProblemState, candidates: Seq[Variable]): Option[(Decision, Decision)] = {
+  def branch(state: ProblemState, candidates: Seq[Variable]): Either[Outcome, (ProblemState, Decision, Decision)] = {
 
     val it = variableHeuristic.iterator
 
@@ -41,6 +41,9 @@ final case class CrossHeuristic(
       assert(state.dom(v).size > 1, s"$variableHeuristic selected a singleton variable ${v.toString(state)}")
       valueHeuristic.branch(v, state.dom(v), state)
     }
+      .getOrElse(
+        Left(state)
+      )
   }
 
   def compute(solver: MAC, state: ProblemState): ProblemState = {

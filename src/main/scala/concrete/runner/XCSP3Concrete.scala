@@ -5,10 +5,10 @@ import java.net.URL
 import java.security.InvalidParameterException
 
 import concrete.generator.cspompatterns.XCSPPatterns
-import concrete.heuristic.{CrossHeuristic, Heuristic, SeqHeuristic}
+import concrete.heuristic.Heuristic
 import cspom._
 import cspom.compiler.CSPOMCompiler
-import cspom.variable.CSPOMVariable
+import cspom.variable.{CSPOMExpression, CSPOMVariable}
 import cspom.xcsp.XCSP3Parser
 
 import scala.collection.mutable
@@ -46,7 +46,9 @@ object XCSP3Concrete extends CSPOMRunner with App {
       .flatMap { cspom =>
         cspom.goal.get match {
           case s@WithParam(_: CSPOMGoal[_], _) =>
-            declaredVariables = s.getSeqParam("variables")
+            declaredVariables = s.getParam[Seq[(String, CSPOMExpression[_])]]("variables")
+              .get.map(_._1)
+
             Success(cspom)
           case _ =>
             Failure(new IllegalArgumentException("Variable sequence not available"))
@@ -55,58 +57,39 @@ object XCSP3Concrete extends CSPOMRunner with App {
   }
 
   def updateParams(pm: ParameterManager, cspom: CSPOM): ParameterManager = {
-    pm.updated("heuristic", readHeuristic(pm, cspom.expressionMap))
+    pm.updated("heuristic", readHeuristic(pm, cspom))
   }
 
-  private def readHeuristic(pm: ParameterManager, cspom: ExpressionMap): Heuristic = {
+  private def readHeuristic(pm: ParameterManager, cspom: CSPOM): Heuristic = {
     val rand = {
       val seed = pm.getOrElse("randomseed", 0L) + pm.getOrElse("iteration", 0)
       new Random(seed)
     }
 
 
-    val heuristics = if (pm.contains("ff")) {
-      Seq()
+    val heuristic = if (pm.contains("ff")) {
+      Heuristic.default(pm, variables.values.toSeq, rand)
     } else {
-      val dv = declaredVariables
-        .flatMap(cspom.expression)
+      val goalVar = cspom.goal.flatMap(g => g.obj.expr)
+
+      val annotationDecision: Option[Seq[String]] = cspom.goal.flatMap(_.params.get("annotationDecision"))
+          .map {
+            case ann: Seq[String] => ann
+          }
+
+      // If decision variables not annoted, use declared (non-auxiliary) variables
+      val dv = annotationDecision.getOrElse(declaredVariables).flatMap(cspom.expression)
         .collect {
-          case v: CSPOMVariable[_] => variables(v)
+          // Do not assign goal variable
+          case v: CSPOMVariable[_] if !goalVar.contains(v) => variables(v)
         }
 
-      Seq(Heuristic.default(pm, dv, rand).get)
+      Heuristic.default(pm, dv, rand)
     }
 
-    val decisionVariables: Set[Variable] = heuristics
-      .flatMap(_.decisionVariables)
-      .toSet
+    // logger.warn(heuristic.toString)
 
-    val completed = if (decisionVariables.size < variables.size) {
-      val remainingVariables = variables.values.iterator.filterNot(decisionVariables).toArray
-
-      lazy val rand = {
-        val seed = pm.getOrElse("randomseed", 0L) + pm.getOrElse("iteration", 0)
-        new Random(seed)
-      }
-
-      if (heuristics.isEmpty || heuristics.exists(_.shouldRestart)) {
-        heuristics :+ CrossHeuristic(pm, remainingVariables, rand).get
-      } else {
-        /* Avoid introducing restarts if all defined heuristics do not enforce it */
-        heuristics :+ CrossHeuristic(pm, remainingVariables, rand).get.copy(shouldRestart = false)
-      }
-    } else {
-      heuristics
-    }
-
-    val heuristic = completed match {
-      case Seq(h) => h
-      case m => new SeqHeuristic(m)
-    }
-
-    logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
-
-    heuristic
+    heuristic.get
   }
 
   def description(args: Seq[String]) =
@@ -119,8 +102,8 @@ object XCSP3Concrete extends CSPOMRunner with App {
     solutionChecker.checkSolution(solution, obj, declaredVariables)
   }
 
-  override def outputCSPOM(cspom: ExpressionMap, solution: Map[String, Any], obj: Option[Any]): String = {
-    xmlSolution(declaredVariables, solution, obj).toString
+  override def outputCSPOM(cspom: ExpressionMap, solution: CSPOMSolution, obj: Option[Variable]): String = {
+    xmlSolution(declaredVariables, solution, obj.flatMap(solution.get)).toString
   }
 
 

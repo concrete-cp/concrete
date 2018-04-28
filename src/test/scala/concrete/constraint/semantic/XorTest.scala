@@ -33,5 +33,18 @@ class XorTest extends FlatSpec with Matchers {
     c.event(s3, Assignment, 1) shouldBe 1
 
     assert(!c.revise(s3).isState)
+
+    state.assign(b2, 1)
+      .orElse(fail())
+      .andThen { s =>
+        c.event(s, Assignment, 1) shouldBe 1
+        c.revise(s)
+      }
+      .orElse(fail())
+      .andThen { s =>
+        s.dom(b1) shouldBe BooleanDomain.FALSE
+        s
+      }
+
   }
 }

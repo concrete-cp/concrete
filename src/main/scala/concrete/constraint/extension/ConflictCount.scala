@@ -115,13 +115,13 @@ trait ConflictCount
       }
 
       matrix match {
-        case tupleSet: TupleTrieSet =>
+        case tupleSet: MDDMatrix =>
           if (tupleSet.initialContent) {
 
             for {
-              tuple <- tupleSet.relation
+              tuple <- tupleSet.mdd
               p <- tuple.indices
-              if doms(p).present(tuple(p))
+              if doms(p).contains(tuple(p))
             } {
               nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
             }
@@ -130,13 +130,13 @@ trait ConflictCount
 
             for (p <- nbInitConflicts.indices) util.Arrays.fill(nbInitConflicts(p), getOtherSize(doms, p))
 
-            for (tuple <- tupleSet.relation; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
+            for (tuple <- tupleSet.mdd; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
 
           }
 
         case _ =>
           for (tuple <- tuples(doms) if !check(tuple); p <- tuple.indices) {
-            nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
+            nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
           }
       }
 

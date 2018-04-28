@@ -10,7 +10,7 @@ import cspom.compiler.CSPOMCompiler
 import cspom.extension.MDDRelation
 import cspom.flatzinc.FlatZincFastParser
 import cspom.xcsp.XCSPParser
-import mdd.{BDD, MiniSet, SetWithMax}
+import mdd.{BDD, SetWithMax}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -18,12 +18,18 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
 
-object UniversalSet extends MiniSet {
-  override def present(i: Int): Boolean = true
+object UniversalSet extends Set[Int] {
+  override def contains(i: Int): Boolean = true
 
   override def size: Int = Int.MaxValue
 
   override def head: Int = 0
+
+  override def +(elem: Int): Set[Int] = ???
+
+  override def -(elem: Int): Set[Int] = ???
+
+  override def iterator: Iterator[Int] = ???
 }
 
 /**

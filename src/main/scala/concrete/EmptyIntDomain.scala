@@ -1,10 +1,11 @@
 package concrete
 
 import bitvectors.BitVector
+import concrete.util.Interval
 
 
 object EmptyIntDomain extends IntDomain {
-  def size = 0
+  override def size = 0
 
   override def head = throw new NoSuchElementException
 
@@ -18,12 +19,12 @@ object EmptyIntDomain extends IntDomain {
 
   def nextOrEq(i: Int) = throw new NoSuchElementException
 
-  def present(i: Int): Boolean = {
+  def contains(i: Int): Boolean = {
     Domain.checks += 1
     false
   }
 
-  def remove(i: Int): IntDomain = this
+  def -(i: Int): IntDomain = this
 
   def removeFrom(lb: Int): IntDomain = this
 
@@ -43,11 +44,11 @@ object EmptyIntDomain extends IntDomain {
 
   override def isEmpty = true
 
-  def apply(i: Int) = throw new NoSuchElementException
-
   def toBitVector(offset: Int): BitVector = BitVector.empty
 
   def span = throw new NoSuchElementException
+
+  override def spanSlice(from: Option[Int], to: Option[Int]): Option[Interval] = None
 
   def singleValue = throw new NoSuchElementException
 
@@ -67,7 +68,11 @@ object EmptyIntDomain extends IntDomain {
 
   def disjoint(d: Domain) = true
 
-  def foreach[S](f: Int => S): Unit = ()
+  override def foreach[S](f: Int => S): Unit = ()
 
   def subsetOf(d: Domain) = true
+
+  def iterator: Iterator[Int] = Iterator.empty
+
+  def keysIteratorFrom(start: Int): Iterator[Int] = Iterator.empty
 }

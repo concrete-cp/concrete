@@ -2,12 +2,16 @@ package concrete
 package heuristic
 package value
 
-final class MedValue() extends ValueHeuristic {
+import cspom.StatisticsManager
+
+final class MedValue() extends ValueSelector {
   override def toString = "median"
 
   def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def selectIndex(variable: Variable, domain: Domain): Int = domain.median
+  override def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) = {
+    (ps, Singleton(StatisticsManager.median(candidates.toSeq)))
+  }
 
   def shouldRestart = false
 }

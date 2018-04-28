@@ -156,14 +156,14 @@ final class MDDStats(prob: Problem, params: ParameterManager) extends Solver(pro
       prob.constraints.collect {
         case c: ReduceableExt => state(c).edges
         case c: MDDC => c.mdd.edges
-        case c: BDDC => c.bdd.edges
+        case c: BDDC => c.relation.edges
       }
 
     val lambdas =
       prob.constraints.collect {
         case c: ReduceableExt => state(c).lambda
         case c: MDDC => c.mdd.lambda
-        case c: BDDC => c.bdd.lambda
+        case c: BDDC => c.relation.lambda
       }
 
     val ks =

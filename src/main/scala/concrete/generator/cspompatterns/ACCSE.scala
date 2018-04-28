@@ -8,31 +8,18 @@ import cspom.CSPOMConstraint
 import cspom.compiler.ACCSE
 import cspom.variable._
 
-import scala.util.hashing.MurmurHash3
-
 object SumSE extends ACCSE[IntPair] {
 
   def populate(c: CSPOMConstraint[_]): Iterator[IntPair] = {
     if (c.function == 'sum) {
-      val (vars, coefs, constant, _) = SumGenerator.readCSPOM(c)
-
-//      val width = Try {
-//        (vars.map(IntExpression.span), coefs).zipped.map(_ * Finite(_)).reduce(_ + _) + Finite(Math.negateExact(constant))
-//      }
-//        .recoverWith {
-//          case e: Exception =>
-//            logger.warn(s"${e.toString} when considering ACCSE for $c")
-//            Failure(e)
-//        }
-//        .toOption
-//        .filter(w => w.lb >= BigInt(Int.MinValue) && w.ub <= BigInt(Int.MaxValue))
-
+      val (vars, coefs, _, _) = SumGenerator.readCSPOM(c)
 
       for {
-//        _ <- width.iterator
-        Seq((k1, v1), (k2, v2)) <- (coefs zip vars).combinations(2)
+        i <- vars.indices.iterator
+        j <- 0 until i
+//        Seq((k1, v1), (k2, v2)) <- (coefs zip vars).combinations(2)
       } yield {
-        IntPair(k1, v1, k2, v2)
+        IntPair(coefs(i), vars(i), coefs(j), vars(j))
       }
     } else {
       Iterator.empty
@@ -90,19 +77,15 @@ trait IntPair {
 }
 
 
-class EqualPair(val v1: SimpleExpression[_], val v2: SimpleExpression[_]) extends IntPair {
+case class EqualPair(v1: SimpleExpression[_], v2: SimpleExpression[_]) extends IntPair {
   def k1 = 1
 
   def k2 = 1
 
-  override def equals(o: Any): Boolean = o match {
-    case p: EqualPair => (v1, v2) == ((p.v1, p.v2)) || (v1, v2) == ((p.v2, p.v1))
-    case _ => false
-  }
-
-  override def hashCode(): Int = {
-    MurmurHash3.unorderedHash(Seq(v1, v2))
-  }
+//  override def equals(o: Any): Boolean = o match {
+//    case p: EqualPair => v1 == p.v1 && v2 == p.v2 //) || (v1, v2) == ((p.v2, p.v1))
+//    case _ => false
+//  }
 }
 
 case class CoefPair(k1: Int, v1: SimpleExpression[_], k2: Int, v2: SimpleExpression[_]) extends IntPair
@@ -123,8 +106,12 @@ object IntPair extends LazyLogging {
     } else if (k1 > k2) {
       CoefPair(k2 / gcd, v2, k1 / gcd, v1)
     } else {
-      assert(gcd == k1)
-      new EqualPair(v1, v2)
+      assert(gcd == math.abs(k1), s"Coefficiens $k1 and $k2 are equal, should also be equal to gcd $gcd")
+      if (v1.hashCode < v2.hashCode) {
+        EqualPair(v1, v2)
+      } else {
+        EqualPair(v2, v1)
+      }
     }
   }
 

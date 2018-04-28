@@ -127,9 +127,9 @@ trait ConcreteRunner extends LazyLogging {
     new FZWriter(pm, problem, statistics)
 
   final def solution(solver: Solver, sol: Map[Variable, Any], writer: ConcreteWriter, pm:ParameterManager): Unit = {
-    val objective = solver.optimises.map(sol)
+    val objective = solver.optimises.map(v => v.name -> sol(v))
 
-    writer.solution(output(sol, objective), objective)
+    writer.solution(output(sol, solver.optimises), objective.toSeq)
     if (pm.contains("control")) {
       for (failed <- control(sol, objective)) {
         throw new IllegalStateException("Control error: " + failed)
@@ -137,7 +137,7 @@ trait ConcreteRunner extends LazyLogging {
     }
   }
 
-  def output(solution: Map[Variable, Any], obj: Option[Any]): String = {
+  def output(solution: Map[Variable, Any], obj: Option[Variable]): String = {
     solution.map {
       case (variable, value) => s"${variable.name} = $value"
     }.mkString("\n")

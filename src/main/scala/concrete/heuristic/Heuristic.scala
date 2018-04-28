@@ -27,7 +27,7 @@ object Heuristic {
 }
 
 trait Heuristic extends HeuristicListener {
-  def branch(state: ProblemState, candidates: Seq[Variable]): Option[(Decision, Decision)]
+  def branch(state: ProblemState, candidates: Seq[Variable]): Either[Outcome, (ProblemState, Decision, Decision)]
 
   def shouldRestart: Boolean
 
@@ -44,6 +44,6 @@ case class NewSolutionEvent(sol: Map[Variable, Int]) extends EventObject(sol)
 
 case object ContradictionEvent extends EventObject(None)
 
-case class AssignmentEvent(variable: Variable*) extends EventObject(variable)
+case class AssignmentEvent(variable: Seq[Variable], value: Seq[Int]) extends EventObject(variable)
 
 case class BadDecision(decision: Decision) extends EventObject(decision)

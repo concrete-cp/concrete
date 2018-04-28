@@ -62,6 +62,8 @@ final class ParameterManager(
   private def parse[T](fType: Type, value: String): T = {
     (if (fType <:< typeOf[Int]) {
       value.toInt
+    } else if (fType <:< typeOf[Long]) {
+      value.toLong
     } else if (fType <:< typeOf[Boolean]) {
       value.toBoolean
     } else if (fType <:< typeOf[Double]) {

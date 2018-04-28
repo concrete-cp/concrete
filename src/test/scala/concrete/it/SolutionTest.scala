@@ -55,9 +55,9 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
       val (pb, vars) = prob
 
 
-      val solver: MAC = MAC(pb, pm).get
+      val solver: MAC = MAC(pb, pb.variables, pm).get
 
-      var state = pb.initState.andThen(solver.init)
+      var state = pb.initState.andThen(solver.init).andThen(solver.preprocess(solver.filter, _))
 
       val decisions = Seq.tabulate(80) { i =>
         val variable = cspom.variable(s"deltaK[${i + 1}]").map(vars).get

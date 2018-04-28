@@ -17,10 +17,10 @@ trait CSPOMRunner extends ConcreteRunner {
 
   var cspomSolver: CSPOMSolver = _
 
-  override final def output(sol: Map[Variable, Any], obj: Option[Any]): String =
+  override final def output(sol: Map[Variable, Any], obj: Option[Variable]): String =
     outputCSPOM(cspomSolver.cspom, cspomSolver.solution(sol), obj)
 
-  def outputCSPOM(cspom: ExpressionMap, solution: Map[String, Any], obj: Option[Any]): String = {
+  def outputCSPOM(cspom: ExpressionMap, solution: CSPOMSolution, obj: Option[Variable]): String = {
     solution.iterator.map {
       case (variable, value) => s"$variable = $value"
     }.mkString("\n")
@@ -37,7 +37,9 @@ trait CSPOMRunner extends ConcreteRunner {
     for {
       cspom2 <- CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
       problem <- generate(pm, cspom2)
-      solver <- Solver(problem, updateParams(pm, cspom2))
+      solver <- Solver(problem,
+        problem.variables.filter(x => cspom.expressionMap.expression(x.name).isDefined),
+        updateParams(pm, cspom2))
     } yield {
       cspomSolver = new CSPOMSolver(solver, cspom2.expressionMap, variables)
       solver

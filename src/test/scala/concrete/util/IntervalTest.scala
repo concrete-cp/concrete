@@ -1,21 +1,24 @@
 package concrete.util
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
 
-class IntervalTest extends FlatSpec with Matchers {
+class IntervalTest extends FlatSpec with Matchers with OptionValues {
 
   "Intervals" should "divide" in {
-    (Interval(1, 19) / 20).allValues shouldBe empty
+    (Interval(1, 19) / 20) shouldBe empty
 
-    (Interval(0, 19) / 20) shouldBe Interval(0, 0)
-    (Interval(1, 20) / 20) shouldBe Interval(1, 1)
-    (Interval(0, 20) / 20) shouldBe Interval(0, 1)
+    (Interval(0, 19) / 20).value shouldBe Interval(0, 0)
+    (Interval(1, 20) / 20).value shouldBe Interval(1, 1)
+    (Interval(0, 20) / 20).value shouldBe Interval(0, 1)
 
-    (Interval(1, 19) / -20).allValues shouldBe empty
-    (Interval(0, 19) / -20) shouldBe Interval(0, 0)
-    (Interval(1, 20) / -20) shouldBe Interval(-1, -1)
-    (Interval(0, 20) / -20) shouldBe Interval(-1, 0)
+    (Interval(1, 19) / -20) shouldBe empty
+    (Interval(0, 19) / -20).value shouldBe Interval(0, 0)
+    (Interval(1, 20) / -20).value shouldBe Interval(-1, -1)
+    (Interval(0, 20) / -20).value shouldBe Interval(-1, 0)
+
+    (Interval(-68, -12) / Interval(35, 46)).value shouldBe Interval(-1, -1)
+
+
   }
 
   it should "detect intersection" in {

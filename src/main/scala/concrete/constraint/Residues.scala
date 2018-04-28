@@ -1,9 +1,7 @@
 package concrete.constraint
 
 import bitvectors.BitVector
-import concrete.{Domain, Outcome, ProblemState}
-
-import scala.annotation.tailrec
+import concrete.{Domain, Event, Outcome, ProblemState}
 
 trait Residues extends Constraint {
 
@@ -43,6 +41,12 @@ trait Residues extends Constraint {
     revise(state, skip(modified)).entailIfFree(this)
   }
 
+  override def advise(ps: ProblemState, event: Event, pos: Int): Int = advise(ps, pos)
+
+  def advise(ps: ProblemState, pos: Int): Int
+
+
+
   private def revise(state: ProblemState, skip: Int): Outcome = {
     logger.debug(s"skipping $skip")
     val doms = scope.map(state.dom)
@@ -58,29 +62,6 @@ trait Residues extends Constraint {
       p -= 1
     }
     current
-  }
-
-//  def revise(state: ProblemState): Outcome = {
-//    val doms = scope.map(state.dom)
-//    var p = arity - 1
-//    var current: Outcome = state
-//    while (p >= 0) {
-//      current = current.updateDom(scope(p), reviseDomain(doms, p))
-//      if (!current.isState) {
-//        return current
-//      }
-//
-//      p -= 1
-//    }
-//    current
-//  }
-
-  @tailrec
-  protected final def ctp(doms: Array[Domain], tuple: Array[Int], i: Int = arity - 1): Boolean = {
-    /* Need high optimization */
-
-    i < 0 || (doms(i).present(tuple(i)) && ctp(doms, tuple, i - 1))
-
   }
 
 }

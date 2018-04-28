@@ -1,122 +1,110 @@
-package concrete
-package constraint
-package semantic
+package concrete.constraint.semantic
+
+import java.util
 
 import bitvectors.BitVector
-import scala.collection.mutable.ArrayBuffer
+import concrete.{Contradiction, Event, Outcome, ProblemState, Variable}
+import concrete.constraint.Constraint
 
-object Circuit {
-  def apply(scope: (Int, Variable)*): Circuit = apply(scope.toMap)
-  def apply(scope: Map[Int, Variable]): Circuit = {
-    val offset = scope.keys.min
-    //val max = scope.keys.max - offset
+import scala.collection.mutable
 
-    val array: Array[Variable] = Array.fill(scope.keys.max - offset + 1)(null)
+class Circuit(scope: Array[Variable], start: Int, size: Variable) extends Constraint(scope :+ size) {
+  override def revise(ps: ProblemState, modified: BitVector): Outcome = {
+    // Distance from start to any node
+    val distances = dijkstra(i => ps.dom(scope(i)), start)
 
-    val constraintScope = new ArrayBuffer[Variable]
-    val vars2scope: Array[Int] = Array.fill(scope.keys.max - offset + 1)(-1)
-    val scope2vars = new ArrayBuffer[Int]
-
-    for ((i, v) <- scope) {
-      array(i - offset) = v
-      vars2scope(i - offset) = constraintScope.size
-      scope2vars += i - offset
-      constraintScope += v
-    }
-
-    new Circuit(offset, array, constraintScope.toArray,
-      vars2scope, scope2vars.toArray)
-
-  }
-}
-
-class Circuit(
-  private val offset: Int,
-  private val hScope: Array[Variable],
-  constraintScope: Array[Variable],
-  private val vars2scope: Array[Int],
-  private val scope2vars: Array[Int])
-    extends Constraint(constraintScope) {
-
-  private val startWith = scope2vars(0)
-
-  def advise(problemState: concrete.ProblemState, event: Event, pos: Int): Int = arity
-  def check(tuple: Array[Int]): Boolean = {
-    check(tuple, scope2vars(0), BitVector.empty, arity)
-  }
-
-  private def check(tuple: Array[Int], current: Int, visited: BitVector, remaining: Int): Boolean = {
-
-    if (remaining == 0) {
-      current == startWith
-    } else if (visited(current)) {
-      false
-    } else {
-      val si = vars2scope(current)
-      val next = tuple(si) - offset
-
-      check(tuple,
-        next,
-        visited + current,
-        remaining - 1)
-    }
-  }
-
-  def init(ps: concrete.ProblemState): Outcome = ps
-  def revise(ps: concrete.ProblemState, mod: BitVector): Outcome = {
-    //println(toString(ps))
-    var N = 0
-    var L: List[Int] = Nil
-    val dfsnum = new Array[Int](hScope.length + 1)
-    val low = new Array[Int](hScope.length + 1)
-    var T = BitVector.empty
-    var onepartfound = false
-
-    def visit(p: Int): Boolean = {
-      L ::= p
-      dfsnum(p) = N
-      N += 1
-      low(p) = dfsnum(p)
-      for (oq <- ps.dom(hScope(p))) {
-        val q = oq - offset
-        if (T(q)) {
-          low(p) = math.min(low(p), dfsnum(q))
-        } else {
-          T += q
-          if (!visit(q)) return false
-          low(p) = math.min(low(p), low(q))
-        }
-      }
-
-      if (low(p) == dfsnum(p)) {
-        if (onepartfound) {
-          //println("second component found")
-          false
-        } else {
-          onepartfound = true
-          L = L.dropWhile { v => v != p }
-          //          var v = 0
-          //          //println("component")
-          //          do {
-          //            v = L.head
-          //            //println(v)
-          //            L = L.tail
-          //          } while (v != p)
-          true
-        }
-      } else {
-        true
-      }
-
-    }
-
-    if (visit(startWith) && T.cardinality == arity) {
-      ps
-    } else {
+    if (!distances.contains(start)) {
       Contradiction(scope)
+    } else {
+
+      val transposed = new mutable.HashMap[Int, mutable.Set[Int]]()
+      for (i <- scope.indices; e <- ps.dom(scope(i))) {
+        transposed.getOrElseUpdate(e, new mutable.HashSet()) += i
+      }
+
+      // Distance from any node to start
+      val reverse = dijkstra(transposed.withDefaultValue(mutable.Set.empty), start)
+
+      // Distance from start to start is shortest possible cycle
+      assert(distances(start) == reverse(start), s"${distances(start)} should be the same as ${reverse(start)}")
+
+      // Nodes in possible cycles must have both defined distance and reverse lengths
+      val reachable = distances.keySet & reverse.keySet
+
+      ps.shaveDom(size, distances(start), reachable.size)
+        .andThen { ps =>
+          val ub = ps.dom(size).last
+          var o = ps: Outcome
+
+          for (i <- scope.indices if i != start) {
+            // Computes distance from start to i, and back
+            val round = for (forward <- distances.get(i); backwards <- reverse.get(i)) yield {
+              forward + backwards
+            }
+
+            // If distance higher than ub, put vertex out of circuit (round = None
+            // means that vertex i is unreachable)
+            if (round.forall(_ > ub)) {
+              o = o.tryAssign(scope(i), i)
+            }
+          }
+          o
+        }
     }
+  }
+
+  private def dijkstra(edges: Int => Iterable[Int], start: Int): mutable.Map[Int, Int] = {
+
+    val distances = new mutable.HashMap[Int, Int]()
+
+    val queue = new util.ArrayDeque[Int]()
+
+    for (v <- edges(start)) {
+      distances(v) = 1
+      if (v != start) queue.offer(v)
+    }
+
+    while (!queue.isEmpty) {
+      val current = queue.poll()
+      val distance: Int = distances(current)
+      for (v <- edges(current)) {
+        if (!distances.contains(v)) {
+          distances(v) = distance + 1
+          queue.offer(v)
+        }
+      }
+    }
+
+    distances
 
   }
 
-  def simpleEvaluation: Int = 3
+  override def init(ps: ProblemState): Outcome = ps
+
+  /**
+    * @return true iff the constraint is satisfied by the given tuple
+    */
+  override def check(tuple: Array[Int]): Boolean = {
+    // Visit cycle
+    val visited = new util.BitSet()
+    var current = start
+    while (!visited.get(current)) {
+      visited.set(current)
+      current = tuple(current)
+    }
+
+    // Vertices not in the cycle should be self-references
+    var i = visited.previousClearBit(scope.length - 1)
+    while (i >= 0) {
+      if (tuple(i) != i) return false
+      i = visited.previousClearBit(i - 1)
+    }
+
+    // Check cycle length
+    visited.cardinality == tuple(scope.length)
+  }
+
+  override def simpleEvaluation: Int = ???
+
+  override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2 * arity
 }

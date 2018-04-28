@@ -51,8 +51,8 @@ class AtLeast(val result: Variable, val value: Variable,
       for (v <- currentValues) {
 
         val cba = canBeAffectedSet(v)
-        logger.debug(s"check value $v from variable $m : ${cba(m)}, ${dom.present(v)}")
-        if (cba(m) && !dom.present(v)) {
+        logger.debug(s"check value $v from variable $m : ${cba(m)}, ${dom(v)}")
+        if (cba(m) && !dom(v)) {
           canBeAffectedSet = canBeAffectedSet.updated(v, cba - m)
         }
       }
@@ -60,7 +60,7 @@ class AtLeast(val result: Variable, val value: Variable,
     }
 
     assert (
-      currentValues.forall( v=> canBeAffectedSet(v).forall(m => ps.dom(vars(m)).present(v))),
+      currentValues.forall( v=> canBeAffectedSet(v).forall(m => ps.dom(vars(m))(v))),
       s"${toString(ps)}, $canBeAffectedSet is incorrect, mod = $mod"
     )
 

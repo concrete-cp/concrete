@@ -7,6 +7,8 @@ import concrete.util.{IdentityMap, Interval}
 import cspom.UNSATException
 
 sealed trait Outcome {
+  def tryAssign(variable: Variable, i: Int): Outcome
+
   def andThen(f: ProblemState => Outcome): Outcome
 
   def orElse[A >: ProblemState](f: => A): A
@@ -152,6 +154,8 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
   def isState = false
 
   def dueTo(cause: => (Constraint, Traversable[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
+
+  override def tryAssign(variable: Variable, i: Int): Outcome = this
 }
 
 object ProblemState {
@@ -269,7 +273,7 @@ case class ProblemState(
 
   def tryAssign(v: Variable, value: Int): Outcome = {
     val d = dom(v)
-    if (d.present(value)) {
+    if (d.contains(value)) {
       if (d.isAssigned) {
         this
       } else {
@@ -282,13 +286,13 @@ case class ProblemState(
   }
 
   def remove(v: Variable, value: Int): Outcome = {
-    updateDom(v, dom(v).remove(value))
+    updateDom(v, dom(v) - value)
   }
 
   def removeIfPresent(v: Variable, value: Int): Outcome = {
     val d = dom(v)
-    if (d.present(value)) {
-      updateDom(v, d.remove(value))
+    if (d(value)) {
+      updateDom(v, d - value)
     } else {
       this
     }

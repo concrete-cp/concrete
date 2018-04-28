@@ -26,11 +26,7 @@ final class FindSupportExt(scope: Array[Variable], tts: Relation)
   extends ExtensionConstraint(scope) with ConflictCount with Residues {
 
   private val edges = tts.edges
-  var matrix: Matrix = new TupleTrieSet(tts, false)
-
-  override def findSupport(ps: ProblemState, p: Int, i: Int): Option[Array[Int]] = {
-    findSupport(ps.doms(scope), p, i)
-  }
+  var matrix: Matrix = ??? //new MDDMatrix(tts, false)
 
   override def findSupport(doms: Array[Domain], p: Int, i: Int): Option[Array[Int]] = {
     val s = tts.findSupport(doms, p, i)

@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.util.TryWith
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.postgresql.util.ReaderInputStream
+import org.xcsp.checker.SolutionChecker
 
 import scala.collection.JavaConverters._
 
@@ -31,11 +32,12 @@ class XCSP3SolutionChecker(file: URL) extends LazyLogging {
 
   def checkSolution(sol: Map[String, Any], obj: Option[Any], variables: Seq[String]): Option[String] = {
     val solution = XCSP3Concrete.xmlSolution(variables, sol, obj)
-    logger.info(solution.toString)
-    val sc = new org.xcsp.checker.SolutionChecker(
-      false,
+    val io = s"""s SATISFIABLE\n""" ++ solution.toString.split("\n").map("v " + _).mkString("\n")
+    logger.info(io)
+    val sc = new SolutionChecker(
+      true,
       temp.getPath,
-      new ReaderInputStream(new StringReader(s""""$solution""""))) {
+      new ReaderInputStream(new StringReader(io))) {
       override def endInstance(): Unit = ()
     }
 

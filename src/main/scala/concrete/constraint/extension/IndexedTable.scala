@@ -48,7 +48,7 @@ final class IndexedTable(val tables: Array[VecMap[ArraySet[Int]]]) extends Relat
   def findSupport(scope: Array[Domain], p: Int, i: Int) = {
     tables(p).get(i).flatMap { m =>
       m.find(t =>
-        tables.indices.forall(q => q == p || scope(q).present(t(q))))
+        tables.indices.forall(q => q == p || scope(q).contains(t(q))))
     }
   }
 
