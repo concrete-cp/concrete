@@ -14,13 +14,13 @@ object SumFactors extends ConstraintCompiler {
 
   type A = (Seq[CSPOMExpression[Any]], Seq[Int], Int)
 
-  override def mtch(c: CSPOMConstraint[_], p: CSPOM) = {
+  override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[(Seq[CSPOMExpression[Any]], Seq[Int], Int)] = {
     c match {
       case CSPOMConstraint(_, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(result: Int)), _) =>
 
         val (fargs, fparams) = args.zip(coefs).filter(_._2 != 0).unzip
         require(fparams.nonEmpty, c)
-        val gcd = concrete.util.Math.gcd(fparams).abs.toInt
+        val gcd = concrete.util.Math.gcd(result +: fparams).abs.toInt
         val rparams = fparams.map(_ / gcd)
         val rresult = result / gcd
         if (rparams != coefs || rresult != result) {

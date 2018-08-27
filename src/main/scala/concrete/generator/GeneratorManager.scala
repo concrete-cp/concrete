@@ -42,7 +42,8 @@ class GeneratorManager(pg: ProblemGenerator) {
       'cumulative -> new CumulativeGenerator(pg),
       'diffn -> new DiffNGenerator(pg),
       'clause -> ClauseGenerator,
-      'bin_packing_load -> new BinPackingGenerator(pg))
+      'bin_packing_load -> new BinPackingGenerator(pg),
+      'if -> new IfGenerator(pg))
   }
 
   def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], cspom: CSPOM): Try[Seq[Constraint]] = {

@@ -3,7 +3,7 @@ package concrete.generator.cspompatterns
 import concrete.constraint.linear.SumMode
 import concrete.generator.SumGenerator
 import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
-import cspom.compiler.ConstraintCompiler
+import cspom.compiler.{ConstraintCompiler, Delta}
 import cspom.compiler.ConstraintCompiler._
 import cspom.variable.{BoolExpression, CSPOMExpression}
 import cspom.{CSPOM, CSPOMConstraint}
@@ -43,7 +43,7 @@ object SumDuplicates extends ConstraintCompiler {
   }
 
 
-  def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A) = {
+  def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A): Delta = {
     val (r, args, const) = data
     val mode = constraint.getParam[String]("mode").flatMap(SumMode.withName).get
     val (variables, factors) = args.filter(_._2 != 0).unzip

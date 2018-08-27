@@ -11,6 +11,7 @@ object ConcretePatterns {
   def apply(params: ParameterManager): Seq[Compiler] = {
     val concreteDef =
       Seq(
+        SumGreaterToLesser,
         Occurrence, AtLeastDomains, AtMostDomains, BoolEq,
         MulDomains, AbsDomains, AbsDiffDomains, Reversed, ClauseDomains,
         MulToSum,
@@ -23,7 +24,7 @@ object ConcretePatterns {
         SimplClause, PBConstants,
         DivDomains, ModDomains,
         Knapsack, Lex, NoOverlap, MinDomains, MaxDomains, DiffNWCumulative,
-        GCC)
+        GCC, NValues)
 
     require(concreteDef.lengthCompare(concreteDef.distinct.size) == 0)
 
@@ -34,6 +35,7 @@ object ConcretePatterns {
       UnaryClause, SumFactors, SumEq, BoolSum, BoolProd, MergeSameCommutative
       , SumSE
       , ClauseSE
+      , MinMaxSimplify
       , MinMaxSE,
       AllDiff
     ) //, MergeRelations) //, LexLeq2SAT)

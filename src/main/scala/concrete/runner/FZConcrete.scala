@@ -15,7 +15,7 @@ import cspom.CSPOM.seq2CSPOMSeq
 import cspom._
 import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc._
-import cspom.variable.{CSPOMExpression, CSPOMSeq, CSPOMVariable, IntExpression}
+import cspom.variable._
 import org.scalameter.Quantity
 
 import scala.util.{Failure, Random, Try}
@@ -94,7 +94,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
   override def outputCSPOM(cspom: ExpressionMap, sol: CSPOMSolution, obj: Option[Variable]): String = {
     val out: Iterable[String] = outputVars.map {
-      n => s"$n = ${bool2int(cspom, n, sol)} ;"
+      n => s"$n = ${solTypeToCSPOMType(cspom, n, sol)} ;"
     } ++ outputArrays.map {
       case (n, ranges) =>
         val seq =
@@ -103,7 +103,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         val initRange = seq.asInstanceOf[CSPOMSeq[_]].definedIndices
 
         require(initRange.size == flattenedSize(ranges))
-        val solutions = initRange.map(i => bool2int(cspom, s"$n[$i]", sol))
+        val solutions = initRange.map(i => solTypeToCSPOMType(cspom, s"$n[$i]", sol))
 
         s"$n = array${ranges.size}d(${
           ranges.map { range =>
@@ -159,25 +159,29 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     val heuristic = if (pm0.contains("ff")) {
       Heuristic.default(pm0, variables.values.toSeq, rand).get
     } else {
-      val parsed = SeqHeuristic(parseGoal(pm0, goal.getSeqParam[FZAnnotation]("fzSolve"), cspom, variables, rand))
-      if (pm0.contains("f")) {
-        if (pm0.contains("fKeepSeq")) {
-          useDefault(pm0, parsed, rand)
-        } else {
-          val decision = parsed.decisionVariables.distinct
+      val parsed = parseGoal(pm0, goal.getSeqParam[FZAnnotation]("fzSolve"), cspom, variables, rand)
 
-          val pm1 = {
-            if (pm0.contains("heuristic.variable.tieBreaker")) {
-              pm0
-            } else {
-              val variableHeuristics = SeqHeuristic.extractVariableHeuristics(Seq(parsed))
-              pm0.updated("heuristic.variable.tieBreaker", SeqVariableHeuristic(variableHeuristics))
-            }
+      // val seqParsed = SeqHeuristic(parsed)
+
+      if (pm0.contains("f")) {
+        //        if (pm0.contains("fKeepSeq")) {
+        //          useDefault(pm0, seqParsed, rand)
+        //        } else {
+        val decision = parsed.flatMap(_.decisionVariables).distinct
+
+        val pm1 = {
+          if (pm0.contains("heuristic.variable.tieBreaker")) {
+            pm0
+          } else {
+            val variableHeuristics = SeqHeuristic.extractVariableHeuristics(parsed)
+            pm0.updated("heuristic.variable.tieBreaker", SeqVariableHeuristic(variableHeuristics))
           }
-          Heuristic.default(pm1, decision, rand).get
         }
+        Heuristic.default(pm1, decision, rand).get
+        //        }
       } else {
-        parsed
+        // Use default heuristic as fallback if parsed heuristic do not cover enough variables
+        SeqHeuristic(parsed :+ Heuristic.default(pm0, variables.values.toSeq, rand).get)
       }
     }
 
@@ -276,11 +280,13 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       ranges.head.size * flattenedSize(ranges.tail)
     }
 
-  private def bool2int(cspom: ExpressionMap, n: String, sol: Map[String, Any]): String = {
+  private def solTypeToCSPOMType(cspom: ExpressionMap, n: String, sol: Map[String, Any]): String = {
     val s = sol(n)
     cspom.expression(n).map {
       case IntExpression(_) if s == true => "1"
       case IntExpression(_) if s == false => "0"
+      case BoolExpression(_) if s == 1 => "true"
+      case BoolExpression(_) if s == 0 => "false"
       case _ => s.toString
     }
       .get

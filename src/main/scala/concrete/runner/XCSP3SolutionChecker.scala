@@ -11,6 +11,7 @@ import org.postgresql.util.ReaderInputStream
 import org.xcsp.checker.SolutionChecker
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 
 class XCSP3SolutionChecker(file: URL) extends LazyLogging {
@@ -20,7 +21,8 @@ class XCSP3SolutionChecker(file: URL) extends LazyLogging {
 
   TryWith {
     val in = file.openStream
-    new CompressorStreamFactory().createCompressorInputStream(in)
+    Try(new CompressorStreamFactory().createCompressorInputStream(in))
+      .getOrElse(in)
   } { in =>
     Files.copy(in, temp.toPath, StandardCopyOption.REPLACE_EXISTING)
   }

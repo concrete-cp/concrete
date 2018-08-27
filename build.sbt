@@ -8,9 +8,9 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.7"
+version := "3.9.2"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.6"
 
 javaOptions in ThisBuild += "-Xss16M"
 
@@ -20,14 +20,14 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.21",
-	"org.postgresql" % "postgresql" % "42.2.2",
+	"fr.univ-valenciennes" %% "cspom" % "2.25",
+	"org.postgresql" % "postgresql" % "42.2.4",
 	"com.typesafe.slick" %% "slick" % "3.2.3",
 	"com.typesafe" % "config" % "1.3.3",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.9" % "test",
-	"com.github.davidmoten" % "rtree" % "0.8.5"
+	"com.storm-enroute" %% "scalameter" % "0.10.1" % "test",
+	"com.github.davidmoten" % "rtree" % "0.8.6"
 	)
 
 scalacOptions ++= Seq(
@@ -37,6 +37,7 @@ scalacOptions ++= Seq(
 ,	"-Xlint" 
 //	"-feature",
 , 	"-Ywarn-unused-import"
+   , "-target:jvm-1.8"
 )
 
 enablePlugins(JavaAppPackaging)

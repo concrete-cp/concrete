@@ -30,18 +30,7 @@ final class LexVar(val pool: Seq[Variable]) extends VariableHeuristic with LazyL
   private val order = pool.zipWithIndex.toMap
 
   override def select(state: ProblemState, i: Seq[Variable]): Seq[Variable] = {
-    i.sortBy(order)
-//    var bestVariable: Variable = null
-//    var bestIndex = pool.size
-//    for (v <- i) {
-//      val index = order.getOrElse(v, bestIndex)
-//      if (index < bestIndex) {
-//        bestVariable = v
-//        bestIndex = index
-//      }
-//    }
-//    logger.info(s"Selected first element $bestVariable")
-//    Option(bestVariable)
+    i.filter(order.contains).sortBy(order)
   }
 
 

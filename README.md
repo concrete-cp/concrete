@@ -3,7 +3,7 @@ concrete
 
 [![Build Status](https://travis-ci.org/concrete-cp/concrete.svg?branch=master)](https://travis-ci.org/concrete-cp/concrete)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a5775c2b60e44d55865574114561d991)](https://www.codacy.com/app/scand1sk/concrete?utm_source=github.com&utm_medium=referral&utm_content=concrete-cp/concrete&utm_campaign=badger)
-[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/a1a0df7c57e24040a76ed7d5a7e609be)](https://www.codacy.com/app/scand1sk/concrete?utm_source=github.com&utm_medium=referral&utm_content=concrete-cp/concrete&utm_campaign=Badge_Coverage)
+[//]: # ([![Codacy Badge](https://api.codacy.com/project/badge/Coverage/a1a0df7c57e24040a76ed7d5a7e609be)](https://www.codacy.com/app/scand1sk/concrete?utm_source=github.com&utm_medium=referral&utm_content=concrete-cp/concrete&utm_campaign=Badge_Coverage))
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.univ-valenciennes/concrete_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/fr.univ-valenciennes/concrete_2.12)
 
 Concrete is a CSP constraint solver written in Scala
@@ -38,14 +38,14 @@ You can also find published releases on Maven Central for easy inclusion in your
 <dependency>
   <groupId>fr.univ-valenciennes</groupId>
   <artifactId>concrete_2.12</artifactId>
-  <version>3.6</version>
+  <version>3.9.2</version>
 </dependency>
 ```
 
 sbt dependency:
 
 ```sbtshell
-libraryDependencies += "fr.univ-valenciennes" % "concrete" % "3.6"
+libraryDependencies += "fr.univ-valenciennes" % "concrete" % "3.9.2"
 ```
     
 # Running Concrete from command line
@@ -235,10 +235,13 @@ Concrete natively supports the following constraints:
 
 - Generic reification (for any constraint _C_, a boolean variable
   _b_ can be defined s.t. _b → C_)
+  
+- Subcircuit with defined starting/ending point and controllable length.
 
-All other documented MiniZinc constraints are supported via decomposition or reformulation.
+All other documented MiniZinc constraints are supported via decomposition or reformulation (all FlatZinc constraints
+are supported).
 
-All other XCSP3 constraints selected for the 2017 competition are supported via decomposition or reformulation.
+All other XCSP3 constraints selected for the 2018 competition are supported via decomposition or reformulation.
 Some XCSP3 constraints are not supported.
 
 # Search strategies
@@ -246,10 +249,11 @@ Some XCSP3 constraints are not supported.
 Concrete solves CSP/COP using a depth-first tree search. When solving XCSP3 instances or if the `-f` option is
  enforced, the default variable ordering heuristic is _dom/wdeg_ with
  incremental computation and random tiebreaking. 
-The default value heuristic chooses the best known value first, then a random bound. 
+The default value heuristic chooses the best known value first, select the value that leads to the best 
+potential solution (BBS), with random tiebreaking. 
 Search is restarted periodically (with a geometric growth) to reduce long tails of search time.
 
-Although still under development and undocumented, Concrete allows the user
+Although still undocumented, Concrete allows the user
 to define new heuristics or combinations of them easily. Generation of nogoods 
 when a restart occurs is available but still disabled by default.
 
@@ -260,4 +264,4 @@ entailment is managed when it can be detected easily.
 # License
 
 Concrete is free software, relased under the terms of the [GNU LGPL 3.0](https://www.gnu.org/licenses/lgpl.txt) license.
-Concrete is © Julien Vion, CNRS and Univ. Valenciennes.
+Concrete is © Julien Vion, CNRS and Univ. Polytechnique des Hauts de France.

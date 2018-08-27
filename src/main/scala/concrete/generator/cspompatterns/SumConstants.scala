@@ -15,12 +15,8 @@ object SumConstants extends ConstraintCompilerNoData {
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
     c.function == 'sum && {
-      val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
-      vars
-        .collectFirst {
-          case c: CSPOMConstant[_] => Unit
-        }
-        .nonEmpty
+      val vars = SumGenerator.readCSPOM(c)._1
+      vars.exists(_.isConstant)
     }
   }
 

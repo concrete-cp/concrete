@@ -34,7 +34,8 @@ object ValueSelector {
   }
 
   def default: Seq[Class[_ <: ValueSelector]] = {
-    Seq(classOf[RandomBoundDiv], classOf[BestValue], classOf[BestCost])
+    Seq(classOf[RandomBoundDiv], classOf[BestValue], classOf[BestCost],
+      classOf[RandomBound])
   }
 
   def instantiate(pm: ParameterManager, seq: Seq[Any], rand: Random): Try[Seq[ValueSelector]] =

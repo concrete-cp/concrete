@@ -24,6 +24,90 @@ import scala.util.{Random, Success, Try}
 
 class SolvingTest extends FunSpec with SolvingBehaviors {
 
+  private val xcsp18COPtest = Seq[(String, (AnyVal, Double))](
+    "NurseRostering-04_c18.xml.lzma" -> ((3062, 1.0)),
+
+    "testMainCOP/Auction-cnt-example_c18.xml.lzma" -> ((54, 1.0)),
+    "testMainCOP/Auction-sum-example_c18.xml.lzma" -> ((54, 1.0)),
+    "testMainCOP/Bacp-m1-05_c18.xml.lzma" -> ((9, 1.0)),
+    "testMainCOP/Bacp-m2-05_c18.xml.lzma" -> ((9, 1.0)),
+    "testMainCOP/CrosswordDesign-03-4-rom_c18.xml.lzma" -> ((12, 1.0)),
+    // "testMainCOP/CrosswordDesign-10-4-rom_c18.xml.lzma" -> ((0, 1.0)),
+
+    "testMainCOP/Fapp-m2s-03-0300_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCOP/Fapp-m2s-ex1_c18.xml.lzma" -> ((523, 1.0)),
+    "testMainCOP/Fapp-m2s-ex2_c18.xml.lzma" -> ((13871, 1.0)),
+    "testMainCOP/GolombRuler-a3v18-07_c18.xml.lzma" -> ((25, 1.0)),
+    "testMainCOP/GraphColoring-queen5-5_c18.xml.lzma" -> ((4, 1.0)),
+
+    // 10
+    "testMainCOP/Knapsack-30-100-00_c18.xml.lzma" -> ((709, 1.0)),
+    "testMainCOP/LowAutocorrelation-015_c18.xml.lzma" -> ((15, 1.0)),
+    "testMainCOP/Mario-easy-2_c18.xml.lzma" -> ((628, 1.0)),
+    "testMainCOP/NurseRostering-00_c18.xml.lzma" -> ((1202, 1.0)),
+    "testMainCOP/Pb-circ4-3_c18.xml.lzma" -> ((20, 1.0)),
+
+    "testMainCOP/Pb-garden-4x4_c18.xml.lzma" -> ((4, 1.0)),
+    "testMainCOP/PeacableArmies-m1-05_c18.xml.lzma" -> ((4, 1.0)),
+    "testMainCOP/PizzaVoucher-10a_c18.xml.lzma" -> ((210, 1.0)),
+    "testMainCOP/QuadraticAssignment-qap_c18.xml.lzma" -> ((4776, 1.0)),
+    //"testMainCOP/QuadraticAssignment-sko90_c18.xml.lzma" -> ((true, 0)),
+    "testMainCOP/Rcpsp-j30-01-01_c18.xml.lzma" -> ((43, 1.0)),
+
+    // 20
+    "testMainCOP/Rlfap-graph-03-opt_c18.xml.lzma" -> ((380, 1.0)),
+    "testMainCOP/Rlfap-graph-04-opt_c18.xml.lzma" -> ((394, 1.0)),
+    "testMainCOP/Rlfap-graph-05-opt_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCOP/Rlfap-graph-10-opt_c18.xml.lzma" -> ((394, 1.0)),
+    "testMainCOP/Rlfap-scen-04-opt_c18.xml.lzma" -> ((46, 1.0)),
+
+    // 25
+    "testMainCOP/Rlfap-scen-05-opt_c18.xml.lzma" -> ((792, 1.0)),
+    "testMainCOP/SteelMillSlab-m1-simple_c18.xml.lzma" -> ((0, 1.0)),
+    "testMainCOP/SteelMillSlab-m2-simple_c18.xml.lzma" -> ((0, 1.0)),
+    "testMainCOP/StillLife-wastage-08_c18.xml.lzma" -> ((36, 1.0)),
+    "testMainCOP/SumColoring-1-fullins-3_c18.xml.lzma" -> ((24, 1.0)),
+
+    // 30
+    "testMainCOP/Tal-01_c18.xml.lzma" -> ((6, 1.0)),
+    "testMainCOP/TemplateDesign-m1-1_c18.xml.lzma" -> ((2, 1.0)),
+    "testMainCOP/TemplateDesign-m2-1_c18.xml.lzma" -> ((2, 1.0)),
+    "testMainCOP/TravelingTournament-a2-galaxy04_c18.xml.lzma" -> ((517, 1.0)),
+    "testMainCOP/TravellingSalesman-10-20-00_c18.xml.lzma" -> ((47, 1.0)),
+  )
+
+  private val xcsp18CSPtest = Seq(
+    "testMainCSP/Bibd-sc-07-03-01_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/Bibd-sum-07-03-01_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/CarSequencing-dingbas_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/ColouredQueens-05_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/ColouredQueens-06_c18.xml.lzma" -> ((false, 1.0)),
+    //"testMainCSP/ColouredQueens-16_c18.xml.lzma" -> ((,)),
+    "testMainCSP/Crossword-m18-ogd2008-vg-04-05_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/Dubois-018_c18.xml.lzma" -> ((false, 1.0)),
+    "testMainCSP/Eternity-04-04_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/frb-30-15-1_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/GracefulGraph-K02-P09_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/GracefulGraph-K03-P03_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/Haystacks-ext-04_c18.xml.lzma" -> ((false, 1.0)),
+    "testMainCSP/LangfordBin-06_c18.xml.lzma" -> ((false, 1.0)),
+    "testMainCSP/MagicHexagon-04-0003_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/MagicHexagon-04-0017_c18.xml.lzma" -> ((false, 1.0)),
+    "testMainCSP/MisteryShopper-04_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/Pb-robin08_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/QuasiGroup-4-07_c18.xml.lzma" -> ((false, 1.0)),
+    "testMainCSP/QuasiGroup-7-07_c18.xml.lzma" -> ((false, 1.0)),
+    "testMainCSP/Rlfap-scen-11-f12_c18.xml.lzma" -> ((false, 1.0)),
+    "testMainCSP/SocialGolfers-4-4-4-cp_c18.xml.lzma" -> ((true, 1.0)),
+    //"testMainCSP/SocialGolfers-6-6-9-cp_c18.xml.lzma" -> ((,)),
+    "testMainCSP/SportsScheduling-08_c18.xml.lzma" -> ((true, 1.0)),
+    "testMainCSP/StripPacking-1a_c18.xml.lzma" -> ((false, 1.0)),
+    //"testMainCSP/StripPacking-1b_c18.xml.lzma" -> ((,)),
+    "testMainCSP/Subisomorphism-g08-g43_c18.xml.lzma" -> ((true, 1.0)),
+
+
+  )
+
   private val lecoutrePB = Seq[(String, (AnyVal, Double))](
     "RadarSurveillance-8-24-3-2-01.xml.xz" -> ((0, 1.0)),
     "qwh-10-57-0_X2.xml.xz" -> ((37, 1.0)),
@@ -160,8 +244,8 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "ProgressiveParty-rally-red05.xml.xz" -> ((4, 1.0)),
     "OpenStacks-m1-tiny.xml.xz" -> ((3, 1.0)),
     "OpenStacks-m1-pb-10-10-1.xml.xz" -> ((5, 1.0)),
-    "OpenStacks-m2-tiny.xml.xz" -> ((3, 1.0)),
-    "OpenStacks-m2-pb-10-10-1.xml.xz" -> ((5, 1.0)),
+    //"OpenStacks-m2-tiny.xml.xz" -> ((3, 1.0)),
+    //"OpenStacks-m2-pb-10-10-1.xml.xz" -> ((5, 1.0)),
 
     "Rack-r1.xml.xz" -> ((550, 1.0)),
     "Queens-view-8.xml.xz" -> ((92, 1.0)),
@@ -192,6 +276,13 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
 
   private val problemBank = Seq[(String, (AnyVal, Boolean))](
     //  "celar-CELAR6-SUB2.fzn.xz" -> ((true, false)),
+    "mznc18-err/error_bool2.fzn" -> ((2, false)),
+    "mznc18-err/error_empty.fzn" -> ((true, false)),
+    "mznc18-err/error_key.fzn" -> ((true, false)),
+    "mznc18-err/error_bool.fzn" -> ((2, false)),
+    "mznc18-err/error_illarg.fzn" -> ((true, false)),
+    "mznc18-err/error_mod.fzn" -> ((8, false)),
+
     "1d_rubiks_cube.small.fzn.xz" -> ((4, false)),
     "1d_rubiks_cube.fzn.xz" -> ((12, false)),
     "battleships10.fzn.xz" -> ((1, false)),
@@ -207,7 +298,8 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   private val parameters = pm //.updated("heuristic.variable", classOf[LastConflict] +: VariableHeuristic.default) //.updated("f", Unit).updated("heuristic.value", classOf[BestCost])
 
   for ((p, (r, test)) <-
-         lecoutrePB ++
+//         xcsp18COPtest ++ xcsp18CSPtest ++
+//           lecoutrePB ++
            problemBank //.slice(3,4) //.slice(7,8)
   ) {
 
@@ -279,8 +371,16 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
             solver.optimizes match {
               case Some(v) =>
-                val (_, last) = check(url, solver, declared, solver.optimizes, test)
-                last.map(_ (v)) should contain(expectedResult)
+                expectedResult match {
+                  case b: Boolean =>
+                    val solsCut = solver.take(1)
+                    val (_, last) = check(url, solsCut, declared, solver.optimizes, test)
+                    last.isDefined shouldBe b
+                  case i: Int =>
+                    val (_, last) = check(url, solver, declared, solver.optimizes, test)
+                    last.map(_ (v)) should contain(i)
+                }
+
               case None =>
                 expectedResult match {
                   case b: Boolean =>

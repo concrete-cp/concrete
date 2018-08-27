@@ -1,0 +1,4 @@
+var 50..60: x:: output_var;
+var 1..5: z:: output_var;
+constraint int_mod(x,5,z);
+solve  satisfy;

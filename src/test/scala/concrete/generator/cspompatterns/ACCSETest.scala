@@ -79,7 +79,7 @@ class ACCSETest extends FlatSpec with Matchers with TryValues {
       ctr(clause(x)(w, y))
     }
 
-    Solver(problem).success
+    Solver(problem).get
 
     problem.constraints.toSeq should have size 5
   }

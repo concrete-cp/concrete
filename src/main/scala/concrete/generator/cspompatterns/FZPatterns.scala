@@ -419,6 +419,8 @@ object FZPatterns {
      * a − x.b = c where x = a/b rounding towards zero.
      * int_mod(var int: a, var int: b, var int: c)
      */
+    case Ctr('int_mod, Seq(a, b, c), p) =>
+      CSPOMConstraint(c, 'mod, Seq(a, b), p)
     /*
      * a = b
      * int_ne(var int: a, var int: b)

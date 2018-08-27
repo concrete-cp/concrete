@@ -2,7 +2,7 @@ package concrete.constraint.linear
 
 sealed trait SumMode
 object SumMode {
-  val map = Seq(SumLE, SumLT, SumEQ, SumNE)
+  private val map = Seq(SumLE, SumLT, SumEQ, SumNE)
     .map(o => o.toString -> o)
     .toMap
 

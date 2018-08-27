@@ -22,6 +22,8 @@ object SeqHeuristic {
 
 final class SeqHeuristic(val heuristics: Seq[Heuristic]) extends Heuristic {
 
+  require(heuristics.nonEmpty)
+
   def branch(state: ProblemState, candidates: Seq[Variable]): Either[Outcome, (ProblemState, Decision, Decision)] = {
 
     val it = heuristics.iterator

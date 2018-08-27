@@ -23,10 +23,10 @@ object AllDiffConstant extends ConstraintCompiler {
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[A] = {
 
-    if (c.function == 'alldifferent) {
-      require(c.result == CSPOMConstant(true))
+    if (c.function == 'alldifferent && c.result == CSPOMConstant(true)) {
+      val except = c.getParam[Int]("except")
       val constants = c.arguments.collect {
-        case c: CSPOMConstant[_] => c.intValue
+        case CSPOMConstant(k: Int) if !except.contains(k) => k
       }
       if (constants.isEmpty) {
         None
@@ -43,7 +43,7 @@ object AllDiffConstant extends ConstraintCompiler {
     val variables = constraint.arguments.collect {
       case v: IntVariable => v
     }
-    require(constants.distinct.size + variables.size == constraint.arguments.size)
+    // require(constants.distinct.size + variables.size == constraint.arguments.size)
 
     val constantSet = RangeSet(constants.map(k => IntInterval.singleton(k)))
 

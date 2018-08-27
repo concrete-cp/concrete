@@ -59,6 +59,8 @@ object XCSPPatterns {
     case CSPOMConstraint(r, 'neg, Seq(x), p) => {
       CSPOMConstraint('sum)(Seq(1, 1), Seq(r, x), 0) withParams p + ("mode" -> SumEQ)
     }
+
+
   }
 
   val mtchMulti: PartialFunction[CSPOMConstraint[_], Seq[CSPOMConstraint[_]]] = {
@@ -92,7 +94,6 @@ object XCSPPatterns {
       reif.toSeq
 
     }
-
 
   }
 
