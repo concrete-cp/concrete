@@ -23,7 +23,7 @@ class AtMost(val result: Variable, val value: Variable,
       if (dom.isAssigned) {
         val value = dom.head
         /* Only process values that appear in the "value" variable */
-        if (currentValues(value)) {
+        if (currentValues.contains(value)) {
           affected = affected.updated(value, affected(value) + m)
         }
       }
@@ -90,7 +90,7 @@ class AtMost(val result: Variable, val value: Variable,
         vars
           .foldLeft(ps) { (ps, v) =>
             val d = ps.dom(v)
-            if (!d.isAssigned && d(value)) {
+            if (!d.isAssigned && d.contains(value)) {
               ps.updateDomNonEmpty(v, d - value)
             } else {
               ps

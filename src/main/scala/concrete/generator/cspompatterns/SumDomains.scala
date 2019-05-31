@@ -1,6 +1,7 @@
 package concrete.generator.cspompatterns
 
 import com.typesafe.scalalogging.LazyLogging
+import concrete.constraint.linear.SumMode._
 import concrete.constraint.linear._
 import concrete.generator.SumGenerator
 import cspom.compiler.ConstraintCompiler._
@@ -26,10 +27,10 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
       } else {
 
         val initBound = mode match {
-          case SumLE => IntInterval.atMost(result)
-          case SumLT => IntInterval.atMost(result - 1)
-          case SumEQ => IntInterval.singleton(result)
-          case SumNE => IntInterval.all
+          case LE => IntInterval.atMost(result)
+          case LT => IntInterval.atMost(result - 1)
+          case EQ => IntInterval.singleton(result)
+          case NE => IntInterval.all
         }
 
         val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * Finite(c)).toIndexedSeq
@@ -74,10 +75,10 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
 
       val initBound = SumMode.withName(m)
         .map {
-          case SumLE => IntInterval.atMost(result)
-          case SumLT => IntInterval.atMost(result - 1)
-          case SumEQ => IntInterval.singleton(result)
-          case SumNE => IntInterval.all
+          case LE => IntInterval.atMost(result)
+          case LT => IntInterval.atMost(result - 1)
+          case EQ => IntInterval.singleton(result)
+          case NE => IntInterval.all
         }
         .get
 

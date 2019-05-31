@@ -5,9 +5,9 @@ class Buffer(sizeHint: Int = 16) {
   var array = new Array[Int](computeSize(8, sizeHint))
   var last = 0
 
-  def apply(i: Int) = array(i)
+  def apply(i: Int): Int = array(i)
 
-  def update(i: Int, v: Int) = {
+  def update(i: Int, v: Int): Unit = {
     last = math.max(last, i + 1)
     array(i) = v
   }
@@ -32,11 +32,11 @@ class Buffer(sizeHint: Int = 16) {
     newSize.toInt
   }
 
-  def applicable(i: Int) = i < array.size
+  def applicable(i: Int): Boolean = i < array.length
 
-  override def toString = iterator(last).mkString("[", ", ", "]")
+  override def toString: String = iterator(last).mkString("[", ", ", "]")
 
-  def iterator(members: Int) = array.iterator.take(members)
+  def iterator(members: Int): Iterator[Int] = array.iterator.take(members)
 }
 
 class SparseSetBuffer(
@@ -46,9 +46,9 @@ class SparseSetBuffer(
 
   def this(sizeHint: Int) = this(new Buffer(sizeHint), new Buffer(sizeHint))
 
-  override def apply(k: Int) = contains(k)
+  override def apply(k: Int): Boolean = contains(k)
 
-  def contains(k: Int) = {
+  def contains(k: Int): Boolean = {
     sparse.applicable(k) && {
       val a = sparse(k)
       a < members && dense(a) == k
@@ -71,7 +71,7 @@ class SparseSetBuffer(
 
   def iterator: Iterator[Int] = dense.iterator(members)
 
-  override def size = members
+  override def size: Int = members
 
   def -(elem: Int): SparseSetBuffer = {
     if (sparse.applicable(elem)) {

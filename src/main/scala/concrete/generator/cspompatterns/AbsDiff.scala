@@ -2,8 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
-import cspom.compiler.Delta
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
@@ -16,8 +15,10 @@ import ConstraintCompiler._
 object AbsDiff extends ConstraintCompiler {
   type A = (CSPOMConstraint[Any], CSPOMExpression[_], Set[(CSPOMConstraint[Any], Seq[CSPOMExpression[_]])])
 
+  def functions = Functions('abs)
+
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM) = c match {
-    case absConstraint @ CSPOMConstraint(_, 'abs, Seq(absArg), _) =>
+    case absConstraint @ CSPOMConstraint(_, _, Seq(absArg), _) =>
       
      // println(problem.deepConstraints(absArg))
 
@@ -36,7 +37,7 @@ object AbsDiff extends ConstraintCompiler {
     case _ => None
   }
 
-  def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A) = {
+  def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A): Delta = {
     val (absConstraint, absArg, addConstraints) = data
     val delta = addConstraints.foldLeft(Delta()) {
       case (acc, (addConstraint, other)) =>

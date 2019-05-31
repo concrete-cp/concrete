@@ -3,7 +3,7 @@ package concrete.generator.cspompatterns
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable.SimpleExpression
 import CSPOM._
 
@@ -18,11 +18,13 @@ import CSPOM._
  */
 object ReifiedXor extends ConstraintCompilerNoData {
 
-  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
-    c.function == 'xor && !c.result.isTrue && c.arguments.length == 2
+  def functions = Functions('xor)
+
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
+    !c.result.isTrue && c.arguments.lengthCompare(2) == 0
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM): Delta = {
 
     val Seq(a: SimpleExpression[_], b: SimpleExpression[_]) = fc.arguments
     val res = fc.result

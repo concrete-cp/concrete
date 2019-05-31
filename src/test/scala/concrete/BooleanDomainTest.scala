@@ -15,18 +15,18 @@ final class BooleanDomainTest extends FlatSpec with Matchers {
   }
 
   it should "detect presence" in {
-    assert(domain(0))
+    assert(domain.contains(0))
     val d2 = domain - 0
-    assert(!d2(0))
-    assert(domain(0))
+    assert(!d2.contains(0))
+    assert(domain.contains(0))
   }
 
   it should "be persistent" in {
     val d2 = domain - 1
-    assert(!d2(1))
-    assert(domain(1))
+    assert(!d2.contains(1))
+    assert(domain.contains(1))
     domain - 1
-    assert(domain(1))
+    assert(domain.contains(1))
   }
 
   it should "find first value" in {

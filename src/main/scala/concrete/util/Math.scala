@@ -8,7 +8,20 @@ object Math {
 
   private val LOG2 = math.log(2.0)
 
-  def ceilDiv(x: Int, y: Int): Int = -java.lang.Math.floorDiv(-x, y)
+  def floorDiv(var0: Long, var2: Long): Long = {
+    var var4 = var0 / var2
+    if ((var0 ^ var2) < 0L && var4 * var2 != var0) var4 -= 1
+    var4
+  }
+
+  def floorDiv(var0: Int, var1: Int): Int = {
+    var var2 = var0 / var1
+    if ((var0 ^ var1) < 0 && var2 * var1 != var0) var2 -= 1
+    var2
+  }
+
+  def ceilDiv(x: Int, y: Int): Int = -floorDiv(-x, y)
+  def ceilDiv(x: Long, y: Long): Long = -floorDiv(-x, y)
 
   /** Make sure not to divide by some negative number as it would reverse the inequality **/
   def gcd(a: Seq[Int]): BigInt = a.map(BigInt(_)).reduce(_.gcd(_))

@@ -3,17 +3,17 @@ package constraint
 package linear
 
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
+final class AddACTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "AddAC" should "filter X" in {
     val x = new Variable("x", IntDomain(-100 to 100))
     val y = new Variable("y", IntDomain.ofSeq(5))
     val z = new Variable("z", IntDomain.ofSeq(2))
 
-    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumEQ, skipIntervals = false)
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.EQ, skipIntervals = false)
 
     val pb = Problem(x, y, z)
 
@@ -41,7 +41,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val y = new Variable("y", IntDomain(-100 to 100))
     val z = new Variable("z", IntDomain.ofSeq(2))
 
-    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumEQ, skipIntervals = false)
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.EQ, skipIntervals = false)
     val pb = Problem(x, y, z)
 
     pb.addConstraint(c)
@@ -67,7 +67,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val x = new Variable("x", IntDomain(1 to 10))
     val y = new Variable("y", IntDomain(20 to 30))
     val z = new Variable("z", IntDomain(-100 to 100))
-    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumEQ, skipIntervals = false)
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.EQ, skipIntervals = false)
     val pb = Problem(x, y, z)
     c.register(new AdviseCount)
     pb.addConstraint(c)
@@ -97,7 +97,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
       ConstraintComparator.compare(
         Array(vx, vy, vz),
-        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ, skipIntervals = false),
+        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.EQ, skipIntervals = false),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]): Boolean = t(0) == t(1) + t(2)
         })
@@ -111,7 +111,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
       ConstraintComparator.compare(
         Array(vx, vy, vz),
-        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ, skipIntervals = false),
+        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.EQ, skipIntervals = false),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]): Boolean = t(0) == t(1) + t(2)
         })

@@ -34,6 +34,9 @@ class DomainBuilder extends mutable.Builder[Int, Domain] {
 abstract class Domain extends SortedSet[Int] with SortedSetLike[Int, Domain] {
   def ordering: Ordering[Int] = Ordering.Int
 
+  @deprecated
+  override def apply(i: Int): Boolean = contains(i)
+
   override def newBuilder: mutable.Builder[Int, Domain] = new DomainBuilder
 
   override def empty: Domain = EmptyIntDomain

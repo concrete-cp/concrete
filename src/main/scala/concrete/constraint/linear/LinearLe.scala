@@ -24,7 +24,7 @@ final class LinearLe(
                       constant: Int,
                       factors: Array[Int],
                       scope: Array[Variable],
-                      val is: Array[Int]) extends Linear(constant, factors, scope, SumLE)
+                      val is: Array[Int]) extends Linear(constant, factors, scope, SumMode.LE)
   with IncrementalBoundPropagation with LazyLogging {
 
   import IncrementalBoundPropagation._

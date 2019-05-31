@@ -4,9 +4,9 @@ package concrete.constraint.extension
 import concrete.{IntDomain, Variable}
 import org.scalacheck.Gen
 import org.scalatest.{FlatSpec, Matchers, OptionValues}
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with OptionValues {
+class MDDRelationTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks with OptionValues {
 
   val mdd = MDDRelation(Seq(Array(1, 2, 3), Array(1, 3, 4), Array(1, 2, 5), Array(2, 3, 5)))
 

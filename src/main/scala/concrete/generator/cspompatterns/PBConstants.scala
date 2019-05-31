@@ -3,7 +3,7 @@ package concrete.generator.cspompatterns
 import concrete.generator.SumGenerator
 import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
 import cspom.compiler.ConstraintCompiler._
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable.{BoolExpression, CSPOMConstant, CSPOMVariable}
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -12,18 +12,18 @@ import cspom.{CSPOM, CSPOMConstraint}
   */
 object PBConstants extends ConstraintCompilerNoData {
 
-  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
-    c.function == 'pseudoboolean && {
-      val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
-      vars
-        .collectFirst {
-          case c: CSPOMConstant[_] => Unit
-        }
-        .nonEmpty
-    }
+  def functions = Functions('pseudoboolean)
+
+  def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
+    val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
+    vars
+      .collectFirst {
+        case c: CSPOMConstant[_] => Unit
+      }
+      .nonEmpty
   }
 
-  def compile(constraint: CSPOMConstraint[_], p: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], p: CSPOM): Delta = {
     val (expr, coefs, originalConst, mode) = SumGenerator.readCSPOM(constraint)
 
     val (vars, varCoefs) = expr.zip(coefs)

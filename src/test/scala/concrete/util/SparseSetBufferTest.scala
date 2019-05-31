@@ -2,10 +2,10 @@ package concrete.util
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
 import org.scalacheck.Gen
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class SparseSetBufferTest extends FlatSpec with Matchers with PropertyChecks {
+class SparseSetBufferTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "SparseSetBuffer" should "detect containment" in {
 
@@ -15,17 +15,17 @@ class SparseSetBufferTest extends FlatSpec with Matchers with PropertyChecks {
 
     map2 should contain(7)
     map2 should contain(6)
-    map2 should not contain (1)
-    map should not contain (6)
+    map2 should not contain 1
+    map should not contain 6
 
   }
 
   it should "be empty by default" in {
     var s = new SparseSetBuffer()
-    s should not contain(0)
+    s should not contain 0
 
     s += 3
-    s should not contain (0)
+    s should not contain 0
 
   }
 

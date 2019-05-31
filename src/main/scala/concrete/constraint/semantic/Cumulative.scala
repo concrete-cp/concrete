@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 trait CumulativeChecker extends Constraint with LazyLogging {
   def nbTasks: Int
+
   def check(tuple: Array[Int]): Boolean = {
 
     val s = tuple.slice(0, nbTasks)
@@ -31,16 +32,16 @@ trait CumulativeChecker extends Constraint with LazyLogging {
 }
 
 /**
- * Requires that a set of tasks given by start times s, durations d, and
- * resource requirements r, never require more than a global resource bound
- * b at any one time.
- *
- * Assumptions:
- * - forall i, d[i] >= 0 and r[i] >= 0
- */
+  * Requires that a set of tasks given by start times s, durations d, and
+  * resource requirements r, never require more than a global resource bound
+  * b at any one time.
+  *
+  * Assumptions:
+  * - forall i, d[i] >= 0 and r[i] >= 0
+  */
 
 class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b)
-    with BC with CumulativeChecker with FixPoint {
+  with BC with CumulativeChecker with FixPoint {
 
   def nbTasks: Int = s.length
 
@@ -133,22 +134,28 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     assert(filtered.nonEmpty)
     var minBound = state.dom(b).head
 
-    state.updateDomNonEmpty(s(i), filtered)
-      .fold(filtered.last until (filtered.head + dBound)) { (state, i) =>
-        profile(i - begin) += rBound
-        if (profile(i - begin) > minBound) {
-          minBound = profile(i - begin)
-          state.removeUntil(b, profile(i - begin))
-        } else {
-          state
-        }
+
+    var ps = state.updateDom(s(i), filtered)
+    var j = filtered.last
+    while (j < filtered.head + dBound && ps.isState) {
+      profile(j - begin) += rBound
+      if (profile(j - begin) > minBound) {
+        minBound = profile(j - begin)
+        ps = ps.removeUntil(b, profile(j - begin))
       }
+      j += 1
+    }
+    ps
   }
 
-  override def revise(ps: ProblemState, mod:BitVector): Outcome = {
+
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     buildProfile(ps)
-      .andThen { ps =>
-        fixPoint(ps, s.indices, { (ps, i) => filter(ps, ps.dom(b).last, i) })
+      .andThen {
+        ps =>
+          fixPoint(ps, s.indices, {
+            (ps, i) => filter(ps, ps.dom(b).last, i)
+          })
       }
   }
 

@@ -143,7 +143,7 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
   }
 
   def checkW1(ng: NoGood, dom: Domain, state: ProblemState): Outcome = {
-    if (dom(ng.witness1)) {
+    if (dom.contains(ng.witness1)) {
       assert(ng.possible(dom, ng.lit1).isDefined)
       state
     } else {
@@ -167,7 +167,7 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
 
 
   def checkW2(ng: NoGood, dom: Domain, state: ProblemState): Outcome = {
-    if (dom(ng.witness2)) {
+    if (dom.contains(ng.witness2)) {
       assert(ng.possible(dom, ng.lit2).isDefined)
       state
     } else {
@@ -343,7 +343,7 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
 
     def matches(tuple: Array[Int]): Boolean =
       literals.forall { decision =>
-        !decision.neg ^ decision.dom(tuple(decision.pos))
+        !decision.neg ^ decision.dom.contains(tuple(decision.pos))
       }
 
     def infer(ps: ProblemState, pos: Int): Outcome = {
@@ -353,7 +353,7 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
         val lit = literals(pos)
         if (lit.neg) {
           // var notin dom is mandatory, so remove all values from dom
-          ps.filterDom(scope(lit.pos))(v => !lit.dom(v))
+          ps.filterDom(scope(lit.pos))(v => !lit.dom.contains(v))
         } else {
           // var in dom is mandatory
           ps.intersectDom(scope(lit.pos), lit.dom)

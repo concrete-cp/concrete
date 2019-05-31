@@ -5,10 +5,10 @@ import concrete.constraint._
 import concrete._
 import concrete.util.Interval
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-final class MulTest extends FlatSpec with Matchers with PropertyChecks {
+final class MulTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   private val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
 

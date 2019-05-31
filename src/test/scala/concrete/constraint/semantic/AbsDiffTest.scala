@@ -5,9 +5,9 @@ package semantic
 
 import org.scalacheck.Gen
 import org.scalatest.{FlatSpec, Inspectors, Matchers}
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
+final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with ScalaCheckPropertyChecks {
 
   private val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
 

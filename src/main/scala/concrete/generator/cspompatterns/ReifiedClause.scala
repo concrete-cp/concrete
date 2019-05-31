@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.ConstraintCompiler
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.variable.{CSPOMExpression, CSPOMSeq}
 
 /**
@@ -18,12 +18,14 @@ object ReifiedClause extends ConstraintCompiler {
 
   type A = (CSPOMExpression[_], CSPOMSeq[_], Seq[CSPOMExpression[_]])
 
-  override def constraintMatcher = {
-    case CSPOMConstraint(res, 'clause, Seq(p: CSPOMSeq[_], CSPOMSeq(n)), params) if !res.isTrue =>
+  def functions: Functions = Functions('clause)
+
+  override def constraintMatcher: PartialFunction[CSPOMConstraint[_], (CSPOMExpression[Any], CSPOMSeq[_], Seq[CSPOMExpression[Any]])] = {
+    case CSPOMConstraint(res, _, Seq(p: CSPOMSeq[_], CSPOMSeq(n)), params) if !res.isTrue =>
       (res, p, n)
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A): Delta = {
     val (res, positive, negative) = data
 
     val c1 = CSPOMDriver.clause(positive, CSPOMSeq(res +: negative: _*))

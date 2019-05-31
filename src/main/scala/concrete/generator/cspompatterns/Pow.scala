@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.extension.MDDRelation
 import cspom.util.{Infinitable, IntInterval, RangeSet}
 import cspom.variable.IntExpression
@@ -11,19 +11,22 @@ import ConstraintCompiler._
 
 object Pow extends ConstraintCompilerNoData {
 
-  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    constraint.function == 'int_pow && constraint.result.isTrue
+  def functions = Functions('int_pow)
+
+  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
+    constraint.result.isTrue
   }
 
-  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
     val args = constraint.arguments.map { case IntExpression(e) => e }
 
     val Seq(x, y, r) = args
 
     import IntExpression.implicits.iterable
 
-    val mdd = try pow(x.toSeq, y.toSeq, r.r)
-    catch {
+    val mdd = try {
+      pow(x.toSeq, y.toSeq, r.r)
+    } catch {
       case e: ArithmeticException => throw new IllegalStateException(s"Could not handle $r = $x ^ $y", e)
     }
 

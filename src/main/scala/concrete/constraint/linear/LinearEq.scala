@@ -18,7 +18,7 @@ final class LinearEq(
                       factors: Array[Int],
                       scope: Array[Variable],
                       val is: Array[Int])
-  extends Linear(constant, factors, scope, SumEQ)
+  extends Linear(constant, factors, scope, SumMode.EQ)
     with IncrementalBoundPropagation
     with LazyLogging {
 

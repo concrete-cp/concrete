@@ -2,10 +2,10 @@ package concrete
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
 import org.scalacheck.Gen
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-final class IntDomainTest extends FlatSpec with Matchers with PropertyChecks {
+final class IntDomainTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "IntDomain" should "find next/prev" in {
     val b = IntDomain.ofSeq(1, 2, 7, 8)
@@ -35,12 +35,12 @@ final class IntDomainTest extends FlatSpec with Matchers with PropertyChecks {
 
   it should "detect presence" in {
     val domain = IntDomain.ofSeq(0, 1)
-    assert(domain(0))
+    assert(domain.contains(0))
 
     val d2 = domain - 0
-    assert(!d2(0))
+    assert(!d2.contains(0))
 
-    assert(domain(0))
+    assert(domain.contains(0))
   }
 
   it should "split" in {

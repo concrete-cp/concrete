@@ -4,11 +4,11 @@ import concrete.constraint._
 import concrete.{Contradiction, IntDomain, Problem, Variable}
 import org.scalacheck.Gen
 import org.scalatest.concurrent.TimeLimits
-import org.scalatest.prop.PropertyChecks
 import org.scalatest.time.{Second, Span}
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with PropertyChecks {
+final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with ScalaCheckPropertyChecks {
 
   "AbsInt" should "filter X" in {
 

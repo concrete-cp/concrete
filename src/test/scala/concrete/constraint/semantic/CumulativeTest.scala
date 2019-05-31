@@ -9,9 +9,9 @@ import concrete.Singleton
 import scala.util.Random
 import concrete.Problem
 import concrete.constraint.AdviseCount
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
+class CumulativeTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
   "cumulative" should "build profile" in {
     val r = new Random(0)
     val starts = Array.tabulate(5)(s => new Variable(s"s$s", IntDomain(0 until 25)))

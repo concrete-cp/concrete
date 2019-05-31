@@ -2,9 +2,7 @@ package concrete
 package generator
 package cspompatterns
 
-import cspom.compiler.CSPOMTypes
-import cspom.compiler.Compiler
-import cspom.compiler.StandardCompilers
+import cspom.compiler.{CSPOMTypes, Compiler, StandardCompilers}
 
 object ConcretePatterns {
 
@@ -21,7 +19,7 @@ object ConcretePatterns {
         SlidingSum, Regular, SetIn, CSPOMTypes,
         AllDiffConstant, PowDomains, Pow,
         // Clause does not support constants
-        SimplClause, PBConstants,
+        SimplClause, UnaryClause, PBConstants,
         DivDomains, ModDomains,
         Knapsack, Lex, NoOverlap, MinDomains, MaxDomains, DiffNWCumulative,
         GCC, NValues)
@@ -29,16 +27,18 @@ object ConcretePatterns {
     require(concreteDef.lengthCompare(concreteDef.distinct.size) == 0)
 
     val concreteImp = Seq(
+      SumDuplicates, ClauseDuplicates,
       //AbsDiff, AbsDiffDomains,
-      SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
-      //MergeNotDisj,
-      UnaryClause, SumFactors, SumEq, BoolSum, BoolProd, MergeSameCommutative
-      , SumSE
-      , ClauseSE
-      , MinMaxSimplify
-      , MinMaxSE,
-      AllDiff
-    ) //, MergeRelations) //, LexLeq2SAT)
+      SubsumedDiff, Square, SumConstants,  PseudoBool,
+      MergeNotDisj,
+      SumFactors, SumEq, BoolSum, BoolProd, MergeSameCommutative,
+      ACCSE_Sum,
+      ACCSE_Clause,
+      MinMaxSimplify,
+      ACCSE_MinMax,
+      MergeSameSum,
+      AllDiff,
+    )
 
     val improveModel = params.getOrElse("improveModel", true)
 

@@ -39,15 +39,16 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     i
   }
 
-  def offer(e: T, eval: Int) = {
-    assume(eval >= 0)
+  def offer(e: T, eval: Int): Boolean = {
+    assert(eval >= 0)
     val list = chooseList(eval)
     //println(e + " : " + eval + " -> " + list)
 
     val present = presence.isPresent(e)
 
-    if (present && list == e.currentList) false
-    else {
+    if (present && list == e.currentList) {
+      false
+    } else {
       if (present) {
         e.remove()
         if (last == e.currentList) {
@@ -87,7 +88,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     }
   }
 
-  def poll() = {
+  def poll(): T = {
     nbPoll += 1
     size -= 1
     val e = poll(0)
@@ -103,8 +104,8 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     presence.clear()
   }
 
-  def isEmpty = last < 0
+  def isEmpty: Boolean = last < 0
 
-  override def toString = queues.mkString("\n")
+  override def toString: String = queues.mkString("\n")
 
 }

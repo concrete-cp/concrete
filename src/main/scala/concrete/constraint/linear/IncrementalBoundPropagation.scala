@@ -18,7 +18,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
   def is: Array[Int]
 
-  protected def updateF(ps: ProblemState, mod: Traversable[Int]) = {
+  protected def updateF(ps: ProblemState, mod: Traversable[Int]): (Array[Domain], Interval, BitVector, Int) = {
     /*
      *  TODO: reinvestigate the detection of modified bounds (was disabled for reification but may still be interesting)
      */

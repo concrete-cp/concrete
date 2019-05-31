@@ -54,7 +54,7 @@ object IntDomain {
   def ofBitVector(offset: Int, bv: BitVector, s: Int): IntDomain = s match {
     case 0 => EmptyIntDomain
     case 1 => Singleton(offset + bv.nextSetBit(0))
-    case s: Int => {
+    case s: Int =>
       val lb = bv.nextSetBit(0)
       val ub = bv.lastSetBit
       assert(s == bv.cardinality)
@@ -65,7 +65,7 @@ object IntDomain {
       } else {
         new BitVectorDomain(offset, bv, s)
       }
-    }
+
   }
 
   def ofInterval(lb: Int, ub: Int): IntDomain =
@@ -109,12 +109,13 @@ object IntDomain {
 
 abstract class IntDomain extends Domain {
 
-  final def assign(value: Int): Singleton = {
+  final def assign(value: Int): IntDomain = {
     assert(contains(value), s"tried to assign to $value which is not present")
-    assert(!isAssigned, s"domain is already assigned to $value")
-    //if (present(value)) 
-    Singleton(value)
-    //else EmptyIntDomain
+    if (isAssigned) {
+      this
+    } else {
+      Singleton(value)
+    }
   }
 
   def |(value: Int): IntDomain
@@ -124,6 +125,23 @@ abstract class IntDomain extends Domain {
   def removeItv(from: Int, to: Int): Domain = {
     val removed = removeFrom(from) | removeTo(to)
     if (removed.size == size) this else removed
+  }
+
+  override def find(f: Int => Boolean): Option[Int] = {
+    if (isEmpty) None
+    else {
+      var current = head
+      while (true) {
+        if (f(current)) {
+          return Some(current)
+        } else if (current == last) {
+          return None
+        } else {
+          current = next(current)
+        }
+      }
+      throw new IllegalStateException()
+    }
   }
 
 }

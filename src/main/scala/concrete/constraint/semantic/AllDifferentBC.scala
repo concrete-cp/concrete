@@ -6,23 +6,25 @@ import concrete.constraint.{BC, Constraint, FixPoint}
 
 import scala.annotation.tailrec
 
-final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker with FixPoint {
+final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) with BC with AllDiffChecker with FixPoint {
 
-  val t = new Array[Int](2 * arity + 2) // Tree links
-  val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
-  val h = new Array[Int](2 * arity + 2) // Hall interval links
-  val bounds = new Array[Int](2 * arity + 2)
-  private val intervals = (0 until arity).map(p => HInterval(p)).toArray
+  def this(vars: Variable*) = this(vars.toArray)
+
+  private val t = new Array[Int](2 * arity + 2) // Tree links
+  private val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
+  private val h = new Array[Int](2 * arity + 2) // Hall interval links
+  private val bounds = new Array[Int](2 * arity + 2)
+  private val intervals = Array.tabulate(arity)(p => HInterval(p))
   private val minsorted = intervals.clone
   private val maxsorted = intervals.clone
-  val simpleEvaluation = 3
+  def simpleEvaluation = 3
   private val doms: Array[Domain] = new Array(arity)
   private val eval: Int = {
     (31 - Integer.numberOfLeadingZeros(arity)) * arity
   }
   var nbBounds = 0
 
-  def except = Set()
+  def except: Set[Int] = Set()
 
   def init(ps: ProblemState): ProblemState = ps
 

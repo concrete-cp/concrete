@@ -16,11 +16,13 @@ class ElementTest extends FlatSpec with Matchers {
     val v13 = new Variable("v13", IntDomain.ofSeq(59, 65))
     val c = new ElementWatch(r, i, Array(null, null, null, null, null, null, null, null, null, null, v10, null, null, v13, v13))
 
-    Seq(59 -> 13, 65 -> 10, 47 -> 13).foreach(e => c.resultWatches(e._2) ::= e._1)
-
-    c.indexWatches(10) = 65
-    c.indexWatches(13) = 59
-    c.indexWatches(14) = 59
+//    Seq(59 -> 13, 65 -> 10, 47 -> 13).foreach { case (i, v) =>
+//      c.resultWatches += i -> (v :: c.resultWatches(i))
+//    }
+//
+//    c.indexWatches.put(10, 65)
+//    c.indexWatches.put(13, 59)
+//    c.indexWatches.put(14, 59)
 
     val problem = Problem(r, i, v10, v13)
     problem.addConstraint(c)

@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.ConstraintCompiler
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.compiler.ConstraintCompiler._
 import cspom.variable.{CSPOMConstant, CSPOMExpression, CSPOMSeq}
 
@@ -12,8 +12,10 @@ object UnaryClause extends ConstraintCompiler {
 
   type A = (Boolean, CSPOMExpression[_])
 
+  def functions = Functions('clause)
+
   override def constraintMatcher = {
-    case CSPOMConstraint(CSPOMConstant(true), 'clause, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), params) if positive.length + negative.length == 1 =>
+    case CSPOMConstraint(CSPOMConstant(true), _, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), params) if positive.length + negative.length == 1 =>
       if (positive.length == 1) {
         (true, positive.head)
       } else if (negative.length == 1) {
@@ -23,7 +25,7 @@ object UnaryClause extends ConstraintCompiler {
       }
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A): Delta = {
 
     val (res, arg) = data
 

@@ -96,11 +96,11 @@ object BooleanDomain {
 
     def isAssigned = false
 
-    def disjoint(d: Domain): Boolean = !(d(0) || d(1))
+    def disjoint(d: Domain): Boolean = !(d.contains(0) || d.contains(1))
 
     def shift(o: Int): Domain = as01.shift(o)
 
-    def subsetOf(d: Domain): Boolean = d(0) && d(1)
+    def subsetOf(d: Domain): Boolean = d.contains(0) && d.contains(1)
   }
 
   case object TRUE extends BooleanDomain {
@@ -149,11 +149,11 @@ object BooleanDomain {
 
     def isAssigned = true
 
-    def disjoint(d: Domain): Boolean = !d(1)
+    def disjoint(d: Domain): Boolean = !d.contains(1)
 
     def shift(o: Int) = Singleton(o + 1)
 
-    def subsetOf(d: Domain): Boolean = d(1)
+    def subsetOf(d: Domain): Boolean = d.contains(1)
   }
 
   case object FALSE extends BooleanDomain {
@@ -201,11 +201,11 @@ object BooleanDomain {
 
     def isAssigned = true
 
-    def disjoint(d: Domain): Boolean = !d(0)
+    def disjoint(d: Domain): Boolean = !d.contains(0)
 
     def shift(o: Int) = Singleton(o)
 
-    def subsetOf(d: Domain): Boolean = d(0)
+    def subsetOf(d: Domain): Boolean = d.contains(0)
   }
 
   case object EMPTY extends BooleanDomain {

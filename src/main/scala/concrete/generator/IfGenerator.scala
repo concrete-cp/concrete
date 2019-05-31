@@ -1,7 +1,7 @@
 package concrete.generator
 
 import concrete.constraint.ReifiedConstraint
-import concrete.constraint.linear.{Eq, EqACFast, EqReif}
+import concrete.constraint.linear.EqACFast
 import cspom.CSPOMConstraint
 
 class IfGenerator(pg: ProblemGenerator) extends Generator {

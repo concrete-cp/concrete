@@ -5,7 +5,7 @@ import java.security.InvalidParameterException
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.ReifiedConstraint
-import concrete.constraint.linear.{SumEQ, SumLE}
+import concrete.constraint.linear.SumMode._
 import cspom._
 import cspom.util.Finite
 import cspom.variable._
@@ -117,7 +117,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
 
     constraint.nonReified && (constraint.function == 'pseudoboolean || constraint.function == 'sum && {
       val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-      (mode == SumLE || mode == SumEQ) &&
+      (mode == LE || mode == EQ) &&
         vars.forall {
           case BoolExpression(_) => true
           case e if BoolExpression.is01(e) => true

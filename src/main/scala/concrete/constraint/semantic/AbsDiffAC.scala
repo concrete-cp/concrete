@@ -28,13 +28,13 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
   def findValidTupleResult(val0: Int, dom1: Domain, dom2: Domain): Option[Array[Int]] = {
     if (val0 >= 0) {
       dom1
-        .find { v => dom2(v - val0) }
+        .find { v => dom2.contains(v - val0) }
         .map { v =>
           Array(val0, v, v - val0)
         }
         .orElse {
           dom1
-            .find { v => dom2(v + val0) }
+            .find { v => dom2.contains(v + val0) }
             .map { v =>
               Array(val0, v, v + val0)
             }
@@ -48,7 +48,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
         (v, math.abs(value - v))
       }
       .find {
-        case (_, res) => result(res)
+        case (_, res) => result.contains(res)
       }
       .map {
         case (v, res) => Array(res, value, v)
@@ -61,7 +61,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable)
         (v, math.abs(value - v))
       }
       .find {
-        case (_, res) => result(res)
+        case (_, res) => result.contains(res)
       }
       .map {
         case (v, res) => Array(res, v, value)

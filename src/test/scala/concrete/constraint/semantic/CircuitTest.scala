@@ -2,14 +2,10 @@ package concrete.constraint.semantic
 
 import concrete.{Assignment, IntDomain, Problem, Variable}
 import concrete.constraint.AdviseCount
-import cspom.variable.IntVariable
-import org.scalacheck.Gen
-import org.scalacheck.Prop.forAllNoShrink
 import org.scalatest.{FlatSpec, Matchers}
-import org.scalatest.prop.Checkers.check
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class CircuitTest extends FlatSpec with Matchers with PropertyChecks {
+class CircuitTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "Circuit constraint" should "check" in {
     val length = 10

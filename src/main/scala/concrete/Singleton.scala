@@ -114,7 +114,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
 
   def &(d: Domain): Domain = d match {
     case bd: BooleanDomain => bd & this
-    case _ if d(singleValue) => this
+    case _ if d.contains(singleValue) => this
     case _ => EmptyIntDomain
   }
 
@@ -170,7 +170,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
   def shift(o: Int): Singleton = if (o == 0) this else
     Singleton(singleValue + o)
 
-  def disjoint(d: Domain): Boolean = !d(singleValue)
+  def disjoint(d: Domain): Boolean = !d.contains(singleValue)
 
-  def subsetOf(d: Domain): Boolean = d(singleValue)
+  def subsetOf(d: Domain): Boolean = d.contains(singleValue)
 }

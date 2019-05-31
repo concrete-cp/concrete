@@ -15,7 +15,7 @@ object Task {
 case class Task(d: Variable, h: Variable, slb: Int, dlb: Int, eub: Int, hlb: Int) extends Ordered[Task] {
   assert(eub > slb)
 
-  private val coef = (dlb * hlb).toDouble / (eub - slb)
+  private val coef = dlb.toDouble * hlb / (eub - slb)
 
   def compare(t: Task): Int = java.lang.Double.compare(coef, t.coef)
 }
@@ -40,7 +40,7 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
 
   def init(ps: ProblemState): Outcome = ps
 
-  def revise(ps: ProblemState, mod: BitVector): Outcome = fixPoint(ps, shave(_))
+  def revise(ps: ProblemState, mod: BitVector): Outcome = fixPoint(ps, shave)
 
   final def shave(ps: ProblemState): Outcome = {
     val tasks = Array.tabulate(s.length) { i =>
@@ -49,25 +49,34 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
 
     scala.util.Sorting.quickSort(tasks) //stableSort(order, (i: Int, j: Int) => tasks(i).coef < tasks(j).coef)
 
-    var xMin = Int.MaxValue / 2
-    var xMax = Int.MinValue / 2
-    var surface = 0
-    val camax = ps.dom(b).last
+    var xMin = Long.MaxValue / 2
+    var xMax = Long.MinValue / 2
+    var surface = 0l
+    val camax = ps.dom(b).last.toLong
 
     ps.fold(tasks) { (ps: ProblemState, t) =>
       xMax = Math.max(xMax, t.eub)
       xMin = Math.min(xMin, t.slb)
       val xDiff = xMax - xMin
       if (xDiff >= 0) {
-        val availSurf: Int = xDiff * camax - surface
+        val availSurf: Long = xDiff * camax - surface
         surface += t.dlb * t.hlb
         if (surface > xDiff * camax) {
           Contradiction(scope)
         } else {
           var state: Outcome = ps
-          if (t.dlb > 0) state = state.removeAfter(t.h, Math.floorDiv(availSurf, t.dlb))
-          if (t.hlb > 0) state = state.removeAfter(t.d, Math.floorDiv(availSurf, t.hlb))
-          if (xDiff > 0) state = state.removeUntil(b, util.Math.ceilDiv(surface, xDiff))
+          if (t.dlb > 0) {
+            val ub = util.Math.floorDiv(availSurf, t.dlb)
+            if (ub.isValidInt) state = state.removeAfter(t.h, ub.toInt)
+          }
+          if (t.hlb > 0) {
+            val ub = util.Math.floorDiv(availSurf, t.hlb)
+            if (ub.isValidInt) state = state.removeAfter(t.d, ub.toInt)
+          }
+          if (xDiff > 0) {
+            val lb = util.Math.ceilDiv(surface, xDiff)
+            if (lb.isValidInt) state = state.removeUntil(b, lb.toInt)
+          }
           state
         }
       } else {

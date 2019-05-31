@@ -53,7 +53,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   def contains(value: Int): Boolean = {
     Domain.checks += 1
     val bit = value - offset
-    bit >= 0 && bitVector(bit)
+    bit >= 0 && bitVector.contains(bit)
   }
 
   def removeAfter(lb: Int): IntDomain = removeFrom(lb + 1)
@@ -144,6 +144,17 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   }
 
+  def toBitVector(offset: Int): BitVector = {
+    if (offset == this.offset) {
+      bitVector
+    } else {
+      bvOffset(offset, {
+        logger.trace(s"generating BV from offset ${this.offset} to $offset by ${Thread.currentThread().getStackTrace.toSeq}")
+        bitVector.shift(this.offset - offset)
+      })
+    }
+  }
+
   override def |(d: Domain): Domain = {
     d match {
       case s: Singleton => this | s.singleValue
@@ -207,17 +218,6 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
-  def toBitVector(offset: Int): BitVector = {
-    if (offset == this.offset) {
-      bitVector
-    } else {
-      bvOffset(offset, {
-        logger.trace(s"generating BV from offset ${this.offset} to $offset by ${Thread.currentThread().getStackTrace.toSeq}")
-        bitVector.shift(this.offset - offset)
-      })
-    }
-  }
-
   def convex = false
 
   override def isEmpty = false
@@ -239,6 +239,8 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     val n = bitVector.nextSetBit(b)
     if (n < 0) throw new NoSuchElementException(s"${bitVector.getClass}$bitVector.next($i) with last = ${bitVector.lastSetBit}") else offset + n
   }
+
+
 
   final private class BVDIterator(private var current: Int) extends Iterator[Int] {
     // Assumes domain is not empty

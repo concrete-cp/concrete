@@ -1,26 +1,25 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.CSPOMConstraint
 import cspom.CSPOM
 
 /**
- * If the given constraint is an all-different or neq constraint, remove it
- * if it is subsumed by another difference constraint.
- *
- * @param constraint
- */
+  * If the given constraint is an all-different or neq constraint, remove it
+  * if it is subsumed by another difference constraint.
+  */
 object SubsumedDiff extends ConstraintCompilerNoData {
 
-  def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) =
-    AllDiff.ALLDIFF_CONSTRAINT(constraint).isDefined && haveSubsumingConstraint(constraint, problem)
+  def functions = Functions(AllDiff.ALLDIFF_FUNCTIONS: _*)
 
-  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) :Delta= {
+  def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean =
+    haveSubsumingConstraint(constraint, problem)
+
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
     ConstraintCompiler.removeCtr(constraint, problem)
   }
 
-  private def haveSubsumingConstraint(
-    constraint: CSPOMConstraint[_], problem: CSPOM) = {
+  private def haveSubsumingConstraint(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val smallestDegree = constraint.fullScope.minBy(problem.constraints(_).size)
 
     problem.constraints(smallestDegree).exists(

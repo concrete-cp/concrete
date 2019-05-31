@@ -70,12 +70,12 @@ final class SquareAC(val x: Variable, val y: Variable)
 
   private def consistentX(xValue: Int, yDomain: Domain) = {
     Square.sqrt(xValue).exists { root =>
-      yDomain(root) || yDomain(-root)
+      yDomain.contains(root) || yDomain.contains(-root)
     }
   }
 
   private def consistentY(yValue: Int, xDomain: Domain) = {
-    math.abs(yValue) < Square.MAX_SQUARE && xDomain(yValue * yValue)
+    math.abs(yValue) < Square.MAX_SQUARE && xDomain.contains(yValue * yValue)
   }
 
   override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {

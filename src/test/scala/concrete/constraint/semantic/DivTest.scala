@@ -5,12 +5,12 @@ import concrete.constraint._
 import concrete.util.Interval
 import org.scalacheck.Gen
 import org.scalatest.{FlatSpec, Inspectors, Matchers}
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 /**
   * @author vion
   */
-class DivTest extends FlatSpec with Matchers with PropertyChecks {
+class DivTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
   "DivAC" should "comply with MiniZinc specifications" in {
 
     Inspectors.forAll(Seq((7, 4, 1), (-7, 4, -1), (7, -4, -1), (-7, -4, 1))) {
@@ -102,7 +102,7 @@ class DivTest extends FlatSpec with Matchers with PropertyChecks {
   private val itvDom = for (lb <- Gen.choose(-100, 100); ub <- Gen.choose(lb, 100)) yield Interval(lb, ub)
 
   it should "shave the same as enumerator" in {
-    PropertyChecks.forAll(itvDom, itvDom, itvDom) { (x, y, z) =>
+    ScalaCheckPropertyChecks.forAll(itvDom, itvDom, itvDom) { (x, y, z) =>
       val vx = new Variable("x", IntDomain.ofInterval(x))
       val vy = new Variable("y", IntDomain.ofInterval(y))
       val vz = new Variable("z", IntDomain.ofInterval(z))

@@ -63,13 +63,13 @@ final class AllDifferent2C(scope: Array[Variable], val except: Set[Int] = Set())
       var state = ps
       var q = tail
       val value = ps.dom(scope(head)).singleValue
-      if (!except.contains(value)) {
+      if (!except(value)) {
         var i = arity - 1
         while (i >= 0) {
           if (i != head) {
             val v = scope(i)
             val od = state.dom(v)
-            if (od(value)) {
+            if (od.contains(value)) {
               val nd = od - value
 
               if (od ne nd) {
@@ -95,7 +95,7 @@ final class AllDifferent2C(scope: Array[Variable], val except: Set[Int] = Set())
     // so check for actual assignment
     if (event <= Assignment) {
       val dom = ps.dom(scope(p))
-      if (dom.isAssigned && !except.contains(dom.head)) {
+      if (dom.isAssigned && !except(dom.head)) {
         q ::= p
         arity
       } else {

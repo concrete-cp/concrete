@@ -14,9 +14,13 @@ class BestCost(pm: ParameterManager, rand: Random) extends ValueSelector with La
   private var objective: Goal = _
   private var filter: Filter = _
 
+  private def isSat = objective == Satisfy
+
   override def toString: String = "best-cost"
 
-  def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) = {
+  def select(ps: ProblemState, variable: Variable, candidates: Domain): (Outcome, Domain) =
+    if (isSat) (ps, candidates)
+    else {
     var bestScore = Int.MaxValue
     val bestValues = TreeSet.newBuilder[Int] //new ArrayBuffer[Int]()
 
@@ -48,9 +52,9 @@ class BestCost(pm: ParameterManager, rand: Random) extends ValueSelector with La
     val domain = ps.dom(variable)
 
     val newDomain = if (domain.size >= boundsOnly) {
-      domain.filterBounds(v => !candidates(v) || checkValue(v))
+      domain.filterBounds(v => !candidates.contains(v) || checkValue(v))
     } else {
-      domain.filter(v => !candidates(v) || checkValue(v))
+      domain.filter(v => !candidates.contains(v) || checkValue(v))
     }
 
 
@@ -83,7 +87,7 @@ class BestCost(pm: ParameterManager, rand: Random) extends ValueSelector with La
     objective match {
       case Minimize(obj) => ps.dom(obj).head
       case Maximize(obj) => -ps.dom(obj).last
-      case Satisfy => 0
+      // case Satisfy => 0
     }
   }
 

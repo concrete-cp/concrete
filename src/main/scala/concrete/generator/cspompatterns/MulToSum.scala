@@ -2,16 +2,17 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver.CSPOMIntExpressionOperations
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
+import cspom.compiler._
 import cspom.variable.{CSPOMConstant, IntExpression}
 
 object MulToSum extends ConstraintCompilerNoData {
+  override def functions = Functions('mul)
 
-  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
-    c.function == 'mul && c.arguments.collect { case CSPOMConstant(_) => true }.size == 1
+  def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
+    c.arguments.collect { case CSPOMConstant(_) => true }.lengthCompare(1) == 0
   }
 
-  def compile(c: CSPOMConstraint[_], in: CSPOM) = {
+  def compile(c: CSPOMConstraint[_], in: CSPOM): Delta = {
     val Seq(v0, v1) = c.arguments
 
     (c.result, v0, v1) match {

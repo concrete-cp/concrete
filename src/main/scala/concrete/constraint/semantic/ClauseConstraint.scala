@@ -18,6 +18,8 @@ case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc 
 
 final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable]) extends Constraint(positive ++ negative: _*) {
 
+  require(arity >= 2, "Clause constraints must have at least two variables")
+
   val simpleEvaluation = 1
   private val posLength = positive.length
 

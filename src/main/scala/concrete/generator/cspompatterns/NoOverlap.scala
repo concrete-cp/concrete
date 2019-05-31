@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable.CSPOMConstant
 import cspom.variable.SimpleExpression
 import cspom.variable.BoolVariable
@@ -15,7 +15,9 @@ import ConstraintCompiler._
   */
 object NoOverlap extends ConstraintCompilerNoData {
 
-  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'noOverlap
+  def functions = Functions('noOverlap)
+
+  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = true
 
   def compile(c: CSPOMConstraint[_], p: CSPOM): Delta = {
     val CSPOMConstraint(CSPOMConstant(true), _, Seq(SimpleExpression.simpleSeq(origins), SimpleExpression.simpleSeq(lengths)), _) = c

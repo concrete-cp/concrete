@@ -1,22 +1,20 @@
 package concrete.generator.cspompatterns
 
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.{ConstraintCompiler, Delta}
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.variable.CSPOMExpression
 import cspom.compiler.ConstraintCompiler._
 
 object MinMaxSimplify extends ConstraintCompiler {
 
+  def functions = Functions('min, 'max)
+
   type A = Seq[CSPOMExpression[_]]
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[MinMaxSimplify.A] = {
-    if (c.function == 'min || c.function == 'max) {
-      val distinct = c.arguments.distinct
-      if (distinct.size < c.arguments.size) {
-        Some(distinct)
-      } else {
-        None
-      }
+    val distinct = c.arguments.distinct
+    if (distinct.size < c.arguments.size) {
+      Some(distinct)
     } else {
       None
     }

@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.extension.MDDRelation
 import cspom.variable.{CSPOMConstant, CSPOMSeq, SimpleExpression}
 import cspom.{CSPOM, CSPOMConstraint}
@@ -10,8 +10,10 @@ import ConstraintCompiler._
 
 object Regular extends ConstraintCompilerNoData {
 
-  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    constraint.function == 'regular && constraint.result.isTrue
+  def functions = Functions('regular)
+
+  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
+    constraint.result.isTrue
   }
 
   /**
@@ -22,7 +24,7 @@ object Regular extends ConstraintCompilerNoData {
     * 1..Q).  We reserve state 0 to be an always failing state.
     */
 
-  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
     val Seq(
     CSPOMSeq(x: Seq[SimpleExpression[Int]]@unchecked),
     CSPOMConstant(q0),
@@ -32,7 +34,7 @@ object Regular extends ConstraintCompilerNoData {
 
     val values = dfa.keys.map(_._2).toSeq.distinct.to[collection.IndexedSeq] //x.map(IntExpression.implicits.iterable).toIndexedSeq
 
-    val regular = mdd(IndexedSeq.fill(x.length)(values), q0, f.toSet, dfa)
+    val regular = mdd(IndexedSeq.fill(x.length)(values), q0, f.toSet, dfa).reduce()
     //
     replaceCtr(constraint, x in new MDDRelation(regular), problem)
   }
@@ -52,7 +54,7 @@ object Regular extends ConstraintCompilerNoData {
         val trie = for {value <- v(depth)
                         nextState <- dfa.get((state, value))
                         subMDD: MDD = parse(depth + 1, nextState)
-                        if (subMDD.nonEmpty)} yield {
+                        if subMDD.nonEmpty} yield {
           concrete.util.Math.any2Int(value) -> subMDD
         }
 

@@ -42,7 +42,7 @@ trait StatefulConstraint[+State <: AnyRef] extends Constraint {
 
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
 
-  def data(ps: ProblemState) = ps(this)
+  def data(ps: ProblemState): State = ps(this)
 
   def updateState[S >: State <: AnyRef](ps: ProblemState, value: S): ProblemState = ps.updateState(this, value)
 }

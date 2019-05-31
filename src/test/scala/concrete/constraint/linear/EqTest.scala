@@ -4,10 +4,10 @@ import concrete._
 import concrete.constraint.AdviseCount
 import cspom.CSPOM
 import cspom.variable.IntVariable
-import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-final class EqTest extends FlatSpec with Matchers with PropertyChecks {
+final class EqTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "EqBC" should "filter" in {
     val v0 = new Variable("v0", IntDomain.ofInterval(2, 3))

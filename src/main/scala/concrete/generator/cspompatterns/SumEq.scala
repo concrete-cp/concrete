@@ -1,8 +1,8 @@
 package concrete.generator.cspompatterns
 
-import concrete.constraint.linear.SumEQ
+import concrete.constraint.linear.SumMode
 import concrete.generator.SumGenerator
-import cspom.compiler.{ConstraintCompiler, Delta}
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.variable.CSPOMExpression
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -10,14 +10,12 @@ object SumEq extends ConstraintCompiler {
 
   type A = (CSPOMExpression[_], Seq[CSPOMExpression[_]])
 
+  def functions = Functions('sum)
+
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[(CSPOMExpression[Any], Seq[CSPOMExpression[Any]])] = {
-    if (c.function == 'sum) {
-      val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(c)
-      if (mode == SumEQ && constant == 0 && (coefs == Seq(1, -1) || coefs == Seq(-1, 1))) {
-        Some((c.result, vars))
-      } else {
-        None
-      }
+    val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(c)
+    if (mode == SumMode.EQ && constant == 0 && (coefs == Seq(1, -1) || coefs == Seq(-1, 1))) {
+      Some((c.result, vars))
     } else {
       None
     }
@@ -34,7 +32,7 @@ object SumEq extends ConstraintCompiler {
     val (r, args) = data
     ConstraintCompiler.replaceCtr(
       c,
-      CSPOMConstraint(r)('eq)(args: _*) withParams (c.params - "mode"),
+      CSPOMConstraint(r)('eq)(args: _*) withParams (c.params - "mode" - "constant"),
       p)
   }
 

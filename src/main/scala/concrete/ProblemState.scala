@@ -6,6 +6,8 @@ import concrete.constraint.{Constraint, StatefulConstraint}
 import concrete.util.{IdentityMap, Interval}
 import cspom.UNSATException
 
+import scala.annotation.tailrec
+
 sealed trait Outcome {
   def tryAssign(variable: Variable, i: Int): Outcome
 
@@ -83,16 +85,16 @@ sealed trait Outcome {
 
   def isState: Boolean
 
-  def fold[A](s: Traversable[A])(f: (ProblemState, A) => Outcome): Outcome = {
-    var state = this
-    for (e <- s) {
-      if (state.isState) {
-        state = f(state.toState, e)
-      } else {
-        return state
-      }
+  def fold[A](s: Iterable[A])(f: (ProblemState, A) => Outcome): Outcome = {
+    fold(s.iterator, f)
+  }
+
+  @tailrec
+  final def fold[A](it: Iterator[A], f: (ProblemState, A) => Outcome): Outcome = {
+    this match {
+      case ps: ProblemState if it.hasNext => f(ps, it.next()).fold(it, f)
+      case e => e
     }
-    state
   }
 
   def dueTo(cause: => (Constraint, Traversable[Variable])): Outcome
@@ -113,7 +115,7 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
 
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = this
 
-  def filterBounds(v: Variable)(f: Int=>Boolean): Outcome = this
+  def filterBounds(v: Variable)(f: Int => Boolean): Outcome = this
 
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = this
 
@@ -156,6 +158,7 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
   def dueTo(cause: => (Constraint, Traversable[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
 
   override def tryAssign(variable: Variable, i: Int): Outcome = this
+
 }
 
 object ProblemState {
@@ -207,7 +210,6 @@ case class ProblemState(
                          entailed: EntailmentManager,
                          data: IdentityMap[Any, Any] = IdentityMap()) extends Outcome
   with LazyLogging {
-
 
 
   def wDeg(v: Variable): Int = entailed.wDeg(v)
@@ -291,7 +293,7 @@ case class ProblemState(
 
   def removeIfPresent(v: Variable, value: Int): Outcome = {
     val d = dom(v)
-    if (d(value)) {
+    if (d.contains(value)) {
       updateDom(v, d - value)
     } else {
       this
@@ -306,6 +308,12 @@ case class ProblemState(
 
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome =
     updateDom(v, dom(v) & (lb, ub))
+
+  def removeTo(v: Variable, ub: Int): Outcome =
+    updateDom(v, dom(v).removeTo(ub))
+
+  override def removeFrom(v: Variable, lb: Int): Outcome =
+    updateDom(v, dom(v).removeFrom(lb))
 
   def updateDom(v: Variable, newDomain: Domain): Outcome = {
     if (newDomain.isEmpty) {
@@ -344,12 +352,6 @@ case class ProblemState(
     if (id < 0) v.initDomain else domains(id)
   }
 
-  def removeTo(v: Variable, ub: Int): Outcome =
-    updateDom(v, dom(v).removeTo(ub))
-
-  override def removeFrom(v: Variable, lb: Int): Outcome =
-    updateDom(v, dom(v).removeFrom(lb))
-
   override def removeUntil(v: Variable, ub: Int): Outcome =
     updateDom(v, dom(v).removeUntil(ub))
 
@@ -358,11 +360,11 @@ case class ProblemState(
 
   def entailIfFree(c: Constraint): ProblemState = c.singleFree(this).map(entail(c, _)).getOrElse(this)
 
+  def entailIfFree(c: Constraint, doms: Array[Domain]): ProblemState = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
+
   def entail(c: Constraint, i: Int): ProblemState = {
     new ProblemState(domains, constraintStates, entailed.entail(c, i), data)
   }
-
-  def entailIfFree(c: Constraint, doms: Array[Domain]): ProblemState = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
 
   def entailIf(c: Constraint, f: ProblemState => Boolean): ProblemState = {
     if (f(this)) entail(c) else this
@@ -381,4 +383,5 @@ case class ProblemState(
     new ProblemState(domains, constraintStates, entailed, data + (key -> value))
 
   def getData[A](key: Any): A = data(key).asInstanceOf[A]
+
 }

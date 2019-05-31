@@ -2,7 +2,7 @@ package concrete
 package it
 
 import org.scalatest.FlatSpec
-import concrete.constraint.Constraint
+
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.runner.FZConcrete
@@ -31,9 +31,9 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
   "concrete" should "validate solution" in {
 
     val pm = new ParameterManager()
-      .updated("ac3c.key", classOf[concrete.heuristic.revision.Weight])
-      .updated("ac3c.queue", classOf[concrete.priorityqueues.ScalaBinomialHeap[Constraint]])
-    //pm("improveModel") = false
+//      .updated("ac3c.key", classOf[concrete.heuristic.revision.Weight])
+//      .updated("ac3c.queue", classOf[concrete.priorityqueues.ScalaBinomialHeap[Constraint]])
+//      .updated("improveModel", false)
 
     //    val cspom = CSPOM { implicit problem =>
     //      val x = IntVariable(0 to 1) as "X"

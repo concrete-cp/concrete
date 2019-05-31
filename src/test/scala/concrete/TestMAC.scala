@@ -39,7 +39,7 @@ class TestMAC extends FlatSpec with Matchers {
   }
 
   def allDiff(p: Problem, q: Seq[Variable]) {
-    p.addConstraint(new AllDifferentBC(q: _*))
+    p.addConstraint(new AllDifferentBC(q.toArray))
     for (Seq(x, y) <- q.combinations(2)) {
       p.addConstraint(new Neq(x, y))
     }

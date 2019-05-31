@@ -10,9 +10,6 @@ import scala.util.{Random, Try}
 
 object ValueSelector {
   def default(params: ParameterManager, rand: Random): Try[Seq[ValueSelector]] = {
-
-    //for {
-    //  vh: Seq[VariableHeuristic] <-
     params.getRaw("heuristic.value")
       .map {
         case h: Seq[_] => instantiate(params, h, rand)
@@ -20,21 +17,10 @@ object ValueSelector {
         case c: Any => instantiate(params, Seq(c), rand)
       }
       .getOrElse(instantiate(params, default, rand))
-    //}
-
-    //      yield {
-    //      val randomDiv = params.getOrElse("heuristic.variable.randomDiv", 0.0)
-    //
-    //      if (randomDiv > 0) {
-    //        new RandomDiv(vh.flatMap(_.pool).distinct, randomDiv, rand) +: vh
-    //      } else {
-    //        vh
-    //      }
-    //    }
   }
 
   def default: Seq[Class[_ <: ValueSelector]] = {
-    Seq(classOf[RandomBoundDiv], classOf[BestValue], classOf[BestCost],
+    Seq(classOf[RandomBoundDiv], classOf[BestValue], classOf[PhaseSaving], classOf[BestCost],
       classOf[RandomBound])
   }
 

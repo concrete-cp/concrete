@@ -27,16 +27,16 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   private def findValidTupleResult(val0: Int, dom1: Domain, dom2: Domain): Option[Array[Int]] = {
     if (val0 == 0) {
-      if (dom1(0)) {
+      if (dom1.contains(0)) {
         Some(Array(0, 0, dom2.head))
-      } else if (dom2(0)) {
+      } else if (dom2.contains(0)) {
         Some(Array(0, dom1.head, 0))
       } else {
         None
       }
     } else {
       dom1
-        .find(val1 => val1 != 0 && val0 % val1 == 0 && dom2(val0 / val1))
+        .find(val1 => val1 != 0 && val0 % val1 == 0 && dom2.contains(val0 / val1))
         .map(val1 => Array(val0, val1, val0 / val1))
     }
 
@@ -44,7 +44,7 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   def findValidTupleV(result: Domain, value: Int, dom: Domain, of: Int): Option[Array[Int]] = {
     dom
-      .find { v => result(value * v) }
+      .find { v => result.contains(value * v) }
       .map { v =>
         val a = new Array[Int](3)
         a(0) = value * v

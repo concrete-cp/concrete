@@ -1,16 +1,16 @@
 name := "concrete"
 
-organization := "fr.univ-valenciennes"
+organization := "com.github.concrete-cp"
 
-maintainer := "Julien Vion <julien.vion@univ-valenciennes.fr>"
+maintainer := "Julien Vion <julien.vion@uphf.fr>"
 
 packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.9.2"
+version := "3.10-SNAPSHOT"
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.8"
 
 javaOptions in ThisBuild += "-Xss16M"
 
@@ -20,18 +20,19 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.25",
-	"org.postgresql" % "postgresql" % "42.2.4",
-	"com.typesafe.slick" %% "slick" % "3.2.3",
-	"com.typesafe" % "config" % "1.3.3",
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+	"com.github.concrete-cp" %% "cspom" % "3.0-SNAPSHOT",
+	"org.postgresql" % "postgresql" % "42.2.5",
+	"com.typesafe.slick" %% "slick" % "3.3.0",
+	"com.typesafe" % "config" % "1.3.4",
+  "org.scalatest" %% "scalatest" % "3.0.7" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.10.1" % "test",
-	"com.github.davidmoten" % "rtree" % "0.8.6"
+	"com.storm-enroute" %% "scalameter" % "0.17" % "test",
+	"com.github.davidmoten" % "rtree" % "0.8.6",
+  "org.eclipse.collections" % "eclipse-collections" % "9.2.0"
 	)
 
 scalacOptions ++= Seq(
- "-Xdisable-assertions",
+  "-Xdisable-assertions",
 	"-deprecation"
 //	"-unchecked", 
 ,	"-Xlint" 
@@ -39,6 +40,8 @@ scalacOptions ++= Seq(
 , 	"-Ywarn-unused-import"
    , "-target:jvm-1.8"
 )
+
+javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
 enablePlugins(JavaAppPackaging)
 enablePlugins(DebianPlugin)
@@ -48,6 +51,7 @@ cancelable in Global := true
 logBuffered in Test := false
 // testOptions in Test += Tests.Argument("-oDF")
 fork in Test := true
+fork := true
 
 publishTo :=  {
   val nexus = "https://oss.sonatype.org/"

@@ -2,14 +2,16 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable.BoolExpression
 import cspom.variable.CSPOMSeq
 
 object PseudoBool extends ConstraintCompilerNoData {
 
-  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c match {
-    case CSPOMConstraint(_, 'sum, Seq(CSPOMSeq(args), _), _) => args.forall {
+  def functions = Functions('sum)
+
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = c match {
+    case CSPOMConstraint(_, _, Seq(CSPOMSeq(args), _), _) => args.forall {
       case BoolExpression(e)           => true
       case e if BoolExpression.is01(e) => true
       case _                           => false
@@ -17,7 +19,7 @@ object PseudoBool extends ConstraintCompilerNoData {
     case _ => false
   }
 
-  def compile(c: CSPOMConstraint[_], p: CSPOM) = {
+  def compile(c: CSPOMConstraint[_], p: CSPOM): Delta = {
 
     ConstraintCompiler.replaceCtr(
       c,

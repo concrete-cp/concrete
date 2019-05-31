@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable.CSPOMSeq
 
 /**
@@ -18,12 +18,11 @@ import cspom.variable.CSPOMSeq
 //  }
 object NegToCNF extends ConstraintCompilerNoData {
 
+  def functions = Functions('not)
 
-  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
-    c.function == 'not
-  }
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = true
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM): Delta = {
 
     val res = fc.result
     val Seq(arg) = fc.arguments

@@ -1,9 +1,10 @@
 package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver._
-import concrete.Solver
+import concrete.{ParameterManager, Solver}
 import cspom.CSPOM.{ctr, goal, _}
 import cspom.CSPOMGoal.Minimize
+import cspom.compiler.CSPOMCompiler
 import cspom.variable.{BoolVariable, CSPOMSeq, IntVariable}
 import cspom.{CSPOM, UNSATException}
 import org.scalatest.{FlatSpec, Matchers, TryValues}
@@ -11,7 +12,7 @@ import org.scalatest.{FlatSpec, Matchers, TryValues}
 class ACCSETest extends FlatSpec with Matchers with TryValues {
 
   "ACCSE" should "greatly improve bad GR model" in {
-    val ticks = 12
+    val ticks = 3
     val max = ticks * ticks
 
     val problem = CSPOM { implicit problem =>
@@ -32,9 +33,18 @@ class ACCSETest extends FlatSpec with Matchers with TryValues {
       goal(Minimize(variables.last))
     }
 
-    val solver = Solver(problem).get
 
-    solver.concreteProblem.constraints should have size (max + 1)
+    val cspom = CSPOMCompiler.compile(problem, ConcretePatterns(new ParameterManager)).get
+
+    // println(problem)
+
+    val nbDiffs = ticks * (ticks - 1)
+    val nbConstraints =
+      (ticks - 1) + //lt constraints
+        nbDiffs + // diff definitions
+        1 // alldiff (constraints are posted on both sides)
+
+    cspom.constraints.toSeq should have size nbConstraints
 
   }
 
@@ -48,8 +58,11 @@ class ACCSETest extends FlatSpec with Matchers with TryValues {
       ctr(sum(x, y, z) >= 11)
     }
 
+    println(problem)
+    val solver = Solver(problem)
+    println(problem)
 
-    Solver(problem).failure.exception shouldBe an[UNSATException]
+    solver.failure.exception shouldBe an[UNSATException]
   }
 
   it should "allow CSPOM to detect sum subexpressions" in {

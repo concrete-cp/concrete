@@ -23,7 +23,7 @@ object BranchHeuristic {
 
   def apply(pm: ParameterManager, rand: Random): Try[BranchHeuristic] = {
     Try(
-      pm.classInPackage("heuristic.branch", "concrete.heuristic.value", classOf[ValueHeuristic])
+      pm.classInPackage("heuristic.branch", "concrete.heuristic.value", default = classOf[ValueHeuristic])
     )
       .flatMap { valueHeuristicClass: Class[_ <: BranchHeuristic] =>
         apply(valueHeuristicClass, pm, rand)

@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable.CSPOMSeq
 
 /**
@@ -16,9 +16,11 @@ import cspom.variable.CSPOMSeq
  */
 object ReifiedConj extends ConstraintCompilerNoData {
 
-  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'and
+  def functions = Functions('and)
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = true
+
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM): Delta = {
 
     val res = fc.result
     val args = fc.arguments

@@ -1,6 +1,6 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.{ConstraintCompiler, Delta}
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.variable.{BoolVariable, CSPOMExpression, CSPOMSeq}
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -8,9 +8,13 @@ object Lex extends ConstraintCompiler {
 
   type A = LexType
 
-  override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM): Option[A] = PartialFunction.condOpt(constraint.function) {
-    case 'lex => LexList
-    case 'lexmatrix => LexMatrix
+  def functions = Functions('lex, 'lexmatrix)
+
+  override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM): Option[A] = Some {
+    constraint.function match {
+      case 'lex => LexList
+      case 'lexmatrix => LexMatrix
+    }
   }
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, data: A): Delta = {

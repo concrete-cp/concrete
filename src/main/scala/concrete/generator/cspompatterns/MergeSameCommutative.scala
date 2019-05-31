@@ -2,21 +2,20 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.{ConstraintCompiler, Delta}
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 
 /**
  * Find and merge auxiliary variables similary defined by other constraints
  */
 object MergeSameCommutative extends ConstraintCompiler {
 
-  val commutative = Set('eq, 'ne, 'mul, 'nevec)
+  def functions = Functions('eq, 'ne, 'mul, 'nevec)
 
   type A = Seq[CSPOMConstraint[_]]
 
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM): Option[A] = {
     val s = for {
       arg <- c.arguments
-      if commutative(c.function)
       argCons <- problem.constraints(arg)
       if (argCons ne c) && c.result != argCons.result &&
         c.function == argCons.function &&

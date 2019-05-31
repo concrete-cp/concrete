@@ -19,7 +19,7 @@ final class CircuitGenerator(adg: AllDifferentGenerator) extends Generator {
 
     val c = new Circuit(vars, start, s)
 
-    Seq(c, new AllDifferent2C(vars), new AllDifferentBC(vars: _*))
+    Seq(c, new AllDifferent2C(vars), new AllDifferentBC(vars))
 
   }
 

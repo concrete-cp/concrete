@@ -12,7 +12,7 @@ final class QuickFifo[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   val presence = new Presence
 
-  def offer(e: T, eval: Int) = {
+  def offer(e: T, eval: Int): Boolean = {
     if (presence.isPresent(e)) false
     else {
       queue.append(e)
@@ -21,7 +21,7 @@ final class QuickFifo[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     }
   }
 
-  def poll() = {
+  def poll(): T = {
     val e = queue.next
     e.remove()
     val e2 = e.asInstanceOf[T]
@@ -34,6 +34,6 @@ final class QuickFifo[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     presence.clear()
   }
 
-  def isEmpty = queue.isEmpty
+  def isEmpty: Boolean = queue.isEmpty
 
 }

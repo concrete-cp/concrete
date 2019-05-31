@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 final class LinearNe(
                       constant: Int,
                       factors: Array[Int],
-                      scope: Array[Variable]) extends Linear(constant, factors, scope, SumNE) with LazyLogging {
+                      scope: Array[Variable]) extends Linear(constant, factors, scope, SumMode.NE) with LazyLogging {
 
   override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     var const = constant

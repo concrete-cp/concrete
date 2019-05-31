@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.util.ContiguousIntRangeSet
 import cspom.variable.{BoolVariable, CSPOMConstant, CSPOMSeq, IntExpression}
 
@@ -36,5 +36,7 @@ object NValues extends ConstraintCompilerNoData {
     ConstraintCompiler.replaceCtr(constraint, newConstraints, problem)
   }
 
-  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = constraint.function == 'nvalues
+  def functions = Functions('nvalues)
+
+  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = true
 }

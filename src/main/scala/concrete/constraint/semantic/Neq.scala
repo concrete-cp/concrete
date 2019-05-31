@@ -27,7 +27,7 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
 
       if (d1.isAssigned) {
         val v = d1.head + c
-        if (d0(v)) {
+        if (d0.contains(v)) {
           ps.updateDom(v0, d0 - v).entail(this)
         } else {
           ps.entail(this)

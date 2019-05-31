@@ -1,76 +1,85 @@
 package concrete.generator.cspompatterns
 
-import concrete.constraint.linear.{SumEQ, SumLE}
+import concrete.constraint.linear.SumMode
 import cspom.CSPOM._
 import concrete.CSPOMDriver._
 import cspom.compiler.ConstraintCompiler._
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, GlobalCompiler}
+import cspom.compiler._
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
 
 object XCSPPatterns {
-  val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
-    case CSPOMConstraint(a, 'sub, Seq(b, c), p) =>
+  def compilers: Seq[(Symbol, PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]])] = Seq(
+    'sub -> { case CSPOMConstraint(a, 'sub, Seq(b, c), p) =>
       CSPOMConstraint('sum)(Seq(-1, 1, -1), Seq(a, b, c), 0) withParams p + ("mode" -> "eq")
+    },
     //      linear(Seq((-1, coerce(a)), (1, coerce(b)), (-1, coerce(c))), "eq", 0) withParams p
 
-    case CSPOMConstraint(a, 'add, args, p) =>
+    'add -> { case CSPOMConstraint(a, 'add, args, p) =>
       CSPOMConstraint('sum)(-1 +: Seq.fill(args.size)(1), a +: args, 0) withParams p + ("mode" -> "eq")
+    },
 
     //    case CSPOMConstraint(r, 'ne, Seq(a, b), p) =>
     //      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "ne")
 
-    case CSPOMConstraint(r, 'lt, Seq(a, b), p) =>
+    'lt -> { case CSPOMConstraint(r, 'lt, Seq(a, b), p) =>
       CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "lt")
+    },
 
-    case CSPOMConstraint(r, 'le, Seq(a, b), p) =>
+    'le -> { case CSPOMConstraint(r, 'le, Seq(a, b), p) =>
       CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "le")
+    },
 
-    case CSPOMConstraint(r, 'gt, Seq(a, b), p) =>
+    'gt -> { case CSPOMConstraint(r, 'gt, Seq(a, b), p) =>
       CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> "lt")
+    },
 
-    case CSPOMConstraint(r, 'ge, Seq(a, b), p) =>
-      CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> SumLE)
+    'ge -> { case CSPOMConstraint(r, 'ge, Seq(a, b), p) =>
+      CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> SumMode.LE)
+    },
 
-    case CSPOMConstraint(r, 'or, a, p) =>
+    'or -> { case CSPOMConstraint(r, 'or, a, p) =>
       CSPOMConstraint(r)('clause)(a, Seq[SimpleExpression[Boolean]]()) withParams p
+    },
 
-    case CSPOMConstraint(r, 'dist, a, p) =>
+    'dist -> { case CSPOMConstraint(r, 'dist, a, p) =>
       CSPOMConstraint(r)('absdiff)(a: _*) withParams p
+    },
 
-    case CSPOMConstraint(r, 'allDifferent, a, p) =>
+    'allDifferent -> { case CSPOMConstraint(r, 'allDifferent, a, p) =>
       CSPOMConstraint(r)('alldifferent)(a: _*) withParams p
+    },
 
-    case CSPOMConstraint(r, 'set, vars, p) =>
+    'set -> { case CSPOMConstraint(r, 'set, vars, p) =>
       CSPOMConstraint('member)(vars, r) withParams p
+    },
 
     /** Semantics of "in" in XCSP3 and Concrete differ */
-    case CSPOMConstraint(r, 'in, Seq(x, y: SimpleExpression[_]), p) =>
+    'in -> { case CSPOMConstraint(r, 'in, Seq(x, y: SimpleExpression[_]), p) =>
       CSPOMConstraint(r)('eq)(x, y) withParams p
+    },
 
-    case CSPOMConstraint(r, 'iff, Seq(x, y), p) => {
+    'iff -> { case CSPOMConstraint(r, 'iff, Seq(x, y), p) =>
       CSPOMConstraint(r)('eq)(x, y) withParams p
-    }
+    },
 
-    case CSPOMConstraint(r, 'imp, Seq(x, y), p) => {
+    'imp -> { case CSPOMConstraint(r, 'imp, Seq(x, y), p) =>
       CSPOMConstraint(r)('clause)(CSPOMSeq(y), CSPOMSeq(x)) withParams p
-    }
+    },
 
-    case CSPOMConstraint(r, 'neg, Seq(x), p) => {
-      CSPOMConstraint('sum)(Seq(1, 1), Seq(r, x), 0) withParams p + ("mode" -> SumEQ)
-    }
+    'neg -> { case CSPOMConstraint(r, 'neg, Seq(x), p) =>
+      CSPOMConstraint('sum)(Seq(1, 1), Seq(r, x), 0) withParams p + ("mode" -> SumMode.EQ)
+    })
 
 
-  }
-
-  val mtchMulti: PartialFunction[CSPOMConstraint[_], Seq[CSPOMConstraint[_]]] = {
-    case CSPOMConstraint(CSPOMConstant(true), 'alldifferentList, lists, _) => {
+  def compilersMulti: Seq[(Symbol, PartialFunction[CSPOMConstraint[_], Seq[CSPOMConstraint[_]]])] = Seq(
+    'alldifferentList -> { case CSPOMConstraint(CSPOMConstant(true), 'alldifferentList, lists, _) =>
       for (Seq(a1, a2) <- lists.combinations(2).toSeq) yield {
         CSPOMConstraint('nevec)(a1, a2)
       }
-    }
+    },
 
-    case CSPOMConstraint(CSPOMConstant(true), 'alldifferentMatrix, Seq(CSPOMSeq(matrix)), _) => {
+    'alldifferentMatrix -> { case CSPOMConstraint(CSPOMConstant(true), 'alldifferentMatrix, Seq(CSPOMSeq(matrix)), _) =>
       val seqMat: Seq[Seq[CSPOMExpression[_]]] = matrix
         .map { case CSPOMSeq(line) => line }
 
@@ -79,9 +88,9 @@ object XCSPPatterns {
       (seqMat ++ transposed).map(c =>
         CSPOMConstraint('alldifferent)(c: _*)
       )
-    }
+    },
 
-    case CSPOMConstraint(CSPOMConstant(true), 'channelBool, Seq(list: CSPOMSeq[_], value), _) => {
+    'channelBool -> { case CSPOMConstraint(CSPOMConstant(true), 'channelBool, Seq(list: CSPOMSeq[_], value), _) =>
       //      val exactly = CSPOMDriver.pseudoBoolean(
       //        list.values.asInstanceOf[Seq[SimpleExpression[Boolean]]],
       //        Seq.fill(list.size)(1), "eq", 1)
@@ -92,28 +101,28 @@ object XCSPPatterns {
 
       // exactly +:
       reif.toSeq
+    }
+  )
 
+  def apply(): Seq[ConstraintCompiler] = Seq(
+    Ordered, Lex, NonLinearSum) ++
+    compilers.map { case (symbol, function) => new GlobalCompiler {
+      val functions: Functions = Functions(symbol)
+      override val constraintMatcher: PartialFunction[CSPOMConstraint[_], Seq[CSPOMConstraint[_]]] = function.andThen(Seq(_))
+    }
+    } ++
+    compilersMulti.map { case (symbol, function) => new GlobalCompiler {
+      val functions = Functions(symbol)
+
+      override def constraintMatcher: PartialFunction[CSPOMConstraint[_], Seq[CSPOMConstraint[_]]] = function
+    }
     }
 
-  }
-
-  def apply() = Seq(
-    Ordered, Lex, NonLinearSum,
-    new GlobalCompiler(mtch) {
-      def selfPropagation = true
-    },
-    new ConstraintCompiler {
-      override def constraintMatcher: PartialFunction[CSPOMConstraint[_], Seq[CSPOMConstraint[_]]] = mtchMulti
-
-      type A = Seq[CSPOMConstraint[_]]
-
-      def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A): Delta = {
-        replaceCtr(c, data, problem)
-      }
-    })
 
   object Ordered extends ConstraintCompilerNoData {
-    def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = constraint.function == 'ordered
+    def functions = Functions('ordered)
+
+    def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = true
 
     def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
       val Seq(IntExpression.simpleSeq(variables), IntExpression.simpleSeq(lengths)) = constraint.arguments

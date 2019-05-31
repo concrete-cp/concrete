@@ -1,9 +1,8 @@
 package concrete.generator.cspompatterns
 
-import concrete.constraint.linear.SumMode
 import concrete.generator.SumGenerator
 import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
-import cspom.compiler.{ConstraintCompiler, Delta}
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.compiler.ConstraintCompiler._
 import cspom.variable.{BoolExpression, CSPOMExpression}
 import cspom.{CSPOM, CSPOMConstraint}
@@ -15,37 +14,35 @@ object SumDuplicates extends ConstraintCompiler {
 
   type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[Any], Int], Int)
 
-  override def mtch(c: CSPOMConstraint[_], p: CSPOM) = {
-    if (c.function == 'sum) {
-      val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
+  def functions = Functions('sum)
 
-      var duplicates = false
-      val factors = collection.mutable.Map[CSPOMExpression[_], Int]()
-      for ((v, c) <- (vars, coefs).zipped) {
-        factors.get(v) match {
-          case Some(i) =>
-            duplicates = true
-            factors(v) = i + c
-          case None =>
-            factors(v) = c
-        }
+  override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[A] = {
+    val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
+
+    var duplicates = false
+    val factors = collection.mutable.Map[CSPOMExpression[_], Int]()
+    for ((v, c) <- (vars, coefs).zipped) {
+      factors.get(v) match {
+        case Some(i) =>
+          duplicates = true
+          factors(v) = i + c
+        case None =>
+          factors(v) = c
       }
+    }
 
-      if (duplicates || factors.values.contains(0)) {
-        Some((c.result, factors, const))
-      } else {
-        None
-      }
-
+    if (duplicates || factors.values.contains(0)) {
+      Some((c.result, factors, const))
     } else {
       None
     }
+
   }
 
 
   def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A): Delta = {
     val (r, args, const) = data
-    val mode = constraint.getParam[String]("mode").flatMap(SumMode.withName).get
+    val mode = SumGenerator.readMode(constraint).get
     val (variables, factors) = args.filter(_._2 != 0).unzip
 
     if (factors.isEmpty) {

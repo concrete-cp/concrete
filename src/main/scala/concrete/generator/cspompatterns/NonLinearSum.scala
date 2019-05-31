@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 
 import concrete.{SumBuilder, util}
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -12,14 +12,14 @@ import scala.collection.mutable.ArrayBuffer
   */
 object NonLinearSum extends ConstraintCompilerNoData {
 
-  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
-    c.function == 'sum && {
-      val SimpleExpression.simpleSeq(coefs) = c.arguments(0)
-      coefs.exists(_.searchSpace > 1)
-    }
+  def functions = Functions('sum)
+
+  def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
+    val SimpleExpression.simpleSeq(coefs) = c.arguments(0)
+    coefs.exists(_.searchSpace > 1)
   }
 
-  def compile(constraint: CSPOMConstraint[_], p: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], p: CSPOM): Delta = {
     //implicit def prob = p
 
     val (vars, varCoefs, constant, mode) = readCSPOM(constraint)

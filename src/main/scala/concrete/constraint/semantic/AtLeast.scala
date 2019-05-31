@@ -28,8 +28,6 @@ class AtLeast(val result: Variable, val value: Variable,
 
   override def toString = s"at least $result occurrences of $value in (${vars.mkString(", ")})"
 
-  override def toString(ps: ProblemState) = s"at least ${result.toString(ps)} occurrences of ${value.toString(ps)} in (${vars.map(_.toString(ps)).mkString(", ")})"
-
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val currentValues = ps.dom(value)
 
@@ -51,21 +49,23 @@ class AtLeast(val result: Variable, val value: Variable,
       for (v <- currentValues) {
 
         val cba = canBeAffectedSet(v)
-        logger.debug(s"check value $v from variable $m : ${cba(m)}, ${dom(v)}")
-        if (cba(m) && !dom(v)) {
+        logger.debug(s"check value $v from variable $m : ${cba(m)}, ${dom.contains(v)}")
+        if (cba(m) && !dom.contains(v)) {
           canBeAffectedSet = canBeAffectedSet.updated(v, cba - m)
         }
       }
       sm = mod.nextSetBit(sm + 1)
     }
 
-    assert (
-      currentValues.forall( v=> canBeAffectedSet(v).forall(m => ps.dom(vars(m))(v))),
+    assert(
+      currentValues.forall(v => canBeAffectedSet(v).forall(m => ps.dom(vars(m)).contains(v))),
       s"${toString(ps)}, $canBeAffectedSet is incorrect, mod = $mod"
     )
 
     canBeAffectedSet
   }
+
+  override def toString(ps: ProblemState) = s"at least ${result.toString(ps)} occurrences of ${value.toString(ps)} in (${vars.map(_.toString(ps)).mkString(", ")})"
 
   private def filterResult(ps: ProblemState, currentValues: Domain, canBeAffectedSet: Map[Int, BitVector]) = {
     var max = 0

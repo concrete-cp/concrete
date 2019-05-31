@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="sbt: com.github.concrete-cp:mdd_2.12:2.0-SNAPSHOT:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/local/com.github.concrete-cp/mdd_2.12/2.0-SNAPSHOT/jars/mdd_2.12.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.ivy2/local/com.github.concrete-cp/mdd_2.12/2.0-SNAPSHOT/docs/mdd_2.12-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/local/com.github.concrete-cp/mdd_2.12/2.0-SNAPSHOT/srcs/mdd_2.12-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

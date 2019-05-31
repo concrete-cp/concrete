@@ -20,7 +20,7 @@ final class StatelessLinearLe(
   constant: Int,
   factors: Array[Int],
   scope: Array[Variable],
-  val is: Array[Int]) extends Linear(constant, factors, scope, SumLE) with StatelessBoundPropagation
+  val is: Array[Int]) extends Linear(constant, factors, scope, SumMode.LE) with StatelessBoundPropagation
     with LazyLogging {
 
   import StatelessBoundPropagation._

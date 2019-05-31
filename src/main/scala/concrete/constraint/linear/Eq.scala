@@ -33,7 +33,7 @@ final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constr
 
     ps.dom(r) match {
       case BooleanDomain.UNKNOWNBoolean =>
-        if (dx(y)) {
+        if (dx.contains(y)) {
           if (dx.isAssigned) {
             // Necessarily grounded to the same value since not disjoint
             ps.updateDomNonEmpty(r, BooleanDomain.TRUE)
@@ -181,9 +181,9 @@ final class EqACNeg private[linear](
     val yDom = ps.dom(y)
     val r = (xDom.span + yDom.span).contains(b) && (
       if (xDom.size < yDom.size) {
-        xDom.exists(xv => yDom(b - xv))
+        xDom.exists(xv => yDom.contains(b - xv))
       } else {
-        yDom.exists(yv => xDom(b - yv))
+        yDom.exists(yv => xDom.contains(b - yv))
       })
 
     if (r) ps else Contradiction(scope)
@@ -191,10 +191,10 @@ final class EqACNeg private[linear](
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val domY = ps.dom(y)
-    ps.filterDom(x)(xv => domY(b - xv))
+    ps.filterDom(x)(xv => domY.contains(b - xv))
       .andThen { ps =>
         val domX = ps.dom(x)
-        ps.filterDom(y)(yv => domX(b - yv))
+        ps.filterDom(y)(yv => domX.contains(b - yv))
       }
 
   }

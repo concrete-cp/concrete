@@ -4,13 +4,15 @@ import concrete.CSPOMDriver._
 import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.CSPOMConstraint
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.variable.{CSPOMSeq, IntExpression, SimpleExpression}
 
 
 object DiffNWCumulative extends ConstraintCompilerNoData {
 
-  def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = constraint.function == 'diffn
+  def functions = Functions('diffn)
+
+  def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = true
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
     val Seq(CSPOMSeq(xs), CSPOMSeq(ds)) = constraint.arguments

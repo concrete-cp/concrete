@@ -1,30 +1,28 @@
 package concrete.constraint.linear
 
-import concrete.ParameterManager
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.ProblemState
-import concrete.Domain
 import bitvectors.BitVector
-import concrete.Outcome
+import concrete._
+import concrete.constraint.Constraint
+import concrete.constraint.linear.SumMode._
 
 import scala.util.Try
 
 object Linear {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable], mode: SumMode, pm: ParameterManager): Linear = {
+
     if (pm.contains("linear.stateless") || (scope.length < 10 && !pm.contains("linear.incremental"))) {
       mode match {
-        case SumLE => StatelessLinearLe(constant, factors, scope, strict = false, pm)
-        case SumLT => StatelessLinearLe(constant, factors, scope, strict = true, pm)
-        case SumEQ => StatelessLinearEq(constant, factors, scope)
-        case SumNE => new LinearNe(constant, factors, scope)
+        case LE => StatelessLinearLe(constant, factors, scope, strict = false, pm)
+        case LT => StatelessLinearLe(constant, factors, scope, strict = true, pm)
+        case EQ => StatelessLinearEq(constant, factors, scope)
+        case NE => new LinearNe(constant, factors, scope)
       }
     } else {
       mode match {
-        case SumLE => LinearLe(constant, factors, scope, strict = false, pm)
-        case SumLT => LinearLe(constant, factors, scope, strict = true, pm)
-        case SumEQ => LinearEq(constant, factors, scope)
-        case SumNE => new LinearNe(constant, factors, scope)
+        case LE => LinearLe(constant, factors, scope, strict = false, pm)
+        case LT => LinearLe(constant, factors, scope, strict = true, pm)
+        case EQ => LinearEq(constant, factors, scope)
+        case NE => new LinearNe(constant, factors, scope)
       }
     }
   }
@@ -65,10 +63,10 @@ abstract class Linear(
 
   private val checkSum: Function[Int, Boolean] =
     mode match {
-      case SumLE => 0 <= _
-      case SumLT => 0 < _
-      case SumEQ => 0 == _
-      case SumNE => 0 != _
+      case LE => 0 <= _
+      case LT => 0 < _
+      case EQ => 0 == _
+      case NE => 0 != _
     }
 
   def check(t: Array[Int]): Boolean = {

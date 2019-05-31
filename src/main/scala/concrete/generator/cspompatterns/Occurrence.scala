@@ -2,14 +2,16 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 
 /**
  * @author vion
  */
 object Occurrence extends ConstraintCompilerNoData {
 
-  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'occurrence
+  def functions = Functions('occurrence)
+
+  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = true
 
   def compile(c: CSPOMConstraint[_], p: CSPOM): Delta = {
     val CSPOMConstraint(r, _, Seq(v, args), params) = c

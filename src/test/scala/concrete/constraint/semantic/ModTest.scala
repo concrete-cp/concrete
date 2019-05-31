@@ -7,7 +7,8 @@ import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+
 
 /**
   * @author vion
@@ -79,7 +80,7 @@ class ModTest extends FlatSpec with Matchers with Inspectors {
         })
     }
 
-    PropertyChecks.forAll(itvDom, itvDom, itvDom) { (x: Interval, y: Interval, z: Interval) =>
+    ScalaCheckPropertyChecks.forAll(itvDom, itvDom, itvDom) { (x: Interval, y: Interval, z: Interval) =>
       val vx = new Variable("x", IntDomain.ofInterval(x))
       val vy = new Variable("y", IntDomain.ofInterval(y))
       val vz = new Variable("z", IntDomain.ofInterval(z))

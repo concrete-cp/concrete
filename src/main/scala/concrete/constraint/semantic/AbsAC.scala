@@ -20,7 +20,7 @@ final class AbsAC(val result: Variable, val v0: Variable, val skipLarge: Boolean
     val result = ps.dom(this.result)
     val x = ps.dom(v0)
 
-    ps.filterDom(this.result) { v: Int => v >= 0 && (x(v) || x(-v)) }
+    ps.filterDom(this.result) { v: Int => v >= 0 && (x.contains(v) || x.contains(-v)) }
       .filterDom(v0) { v: Int => result(math.abs(v)) }
       .entailIfFree(this)
   }

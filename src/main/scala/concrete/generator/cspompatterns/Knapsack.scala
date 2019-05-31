@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
 import cspom.extension.MDDRelation
 import cspom.util.{ContiguousIntRangeSet, FiniteIntInterval, Infinitable, RangeSet}
 import cspom.variable.IntExpression.implicits.iterable
@@ -10,13 +10,15 @@ import cspom.variable.{CSPOMSeq, IntExpression, SimpleExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd._
 
-final object Knapsack extends ConstraintCompilerNoData {
+object Knapsack extends ConstraintCompilerNoData {
 
-  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    constraint.function == 'knapsack && constraint.result.isTrue && constraint.arguments.forall(_.fullyDefined)
+  def functions = Functions('knapsack)
+
+  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
+    constraint.result.isTrue && constraint.arguments.forall(_.fullyDefined)
   }
 
-  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
     val Seq(IntExpression.constSeq(w), IntExpression.constSeq(p), CSPOMSeq(x), IntExpression(tw), IntExpression(tp)) = constraint.arguments
 
     val vars = x.map(_.asInstanceOf[SimpleExpression[Int]])

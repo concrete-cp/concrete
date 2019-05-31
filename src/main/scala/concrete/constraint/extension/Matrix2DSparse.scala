@@ -26,7 +26,7 @@ final class Matrix2DSparse(xSize: Int, ySize: Int, val xOffset: Int, val yOffset
 
   def size: Int = xMatrix.size * ySize + yMatrix.size * xSize
 
-  override def check(tuple: Array[Int]): Boolean = xMatrix(tuple(0))(tuple(1) - yOffset)
+  override def check(tuple: Array[Int]): Boolean = xMatrix(tuple(0)).contains(tuple(1) - yOffset)
 
   override def set(tuple: Seq[Int], status: Boolean): Unit = {
     val Seq(rx, ry) = tuple

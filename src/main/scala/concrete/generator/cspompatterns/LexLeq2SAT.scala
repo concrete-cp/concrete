@@ -1,14 +1,16 @@
 package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver.{CSPOMBoolExpressionOperations, CSPOMIntExpressionOperations, and, or}
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Functions}
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
 
 object LexLeq2SAT extends ConstraintCompilerNoData {
 
+  def functions = Functions('lexleq)
+
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c match {
-    case CSPOMConstraint(CSPOMConstant(true), 'lexleq, Seq(x: CSPOMSeq[_], y: CSPOMSeq[_]), _) =>
+    case CSPOMConstraint(CSPOMConstant(true), _, Seq(x: CSPOMSeq[_], y: CSPOMSeq[_]), _) =>
       (x ++ y).forall {
         case BoolExpression(v) => true
         case v if BoolExpression.is01(v) => true

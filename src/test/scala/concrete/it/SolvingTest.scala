@@ -6,7 +6,6 @@ import java.net.URL
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete.generator.cspompatterns.{FZPatterns, XCSPPatterns}
-import concrete.heuristic.variable._
 import concrete.runner.{XCSP3Concrete, XCSP3SolutionChecker}
 import cspom.CSPOM.Parser
 import cspom.compiler.CSPOMCompiler
@@ -25,7 +24,7 @@ import scala.util.{Random, Success, Try}
 class SolvingTest extends FunSpec with SolvingBehaviors {
 
   private val xcsp18COPtest = Seq[(String, (AnyVal, Double))](
-    "NurseRostering-04_c18.xml.lzma" -> ((3062, 1.0)),
+    //"NurseRostering-04_c18.xml.lzma" -> ((3062, 1.0)),
 
     "testMainCOP/Auction-cnt-example_c18.xml.lzma" -> ((54, 1.0)),
     "testMainCOP/Auction-sum-example_c18.xml.lzma" -> ((54, 1.0)),
@@ -297,11 +296,14 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   private val pm = new ParameterManager()
   private val parameters = pm //.updated("heuristic.variable", classOf[LastConflict] +: VariableHeuristic.default) //.updated("f", Unit).updated("heuristic.value", classOf[BestCost])
 
-  for ((p, (r, test)) <-
-//         xcsp18COPtest ++ xcsp18CSPtest ++
-//           lecoutrePB ++
-           problemBank //.slice(3,4) //.slice(7,8)
-  ) {
+  for {
+    (p, (r, test)) <- Seq(
+      xcsp18COPtest,
+      xcsp18CSPtest,
+      lecoutrePB,
+      problemBank,
+    ).flatten
+  } {
 
     describe(p) {
 
@@ -350,13 +352,16 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
     it("should find solutions", Seq(SlowTest).filter(_ => slow(name)): _*) {
 
-      val result: Try[_] = for {
+
+      val result: Try[Unit] = for {
 
         parser <- Try(CSPOM.autoParser(url).get)
         cspom <- CSPOM.load(url, parser).flatMap(compile(parser, _))
+        //        cspom <- FZConcrete.loadCSPOMURL(pm, url)
         solver <- Solver(cspom, pm)
 
       } yield {
+
 
         val declared = cspom.goal.get.getSeqParam[(String, CSPOMExpression[_])]("variables").map(_._1)
         val desc = solver.optimizes match {
@@ -389,7 +394,12 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
                     nbSols > 0 shouldBe b
                   case i: Int =>
                     val solsCut = solver.take(i + 1)
+                    //                    solsCut.foreach { s =>
+                    //                      println(FZConcrete.outputCSPOM(cspom.expressionMap, s, None))
+                    //                    println("=========")}
+
                     val (nbSols, _) = check(url, solsCut, declared, solver.optimizes, test)
+
                     nbSols shouldBe expectedResult
                 }
 
@@ -403,8 +413,12 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
 
       result.recover {
-        case e: UNSATException if expectedResult == false =>
-          fail(s"Encountered $e on satisfiable problem")
+        case e: UNSATException =>
+          if (expectedResult == true || expectedResult != 0) {
+            fail("Encountered UNSATException on satisfiable problem", e)
+          } else {
+            ()
+          }
       }
         .get
 

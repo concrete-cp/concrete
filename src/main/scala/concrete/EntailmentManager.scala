@@ -93,7 +93,7 @@ final class EntailmentManager(
     activeConstraints(vid)
   }
 
-  def entailedReif(c: Constraint) = entailedReified(c.id)
+  def entailedReif(c: Constraint): Boolean = entailedReified(c.id)
 
   def hasInactiveVar(c: Constraint): Boolean = {
     (0 until c.arity).exists { i =>
@@ -101,7 +101,7 @@ final class EntailmentManager(
       val v = c.scope(i)
       v.id >= 0 && {
         val pos = c.positionInVariable(i)
-        pos >= 0 && !activeConstraints(v.id)(pos)
+        pos >= 0 && !activeConstraints(v.id).contains(pos)
       }
 
     }

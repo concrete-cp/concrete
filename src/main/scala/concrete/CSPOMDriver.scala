@@ -54,8 +54,14 @@ object CSPOMDriver {
     problem.defineBool(result =>
       CSPOMConstraint(result)('sum)(coefs, vars, CSPOMConstant(constant)) withParam ("mode" -> mode))
 
-  def pseudoBoolean(vars: Seq[SimpleExpression[Boolean]], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] =
+  def pseudoBoolean(vars: CSPOMSeq[_], coefs: CSPOMSeq[_], mode: String, constant: Int): CSPOMConstraint[Boolean] = {
     CSPOMConstraint('pseudoboolean)(coefs, vars, CSPOMConstant(constant)) withParam ("mode" -> mode)
+  }
+
+  def pseudoBoolean(vars: Seq[SimpleExpression[Boolean]], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] = {
+    pseudoBoolean(seq2CSPOMSeq(vars), seq2CSPOMSeq(coefs), mode, constant)
+  }
+
 
   def abs(variable: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] = {
     problem.defineInt(r => CSPOMConstraint(r)('abs)(variable))

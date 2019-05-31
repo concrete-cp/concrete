@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.variable.CSPOMExpression
 
 /**
@@ -10,13 +10,15 @@ import cspom.variable.CSPOMExpression
  */
 object Square extends ConstraintCompiler {
 
+  def functions = Functions('mul)
+
   type A = (CSPOMExpression[_], CSPOMExpression[_])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(r, 'mul, Seq(a, b), _) if (a eq b) => (r, a)
+    case CSPOMConstraint(r, _, Seq(a, b), _) if a eq b => (r, a)
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A): Delta = {
 
     val (r, a) = data
 

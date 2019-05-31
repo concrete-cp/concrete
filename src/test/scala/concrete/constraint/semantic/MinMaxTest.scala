@@ -5,12 +5,12 @@ import org.scalatest.FlatSpec
 import concrete._
 import concrete.constraint.AdviseCount
 import org.scalatest.Inspectors
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 /**
   * @author vion
   */
-class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
+class MinMaxTest extends FlatSpec with Matchers with Inspectors with ScalaCheckPropertyChecks {
   "Min" should "filter unique candidate" in {
     val r = new Variable("r", IntDomain.ofSeq(121))
     val a = Array(
