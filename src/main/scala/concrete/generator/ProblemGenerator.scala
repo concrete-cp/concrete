@@ -9,7 +9,6 @@ import concrete.constraint.linear.SumMode._
 import cspom._
 import cspom.util.Finite
 import cspom.variable._
-import org.scalameter.Quantity
 
 import scala.util.Try
 
@@ -20,10 +19,10 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   val gm = new GeneratorManager(this)
 
   @Statistic
-  var genTime: Quantity[Double] = _
+  var genTime: Double = _
 
   def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
-    val (result, time) = StatisticsManager.measure[(Problem, Map[CSPOMVariable[_], Variable]), Unit, Double] {
+    val (result, time) = StatisticsManager.measure{
 
       val variables = generateVariables(cspom)
 
@@ -42,7 +41,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
           case c: ReifiedConstraint => (classOf[ReifiedConstraint], c.constraint.getClass)
           case c => c.getClass
         }
-        .map { case (k, v) => s"$k: ${v.length}" }.mkString("\n"))
+        .map { case (k, v) => s"$k: ${v.size}" }.mkString("\n"))
 
       (problem, variables)
     }
@@ -110,12 +109,12 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   }
 
   def isBoolean(constraint: CSPOMConstraint[_]): Boolean = {
-    //    if (constraint.function == 'sum) {
+    //    if (constraint.function == "sum") {
     //      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
     //      println(vars)
     //    }
 
-    constraint.nonReified && (constraint.function == 'pseudoboolean || constraint.function == 'sum && {
+    constraint.nonReified && (constraint.function == "pseudoboolean" || constraint.function == "sum" && {
       val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
       (mode == LE || mode == EQ) &&
         vars.forall {

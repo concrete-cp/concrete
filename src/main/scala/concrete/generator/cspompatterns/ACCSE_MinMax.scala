@@ -6,20 +6,20 @@ import cspom.compiler.ACCSE
 import cspom.variable._
 
 sealed trait MinMaxType {
-  def function: Symbol
+  def function: String
 }
 
 case object MinType extends MinMaxType {
-  def function = 'min
+  def function = "min"
 }
 
 case object MaxType extends MinMaxType {
-  def function = 'max
+  def function = "max"
 }
 
 object ACCSE_MinMax extends ACCSE[MinMaxType] {
 
-  def functions: Seq[Symbol] = Seq('min, 'max)
+  def functions: Seq[String] = Seq("min", "max")
 
   override def define(subexp: List[Arg], aux: CSPOMVariable[_]): (Arg, CSPOMConstraint[_]) = {
     val typ = subexp.head._2
@@ -44,8 +44,8 @@ object ACCSE_MinMax extends ACCSE[MinMaxType] {
 
   override def constraintToArgs(c: CSPOMConstraint[_]): IndexedSeq[Arg] = {
     c.function match {
-      case 'min => c.arguments.map(v => (v, MinType)).toIndexedSeq
-      case 'max => c.arguments.map(v => (v, MaxType)).toIndexedSeq
+      case "min" => c.arguments.map(v => (v, MinType)).toIndexedSeq
+      case "max" => c.arguments.map(v => (v, MaxType)).toIndexedSeq
     }
   }
 

@@ -8,7 +8,7 @@ import concrete.constraint.Constraint
 
 import scala.collection.mutable
 
-class Circuit(scope: Array[Variable], start: Int, size: Variable) extends Constraint(scope :+ size) {
+class XCSPCircuit(scope: Array[Variable], start: Int, size: Variable) extends Constraint(scope :+ size) {
   override def revise(ps: ProblemState, modified: BitVector): Outcome = {
     // Distance from start to any node
     val distances = dijkstra(i => ps.dom(scope(i)), start)

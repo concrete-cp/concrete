@@ -26,8 +26,8 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
 
   def size: Int = xMatrix.length * yMatrix.length
 
-  override def set(tuple: Seq[Int], status: Boolean): Unit = {
-    val Seq(rx, ry) = tuple
+  override def set(tuple: Array[Int], status: Boolean): Unit = {
+    val Array(rx, ry) = tuple
     set(rx, ry, status)
   }
 

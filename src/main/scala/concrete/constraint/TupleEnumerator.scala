@@ -9,7 +9,7 @@ object TupleEnumerator {
   @Statistic
   var checks = 0L
 
-  def clearStats() {
+  def clearStats(): Unit = {
     checks = 0
   }
 }
@@ -28,7 +28,7 @@ trait TupleEnumerator extends Constraint {
   //  }
   //
   def tuples(doms: Array[Domain]): Iterator[Array[Int]] = new Iterator[Array[Int]] {
-    private var tuple: Array[Int] = null //new Array(arity)
+    private var tuple: Array[Int] = _ //new Array(arity)
 
     def hasNext: Boolean = {
       if (tuple eq null) {

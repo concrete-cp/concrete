@@ -17,7 +17,7 @@ class FZWriter(val params: ParameterManager, val problem: String, val stats: Sta
 
 
 
-  def printSolution(sol: String, obj: Seq[(String, Any)]) {
+  def printSolution(sol: String, obj: Seq[(String, Any)]): Unit = {
     Console.println(sol)
     for ((ov, o) <- obj) {
       Console.println(s"% objective $ov = $o")
@@ -32,11 +32,11 @@ class FZWriter(val params: ParameterManager, val problem: String, val stats: Sta
       }
   }
 
-  def error(e: Throwable) {
+  def error(e: Throwable): Unit = {
     e.printStackTrace(Console.err)
   }
 
-  def disconnect(status: RunnerResult) {
+  def disconnect(status: RunnerResult): Unit = {
     writeStats()
     Console.println {
       status match {

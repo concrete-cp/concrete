@@ -27,8 +27,7 @@ final class PhaseSaving() extends ValueSelector {
 
   override def event[S <: Outcome](e: EventObject, ps: S): S = {
     e match {
-      case ae: AssignmentEvent =>
-        for (e: (Variable, Int) <- (ae.variable, ae.value).zipped) previous += e
+      case ae: AssignmentEvent => previous ++= ae.assignments
       case _ =>
     }
     ps

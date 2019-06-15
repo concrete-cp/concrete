@@ -98,7 +98,7 @@ abstract class BinaryExt(scope: Array[Variable], val matrix: Matrix2D)
     matrix
       .allowed
       .count { tuple =>
-        (tuple, base).zipped.forall { (t, b) => b < 0 || t == b } &&
+        (tuple lazyZip base).forall { (t, b) => b < 0 || t == b } &&
           removeTuple(tuple)
       }
 

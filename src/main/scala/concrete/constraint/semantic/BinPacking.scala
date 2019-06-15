@@ -219,7 +219,7 @@ class BinPacking private(load: Array[Variable],
     }
   }
 
-  private def noSum(X: IndexedSeq[Int], α: Int, β: Int): Option[(Int, Int)] = {
+  private def noSum(X: ArrayBuffer[Int], α: Int, β: Int): Option[(Int, Int)] = {
     if (α <= 0 || β >= X.sum) None
     else {
       val N = X.length - 1

@@ -2,15 +2,15 @@ package concrete.priorityqueues
 
 final class JavaNative[T <: PTag] extends PriorityQueue[T] {
 
-  case class E(val e: T, val eval: Int) extends Ordered[E] {
-    def compare(y: E) = eval.compare(y.eval)
+  case class E(e: T, eval: Int) extends Ordered[E] {
+    def compare(y: E): Int = eval.compare(y.eval)
   }
 
   private val queue = new java.util.PriorityQueue[E]()
 
   private val presence = new Presence
 
-  def offer(elt: T, eval: Int) = {
+  def offer(elt: T, eval: Int): Boolean = {
     if (presence.isPresent(elt)) {
       false
     } else {
@@ -20,15 +20,15 @@ final class JavaNative[T <: PTag] extends PriorityQueue[T] {
     }
   }
 
-  def poll() = {
+  def poll(): T = {
     val elt = queue.poll().e
     presence.unsetPresent(elt)
     elt
   }
 
-  def isEmpty = queue.isEmpty
+  def isEmpty: Boolean = queue.isEmpty
 
-  override def clear() {
+  override def clear(): Unit = {
     queue.clear()
     presence.clear()
   }

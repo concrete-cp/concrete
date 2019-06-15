@@ -22,12 +22,12 @@ import cspom.{CSPOM, CSPOMConstraint}
   */
 object BoolEq extends ConstraintCompiler {
 
-  def functions = Functions('eq)
+  def functions = Functions("eq")
 
   type A = Seq[SimpleExpression[_]]
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = c match {
-    case CSPOMConstraint(r, 'eq, Seq(BoolExpression.bool01(a), BoolExpression.bool01(b)), _) =>
+    case CSPOMConstraint(r, "eq", Seq(BoolExpression.bool01(a), BoolExpression.bool01(b)), _) =>
       Some(Seq(a, b))
     case _ => None
   }
@@ -54,7 +54,7 @@ object BoolEq extends ConstraintCompiler {
 object BoolSum extends ConstraintCompiler {
   type A = Seq[CSPOMConstraint[_]]
 
-  def functions = Functions('sum)
+  def functions = Functions("sum")
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = {
     val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(c)
@@ -66,7 +66,7 @@ object BoolSum extends ConstraintCompiler {
       // TODO find other binary clauses
 
       PartialFunction.condOpt((coefs, constant, mode)) {
-        case (Seq(1, 1), 1, SumMode.EQ) => Seq(CSPOMConstraint(c.result)('xor)(vars: _*))
+        case (Seq(1, 1), 1, SumMode.EQ) => Seq(CSPOMConstraint(c.result)("xor")(vars: _*))
       }
 
 
@@ -84,7 +84,7 @@ object BoolSum extends ConstraintCompiler {
 
 object BoolProd extends ConstraintCompilerNoData {
 
-  def functions = Functions('mul)
+  def functions = Functions("mul")
 
   override def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
     c.arguments.forall(BoolExpression.is01)
@@ -92,7 +92,7 @@ object BoolProd extends ConstraintCompilerNoData {
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM): Delta = {
 
-    val c = CSPOMConstraint(fc.result)('and)(fc.arguments: _*)
+    val c = CSPOMConstraint(fc.result)("and")(fc.arguments: _*)
 
     replaceCtr(fc, c, problem)
 

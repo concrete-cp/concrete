@@ -2,6 +2,7 @@ package concrete.util
 
 import scala.collection.mutable
 import scala.math.BigDecimal.RoundingMode
+import scala.math.Ordering.Double.TotalOrdering
 import scala.util.Random
 
 object Math {
@@ -130,7 +131,7 @@ object Math {
   def logSumOfExponentials(xs: Seq[Double]): Double = {
     if (xs.isEmpty) 0
     else {
-      val max = xs.max
+      val max = xs.max(TotalOrdering)
       val sum = xs.filterNot(_.isNegInfinity).map(x => math.exp(x - max)).sum
       max + math.log(sum)
     }
@@ -145,7 +146,7 @@ object Math {
       def tryCompare(x: Seq[T], y: Seq[T]): Option[Int] = ???
 
       def lteq(is: Seq[T], js: Seq[T]): Boolean =
-        (is, js).zipped.forall { case (i, j) => ordering.lteq(i, j) }
+        (is lazyZip js).forall { case (i, j) => ordering.lteq(i, j) }
     }
 
   def logNormalLong(rand: Random, mean: Double, stdev: Double): Long = {

@@ -1,24 +1,42 @@
 package concrete.generator
 
-import Generator.cspom2concrete1D
-import Generator.cspom2concreteSeq
-import concrete.constraint.semantic.Cumulative
+import com.typesafe.scalalogging.LazyLogging
+import concrete.constraint.semantic.energy.CumulativeEnergy2
+import concrete.constraint.semantic.{Cumulative, CumulativeEnergy}
+import concrete.generator.Generator.{cspom2concrete1D, cspom2concreteSeq}
 import cspom.CSPOMConstraint
-import concrete.constraint.semantic.CumulativeEnergy
 
-final class CumulativeGenerator(pg: ProblemGenerator) extends Generator {
+final class CumulativeGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
     val Seq(s, d, r, b) = constraint.arguments
 
     val svars = cspom2concreteSeq(s).map(_.asVariable(pg)).toArray
-    val dvars = cspom2concreteSeq(d).map(_.asVariable(pg)).toArray
-    val rvars = cspom2concreteSeq(r).map(_.asVariable(pg)).toArray
-    val bvar = cspom2concrete1D(b).asVariable(pg)
 
-    Seq(
-      new Cumulative(svars, dvars, rvars, bvar),
-      new CumulativeEnergy(svars, dvars, rvars, bvar))//.take(1)
+
+    val dConc = cspom2concreteSeq(d)
+    val rConc = cspom2concreteSeq(r)
+    val bConc = cspom2concrete1D(b)
+
+
+    val dVars = dConc.map(_.asVariable(pg)).toArray
+    val rVars = rConc.map(_.asVariable(pg)).toArray
+    val bVar = bConc.asVariable(pg)
+
+    val profile = new Cumulative(svars, dVars, rVars, bVar)
+
+    val dConst = dConc.collect { case Const(i: Int) => i }.toArray
+    val rConst = rConc.collect { case Const(i: Int) => i }.toArray
+    val bConst = PartialFunction.condOpt(bConc) { case Const(i: Int) => i }
+
+    val energy = if (false && dConst.length == dConc.size && rConst.length == rConc.size && bConst.isDefined) {
+      logger.warn("Cumulative Energy enabled")
+      new CumulativeEnergy2(svars, rConst, dConst, bConst.get)
+    } else {
+      new CumulativeEnergy(svars, dVars, rVars, bVar)
+    }
+
+    Seq(profile, energy)
 
   }
 

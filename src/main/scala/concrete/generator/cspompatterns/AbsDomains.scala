@@ -6,9 +6,9 @@ import cspom.compiler.VariableCompiler
 import cspom.variable.IntExpression.implicits.{arithmetics, ranges}
 import cspom.variable.{IntExpression, SimpleExpression}
 
-object AbsDomains extends VariableCompiler('abs) {
+object AbsDomains extends VariableCompiler("abs") {
 
-  def compiler(c: CSPOMConstraint[_]) = {
+  def compiler(c: CSPOMConstraint[_]): Seq[(SimpleExpression[_], SimpleExpression[Int])] = {
 
     val CSPOMConstraint(r: SimpleExpression[_], _, Seq(i: SimpleExpression[_]), _) = c
     val ir = IntExpression.coerce(r)

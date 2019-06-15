@@ -27,7 +27,7 @@ abstract class ScoredVariableHeuristic extends VariableHeuristic with LazyLoggin
     }
 
     logger.info(s"Score $bs for candidates: $candidates")
-    candidates
+    candidates.toSeq
   }
 
   def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int =

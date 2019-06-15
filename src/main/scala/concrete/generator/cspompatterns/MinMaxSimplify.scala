@@ -7,7 +7,7 @@ import cspom.compiler.ConstraintCompiler._
 
 object MinMaxSimplify extends ConstraintCompiler {
 
-  def functions = Functions('min, 'max)
+  def functions = Functions("min", "max")
 
   type A = Seq[CSPOMExpression[_]]
 

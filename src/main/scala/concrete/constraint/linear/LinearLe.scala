@@ -8,7 +8,7 @@ import cspom.Statistic
 
 object LinearLe {
   @Statistic
-  var shaves: Long = 0l
+  var shaves: Long = 0L
 
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager): LinearLe = {
     val actualConstant = if (strict) constant - 1 else constant
@@ -29,7 +29,7 @@ final class LinearLe(
 
   import IncrementalBoundPropagation._
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val (doms, f, vars, max) = updateF(ps, mod)
     clearMod()
     if (f.lb <= 0) {

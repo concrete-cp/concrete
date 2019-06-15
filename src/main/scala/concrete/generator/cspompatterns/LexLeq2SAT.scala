@@ -7,7 +7,7 @@ import cspom.{CSPOM, CSPOMConstraint}
 
 object LexLeq2SAT extends ConstraintCompilerNoData {
 
-  def functions = Functions('lexleq)
+  def functions = Functions("lexleq")
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(x: CSPOMSeq[_], y: CSPOMSeq[_]), _) =>
@@ -38,15 +38,15 @@ object LexLeq2SAT extends ConstraintCompilerNoData {
         (0 until n - 1).map { i =>
           and(
             lt(x(i + 1), y(i + 1)) +:
-              (0 until i).map(j => x(j) === y(j)): _*) //problem.isBool('and, conjunction)
+              (0 until i).map(j => x(j) === y(j)): _*) //problem.isBool("and", conjunction)
         }: _*)
 
   }
 
   def lt(x: CSPOMExpression[_], y: CSPOMExpression[_])(implicit problem: CSPOM): SimpleExpression[Boolean] =
     (x, y) match {
-      case (BoolExpression(xi), BoolExpression(yi)) => xi ==> yi // problem.isBool('clause, Seq(Seq(yi), Seq(xi)))
-      case (IntExpression(xi), IntExpression(yi)) => xi < yi // problem.isBool('lt, Seq(xi, yi))
+      case (BoolExpression(xi), BoolExpression(yi)) => xi ==> yi // problem.isBool("clause", Seq(Seq(yi), Seq(xi)))
+      case (IntExpression(xi), IntExpression(yi)) => xi < yi // problem.isBool("lt", Seq(xi, yi))
     }
 
 }

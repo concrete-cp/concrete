@@ -33,7 +33,7 @@ final class UnaryExt(scope: Variable, var matrix: Matrix)
     ps.updateDom(scope, allowed).entail(this)
   }
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome =
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome =
     if (ps.dom(scope).disjoint(allowed)) ps else Contradiction(Nil)
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
@@ -43,6 +43,7 @@ final class UnaryExt(scope: Variable, var matrix: Matrix)
 
   def removeTuple(tuple: Array[Int]): Boolean = {
     ??? //disEntail();
+    // val t = immutable.ArraySeq.unsafeWrapArray(tuple)
     if (matrix.check(tuple)) {
       matrix.set(tuple, status = false)
       true
@@ -57,7 +58,7 @@ final class UnaryExt(scope: Variable, var matrix: Matrix)
   //    case _         => throw new IllegalArgumentException()
   //  }
 
-  override def check(tuple: Array[Int]) = matrix.check(tuple)
+  override def check(tuple: Array[Int]): Boolean = matrix.check(tuple)
 
   def simpleEvaluation = 1
 

@@ -13,7 +13,7 @@ final class MDDMatrix(
 
   def check(tuple: Array[Int]): Boolean = mdd.contains(tuple) ^ initialContent
 
-  def set(tuple: Seq[Int], status: Boolean): Unit = {
+  def set(tuple: Array[Int], status: Boolean): Unit = {
     ???
   }
 

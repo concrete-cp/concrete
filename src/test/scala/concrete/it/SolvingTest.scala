@@ -450,7 +450,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
         try {
           val failed = checker.checkSolution(sol, obj, variables)
           withClue(XCSP3Concrete.xmlSolution(variables, sol, obj)) {
-            failed shouldBe 'empty
+            failed shouldBe empty
           }
         } catch {
           case e: UnsupportedOperationException =>

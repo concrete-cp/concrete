@@ -18,7 +18,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
   def is: Array[Int]
 
-  protected def updateF(ps: ProblemState, mod: Traversable[Int]): (Array[Domain], Interval, BitVector, Int) = {
+  protected def updateF(ps: ProblemState, mod: Iterable[Int]): (Array[Domain], Interval, BitVector, Int) = {
     /*
      *  TODO: reinvestigate the detection of modified bounds (was disabled for reification but may still be interesting)
      */
@@ -52,7 +52,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
   def initData(ps: ProblemState): ProblemState = {
     val doms = ps.doms(scope)
-    val f = (doms, factors).zipped.map(_.span * _).reduce(_ + _) - constant
+    val f = (doms lazyZip factors).map(_.span * _).reduce(_ + _) - constant
     val maxI = size(doms.head, factors.head)
     val vars = BitVector.filled(arity).filter(p => !doms(p).isAssigned)
 

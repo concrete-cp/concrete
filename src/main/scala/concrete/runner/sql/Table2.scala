@@ -8,11 +8,11 @@ import slick.jdbc.GetResult
 import slick.jdbc.PostgresProfile.api._
 
 import scala.annotation.tailrec
-import scala.collection.{SortedMap, mutable}
+import scala.collection.{SortedMap, immutable, mutable}
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.xml.{Node, NodeSeq, Text}
+import scala.math.Ordering.Double.TotalOrdering
 
 object Table2 extends App {
   lazy val baseConfig = ConfigFactory.load //defaults from src/resources
@@ -116,7 +116,7 @@ object Table2 extends App {
     }
 
     for {
-      ((problemId, iteration), stats) <- results
+      ((problemId, _), stats) <- results
       if !stats.forall(_._2.toDouble(timeoutHandler, oomHandler).isNaN)
       problem <- p.get(problemId)
       tag <- problem.tags
@@ -131,9 +131,9 @@ object Table2 extends App {
   val (results, totals, pbs) = Await.result(fut, Duration.Inf)
   val ignoreNaN = false
 
-  def attributeEquals(name: String, value: String)(node: Node) = {
-    node.attribute(name).get.contains(Text(value))
-  }
+//  def attributeEquals(name: String, value: String)(node: Node) = {
+//    node.attribute(name).get.contains(Text(value))
+//  }
 
   def tabular(data: Seq[Any]) = {
     format match {
@@ -152,7 +152,7 @@ object Table2 extends App {
 
   @tailrec
   def rank[B: Ordering](p: IndexedSeq[Array[B]], candidates: Seq[Int],
-                        cRank: Int = 1, ranking: SortedMap[Int, Seq[Int]] = SortedMap.empty): SortedMap[Int, Seq[Int]] =
+                        cRank: Int = 1, ranking: immutable.SortedMap[Int, Seq[Int]] = immutable.SortedMap.empty): SortedMap[Int, Seq[Int]] =
     if (candidates.isEmpty) {
       ranking
     } else {
@@ -186,7 +186,7 @@ object Table2 extends App {
 
   def winnerTakesAll(d: Array[Array[Int]]) = {
     val p = Array.ofDim[Int](d.length, d.length)
-    for (i <- d.indices.par; j <- d.indices) {
+    for (i <- d.indices; j <- d.indices) {
       if (d(i)(j) > d(j)(i)) {
         p(i)(j) = d(i)(j)
       }
@@ -194,10 +194,10 @@ object Table2 extends App {
     p
   }
 
-  def schulze[A: Ordering](p0: Array[Array[A]]) = {
+  def schulze(p0: Array[Array[Int]]) = {
     //val p = percentages(d, avis)
 
-    val p = p0.map(_.clone)
+    val p = p0.map(a => mutable.ArraySeq.from(a))
 
     for (i <- p.indices) {
       //println("%.0f %%".format(100.0 * i / p.length))
@@ -231,9 +231,9 @@ object Table2 extends App {
   implicit val getExecutionResult: GetResult[Execution] =
     GetResult(r => Execution(r.<<, r.<<, r.<<, r.<<, r.<<))
 
-  def className(n: NodeSeq) = {
-    n.headOption.flatMap(_.text.split('.').lastOption).getOrElse("?")
-  }
+//  def className(n: NodeSeq) = {
+//    n.headOption.flatMap(_.text.split('.').lastOption).getOrElse("?")
+//  }
 
   def engineer(value: Double): (Double, Option[Char]) = {
     if (value == 0 || value.isInfinity) {
@@ -255,22 +255,22 @@ object Table2 extends App {
     }
   }
 
-  private def toGML(p: Array[Array[Int]], labels: IndexedSeq[String]) {
-    println("graph [ directed 0 ");
-    for (c <- p.indices) {
-      println("""node [ id %d label "%s" ]""".format(c, labels(c)))
-    }
-
-    val s = """edge [ source %d target %d label "%d" graphics [ targetArrow "standard" ] ] """
-
-    for (i <- p.indices; j <- p.indices if i != j) {
-      if (p(i)(j) > 0) {
-        println(s.format(i, j, p(i)(j)))
-      }
-    }
-
-    println("]")
-  }
+//  private def toGML(p: Array[Array[Int]], labels: IndexedSeq[String]): Unit = {
+//    println("graph [ directed 0 ");
+//    for (c <- p.indices) {
+//      println("""node [ id %d label "%s" ]""".format(c, labels(c)))
+//    }
+//
+//    val s = """edge [ source %d target %d label "%d" graphics [ targetArrow "standard" ] ] """
+//
+//    for (i <- p.indices; j <- p.indices if i != j) {
+//      if (p(i)(j) > 0) {
+//        println(s.format(i, j, p(i)(j)))
+//      }
+//    }
+//
+//    println("]")
+//  }
 
   for (((problemId, iteration), stats) <- results.toSeq.sortBy { p => (pbs(p._1._1).problem, p._1._2) }) {
     print(s"$problemId. ${pbs(problemId).problem} $iteration\t")
@@ -297,7 +297,7 @@ object Table2 extends App {
 
     }
 
-    val best = medians.max
+    val best = medians.max(TotalOrdering)
 
     println(s"$k &\t" + medians.map { median =>
       f"${if (median > best / 1.1) "\\bf " else ""} $median%.0f"

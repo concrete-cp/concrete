@@ -18,14 +18,14 @@ object GCC extends ConstraintCompilerNoData {
 
   private val gccAsMDD = false
 
-  def functions = Functions('gccExact, 'gccMinMax)
+  def functions = Functions("gccExact", "gccMinMax")
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = c.result.isTrue
 
   def compile(c: CSPOMConstraint[_], p: CSPOM): Delta = {
 
     c.function match {
-      case 'gccExact =>
+      case "gccExact" =>
         val CSPOMConstraint(_, _, Seq(SimpleExpression.simpleSeq(vars), CSPOMConstant(closed: Boolean), CSPOMConstant.seq(values), IntExpression.simpleSeq(occ)), params) = c
 
         //        val constraints =
@@ -36,7 +36,7 @@ object GCC extends ConstraintCompilerNoData {
 
         val vals = values.map(concrete.util.Math.any2Int)
 
-        val bounds = (vals, occ).zipped.map {
+        val bounds = (vals lazyZip occ).map {
           case (v, o) =>
             val FiniteIntInterval(lb, ub) = IntExpression.span(o)
             v -> (lb to ub)
@@ -45,12 +45,12 @@ object GCC extends ConstraintCompilerNoData {
 
         val constraints = if (gccAsMDD) {
           Seq(
-            CSPOMConstraint('extension)(vars ++ occ: _*)
+            CSPOMConstraint("extension")(vars ++ occ: _*)
               .withParam("init" -> false, "relation" -> new MDDRelation(mdd(domains, vals.toIndexedSeq, bounds)))
           )
         } else {
-          for ((v, o) <- (vals, occ).zipped.toSeq) yield {
-            CSPOMConstraint(o)('occurrence)(CSPOMConstant(v), vars)
+          for ((v, o) <- vals zip occ) yield {
+            CSPOMConstraint(o)("occurrence")(CSPOMConstant(v), vars)
           }
         }
 
@@ -67,16 +67,16 @@ object GCC extends ConstraintCompilerNoData {
 
         ConstraintCompiler.replaceCtr(c, constraints ++: closedCons, p)
 
-      case 'gccMinMax =>
+      case "gccMinMax" =>
         val CSPOMConstraint(_, _, Seq(vars: CSPOMSeq[_], CSPOMConstant(closed: Boolean), CSPOMConstant.seq(values), IntExpression.simpleSeq(occMin), IntExpression.simpleSeq(occMax)), params) = c
 
         val vals = values.map(concrete.util.Math.any2Int)
 
         val constraints =
-          for {(v, min, max) <- (vals, occMin, occMax).zipped.toSeq
+          for {(v, min, max) <- (vals lazyZip occMin lazyZip occMax).toSeq
                c <- Seq(
-                 CSPOMConstraint('atLeast)(min, CSPOMConstant(v), vars),
-                 CSPOMConstraint('atMost)(max, CSPOMConstant(v), vars))
+                 CSPOMConstraint("atLeast")(min, CSPOMConstant(v), vars),
+                 CSPOMConstraint("atMost")(max, CSPOMConstant(v), vars))
           } yield c
 
         val closedCons: Seq[CSPOMConstraint[_]] = if (closed) {
@@ -156,7 +156,7 @@ object GCC extends ConstraintCompilerNoData {
 
   private def closedConstraints(vars: Seq[CSPOMExpression[_]], values: Seq[Int]) = {
     for (v <- vars) yield {
-      CSPOMConstraint('in)(v, CSPOM.constantSeq(values))
+      CSPOMConstraint("in")(v, CSPOM.constantSeq(values))
     }
   }
 

@@ -46,8 +46,8 @@ object Tagger extends App {
 
     val upd: Seq[DBIO[Int]] = problems.flatMap { p =>
       
-      val path = new URI(p.name).getPath.split('/')
-      println(path.toSeq)
+      val path = new URI(p.name).getPath.split('/').toSeq
+      println(path)
       val cats = path.init
 
 //      val display: Seq[DBIO[Int]] = if (p.display.isEmpty) {

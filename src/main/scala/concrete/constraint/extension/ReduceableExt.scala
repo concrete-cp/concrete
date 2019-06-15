@@ -29,7 +29,7 @@ import cspom.Statistic
 
 object ReduceableExt {
   @Statistic
-  var fills = 0l
+  var fills = 0L
 }
 
 final class ReduceableExt(scope: Array[Variable], val relation: Relation)

@@ -38,7 +38,7 @@ trait CSPOMRunner extends ConcreteRunner {
       cspom2 <- CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
       problem <- generate(pm, cspom2)
       solver <- Solver(problem,
-        problem.variables.filter(x => cspom.expressionMap.expression(x.name).isDefined),
+        problem.variables.filter(x => cspom.expressionMap.expression(x.name).isDefined).toSeq,
         updateParams(pm, cspom2))
     } yield {
       cspomSolver = new CSPOMSolver(solver, cspom2.expressionMap, variables)

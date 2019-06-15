@@ -67,7 +67,7 @@ class WArcsOnDom(val pool: Seq[Variable])
         arcs.increment(v1, v2)
       }
     }
-    neighbors = neighb.mapValues(_.toSeq).toMap
+    neighbors = neighb.view.mapValues(_.toSeq).toMap
     ps //super.compute(s, ps)
   }
 

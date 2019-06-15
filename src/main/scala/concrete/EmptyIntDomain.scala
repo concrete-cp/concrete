@@ -24,7 +24,7 @@ object EmptyIntDomain extends IntDomain {
     false
   }
 
-  def -(i: Int): IntDomain = this
+  def excl(i: Int): IntDomain = this
 
   def removeFrom(lb: Int): IntDomain = this
 
@@ -74,5 +74,5 @@ object EmptyIntDomain extends IntDomain {
 
   def iterator: Iterator[Int] = Iterator.empty
 
-  def keysIteratorFrom(start: Int): Iterator[Int] = Iterator.empty
+  def iteratorFrom(start: Int): Iterator[Int] = Iterator.empty
 }

@@ -8,11 +8,12 @@ import cspom.{CSPOM, CSPOMConstraint}
 import mdd._
 
 import scala.collection.immutable.Queue
-import scala.xml.{Elem, Node, PrettyPrinter}
+import scala.collection.mutable
+
 
 object SlidingSum extends ConstraintCompilerNoData {
 
-  def functions = Functions('slidingSum)
+  def functions = Functions("slidingSum")
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
     constraint.nonReified && constraint.arguments.forall(_.fullyDefined)
@@ -32,7 +33,7 @@ object SlidingSum extends ConstraintCompilerNoData {
   }
 
   def mdd(low: Int, up: Int, seq: Int, domains: IndexedSeq[Seq[Int]], k: Int = 0, queue: Queue[Int] = Queue.empty,
-          nodes: JavaMap[(Int, Queue[Int]), MDD] = new JavaMap()): MDD = {
+          nodes: mutable.HashMap[(Int, Queue[Int]), MDD] = new mutable.HashMap()): MDD = {
     val current = queue.sum
     val nextDomains = domains.view.slice(k, k + seq - queue.size)
     if (current + nextDomains.map(_.min).sum > up) {
@@ -61,46 +62,46 @@ object SlidingSum extends ConstraintCompilerNoData {
 
   def selfPropagation = false
 
-  def main(arg: Array[String]): Unit = {
-    val domains = IndexedSeq.fill(10)(Seq(0,1))
-    val data = mdd(0, 2, 4, domains)
+//  def main(arg: Array[String]): Unit = {
+//    val domains = IndexedSeq.fill(10)(Seq(0,1))
+//    val data = mdd(0, 2, 4, domains)
+//
+//    data.identify()
 
-    data.identify()
+//    def toGML(mdd: MDD, ts: IdSet[MDD] = new IdSet()): Seq[Node] = {
+//      ts.onceOrElse(mdd, {
+//        if (mdd eq MDDLeaf) {
+//          Seq(<node id={mdd.id.toString} label="l" />)
+//        } else {
+//          <node id={mdd.id.toString} label={mdd.id.toString} /> +:
+//          mdd.children
+//            .flatMap { case (i, submdd) =>
+//              <edge source={mdd.id.toString} target={submdd.id.toString} label={i.toString} /> +:
+//                toGML(submdd, ts)
+//            }
+//              .toSeq
+//        }
+//      }, Nil)
+//    }
 
-    def toGML(mdd: MDD, ts: IdSet[MDD] = new IdSet()): Seq[Node] = {
-      ts.onceOrElse(mdd, {
-        if (mdd eq MDDLeaf) {
-          Seq(<node id={mdd.id.toString} label="l" />)
-        } else {
-          <node id={mdd.id.toString} label={mdd.id.toString} /> +:
-          mdd.children
-            .flatMap { case (i, submdd) =>
-              <edge source={mdd.id.toString} target={submdd.id.toString} label={i.toString} /> +:
-                toGML(submdd, ts)
-            }
-              .toSeq
-        }
-      }, Nil)
-    }
-
-    println(data)
-
-
-    val gml: Elem = <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
-                             xmlns:svg="http://www.w3.org/2000/svg"
-                             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                             xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns
-                                graphml+svg.xsd">
-      <graph id="G" edgedefault="undirected">
-        {toGML(data)}
-      </graph>
-      </graphml>
-
-    val pp = new PrettyPrinter(80, 2)
-
-    println(pp.format(gml))
+//    println(data)
+//
+//
+//    val gml: Elem = <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+//                             xmlns:svg="http://www.w3.org/2000/svg"
+//                             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+//                             xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns
+//                                graphml+svg.xsd">
+//      <graph id="G" edgedefault="undirected">
+//        {toGML(data)}
+//      </graph>
+//      </graphml>
+//
+//    val pp = new PrettyPrinter(80, 2)
+//
+//    println(pp.format(gml))
 
 
-  }
+//  }
 
 }

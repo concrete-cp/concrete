@@ -41,7 +41,7 @@ trait ConflictCount
       true
     }
 
-  final def addConflict(tuple: Array[Int]) {
+  final def addConflict(tuple: Array[Int]): Unit = {
     if (nbInitConflicts != null) {
       for (p <- tuple.indices) {
         nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
@@ -52,19 +52,19 @@ trait ConflictCount
     }
   }
 
-  private def countConflicts(doms: Array[Domain]) {
+  private def countConflicts(doms: Array[Domain]): Unit = {
     nbConflicts(doms) match {
       case Some((o, c)) =>
         nbInitConflicts = c
         offsets = o
-        nbMaxConflicts = new Array(arity);
+        nbMaxConflicts = new Array(arity)
         updateMaxConflicts()
       case None => applicable = false
     }
 
   }
 
-  private def updateMaxConflicts() {
+  private def updateMaxConflicts(): Unit = {
     for (p <- nbMaxConflicts.indices) {
       nbMaxConflicts(p) = nbInitConflicts(p).max
     }

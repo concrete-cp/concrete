@@ -8,7 +8,7 @@ import scala.collection.mutable
 class IntDomainBuilder(offset: Int, nbits: Int = BitVector.WORD_SIZE) extends mutable.Builder[Int, IntDomain] {
   private val bitSet = new java.util.BitSet(nbits)
 
-  override def +=(elem: Int): IntDomainBuilder.this.type = {
+  override def addOne(elem: Int): IntDomainBuilder.this.type = {
     bitSet.set(elem - offset)
     this
   }

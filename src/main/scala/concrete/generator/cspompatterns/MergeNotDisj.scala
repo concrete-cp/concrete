@@ -12,12 +12,12 @@ import cspom.variable.CSPOMSeq
 object MergeNotDisj extends ConstraintCompiler {
   type A = Seq[CSPOMConstraint[_]]
 
-  def functions = Functions('not)
+  def functions = Functions("not")
 
   override def mtch(fc: CSPOMConstraint[_], problem: CSPOM): Option[A] = Some {
     val v = fc.result
     problem.constraints(v).toSeq.collect {
-      case c: CSPOMConstraint[_] if c.function == 'clause => c
+      case c: CSPOMConstraint[_] if c.function == "clause" => c
     }
   }
 
@@ -27,7 +27,7 @@ object MergeNotDisj extends ConstraintCompiler {
 
     val newConstraints = for (clause <- clauses) yield {
       val Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]) = clause.arguments
-      new CSPOMConstraint(clause.result, 'clause, Seq(positive, a +: negative))
+      new CSPOMConstraint(clause.result, "clause", Seq(positive, a +: negative))
     }
 
     ConstraintCompiler.replaceCtr(fc +: clauses, newConstraints, problem)

@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
   */
 object NonLinearSum extends ConstraintCompilerNoData {
 
-  def functions = Functions('sum)
+  def functions = Functions("sum")
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
     val SimpleExpression.simpleSeq(coefs) = c.arguments(0)
@@ -32,10 +32,10 @@ object NonLinearSum extends ConstraintCompilerNoData {
       case e => (1, constant, e)
     }
 
-    val arguments = (varCoefs, vars).zipped.map {
+    val arguments = (varCoefs lazyZip vars).map {
       case (c: CSPOMVariable[_], v) =>
         val r = IntVariable.free()
-        val constraint = CSPOMConstraint(r)('mul)(c, v)
+        val constraint = CSPOMConstraint(r)("mul")(c, v)
         muls += constraint
         SumBuilder(neg, r)
       case (CSPOMConstant(c), v) =>
@@ -44,7 +44,10 @@ object NonLinearSum extends ConstraintCompilerNoData {
 
 
     val linear = arguments.reduce(_ + _) === k withParam "mode" -> revMode
-    ConstraintCompiler.replaceCtr(constraint, linear +: muls, p)
+
+    muls += linear
+
+    ConstraintCompiler.replaceCtr(constraint, muls.toSeq, p)
   }
 
   private def readCSPOM(constraint: CSPOMConstraint[_]) = {

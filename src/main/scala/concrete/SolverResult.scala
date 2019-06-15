@@ -1,7 +1,7 @@
 package concrete
 
 import java.util.Optional
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 sealed trait SolverResult {
   def isSat: Boolean
@@ -10,14 +10,14 @@ sealed trait SolverResult {
 
   def getInteger: java.util.Optional[java.util.Map[Variable, java.lang.Integer]] = {
     val o = getInt.map {
-      _.mapValues(i => i: java.lang.Integer).asJava
+      _.view.mapValues(i => i: java.lang.Integer).toMap.asJava
     }
 
     Optional.ofNullable(o.orNull)
   }
 
   def getInt: Option[Map[Variable, Int]] = get.map { s =>
-    s.mapValues(util.Math.any2Int)
+    s.view.mapValues(util.Math.any2Int).toMap
   }
 }
 

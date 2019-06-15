@@ -7,7 +7,7 @@ import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.variable.{IntExpression, SimpleExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 
-object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
+object AbsDiffDomains extends VariableCompiler("absdiff") with LazyLogging {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(ir: SimpleExpression[_], _, Seq(ii0: SimpleExpression[_], ii1: SimpleExpression[_]), _) =>

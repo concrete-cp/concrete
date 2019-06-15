@@ -40,48 +40,47 @@ trait CumulativeChecker extends Constraint with LazyLogging {
   * - forall i, d[i] >= 0 and r[i] >= 0
   */
 
-class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b)
+class Cumulative(startTimes: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(startTimes ++ d ++ r :+ b)
   with BC with CumulativeChecker with FixPoint {
 
-  def nbTasks: Int = s.length
+  def nbTasks: Int = startTimes.length
 
   private var begin: Int = _
   private var profile: Array[Int] = _
 
   override def toString(ps: ProblemState): String = {
-    s"Cumulative(start = [${s.map(ps.dom).mkString(", ")}], dur = [${d.map(ps.dom).mkString(", ")}], res = [${r.map(ps.dom).mkString(", ")}], bound = ${ps.dom(b)})"
+    s"Cumulative(start = [${startTimes.map(ps.dom).mkString(", ")}], dur = [${d.map(ps.dom).mkString(", ")}], res = [${r.map(ps.dom).mkString(", ")}], bound = ${ps.dom(b)})"
   }
 
   def advise(problemState: ProblemState, pos: Int): Int = arity * arity
 
   def init(ps: ProblemState): Outcome = {
-    val startDomains = ps.doms(s)
+    val startDomains = ps.doms(startTimes)
     begin = startDomains.map(_.head).min
-    val end = (startDomains, ps.doms(d)).zipped.map((s, d) => s.last + d.last).max
+    val end = (startDomains lazyZip ps.doms(d)).map((s, d) => s.last + d.last).max
     profile = new Array[Int](end - begin + 1)
     ps
   }
 
   private def buildProfile(ps: ProblemState): Outcome = {
     util.Arrays.fill(profile, 0)
-    var i = s.length - 1
-    var state = ps
+    var i = startTimes.length - 1
+    var state = ps: Outcome
     var bound = state.dom(b).head
-    while (i >= 0) {
-      val sDom = state.dom(s(i))
+    while (state.isState && i >= 0) {
+      val sDom = state.dom(startTimes(i))
       val dBound = state.dom(d(i)).head
       val rBound = state.dom(r(i)).head
 
       // partie obligatoire entre debut au plus tard et fin au plus tôt
-      for (i <- sDom.last until (sDom.head + dBound)) {
-        profile(i - begin) += rBound
+      state = state.fold(sDom.last until (sDom.head + dBound)) { case (s, j) =>
+        profile(j - begin) += rBound
 
-        if (profile(i - begin) > bound) {
-          bound = profile(i - begin)
-          state.removeUntil(b, bound) match {
-            case c: Contradiction => return c
-            case ns: ProblemState => state = ns
-          }
+        if (profile(j - begin) > bound) {
+          bound = profile(j - begin)
+          s.removeUntil(b, bound)
+        } else {
+          s
         }
       }
       i -= 1
@@ -90,7 +89,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
   }
 
   private def filter(state: ProblemState, bound: Int, i: Int): Outcome = {
-    val sDom = state.dom(s(i))
+    val sDom = state.dom(startTimes(i))
     val dBound = state.dom(this.d(i)).head
     val rBound = state.dom(r(i)).head
 
@@ -108,7 +107,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
       if (profile(min + d - begin) + rBound > bound) {
         sDom.nextOption(min + d) match {
           case Some(v) => min = v
-          case None => return Contradiction(s(i))
+          case None => return Contradiction(startTimes(i))
         }
         d = 0
       } else {
@@ -135,7 +134,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     var minBound = state.dom(b).head
 
 
-    var ps = state.updateDom(s(i), filtered)
+    var ps = state.updateDom(startTimes(i), filtered)
     var j = filtered.last
     while (j < filtered.head + dBound && ps.isState) {
       profile(j - begin) += rBound
@@ -153,7 +152,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     buildProfile(ps)
       .andThen {
         ps =>
-          fixPoint(ps, s.indices, {
+          fixPoint(ps, startTimes.indices, {
             (ps, i) => filter(ps, ps.dom(b).last, i)
           })
       }

@@ -1,9 +1,8 @@
 package concrete.constraint
 
-import bitvectors.BitVector
 import concrete.{Domain, Event, Outcome, ProblemState}
 
-trait Residues extends Constraint {
+trait Residues extends Constraint with EnumerateVariables {
 
   val residues: ResidueManager = {
     if (scope.map(v => v.initDomain.last - v.initDomain.head).sum < 30000) {

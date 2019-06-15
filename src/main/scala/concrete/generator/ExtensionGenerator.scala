@@ -23,6 +23,7 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
     val Some(mdd) = extensionConstraint.params.get("relation")
       .map {
         case r: cspom.extension.MDDRelation => r.mdd
+        case _ => throw new IllegalStateException()
       }
 
     val Some(init: Boolean) = extensionConstraint.params.get("init")
@@ -47,7 +48,7 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           // Binary case
           val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
             domains(0).head, domains(1).head, init)
-          matrix.setAll(mdd, !init)
+          matrix.setAll(mdd.view.map(a => a.toArray), !init)
           BinaryExt(scope, matrix)
 
         case _ if !init && algorithm != "General" =>
@@ -92,7 +93,6 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
       case "BDD" => relationCache.getOrElseUpdate(relation, new BDDRelation(BDD(relation).reduce()))
       case "STR" => relationCache.getOrElseUpdate(relation, STR(relation.toArrayArray)).asInstanceOf[STR].copy
       case "HashTable" => HashTable(relation.toArrayArray)
-      case "IndexedTable" => IndexedTable(relation.toArrayArray)
     }
   }
 

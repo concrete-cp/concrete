@@ -1,5 +1,7 @@
 package concrete.util
 
+import scala.collection.{immutable, mutable}
+
 class Buffer(sizeHint: Int = 16) {
 
   var array = new Array[Int](computeSize(8, sizeHint))
@@ -13,7 +15,7 @@ class Buffer(sizeHint: Int = 16) {
   }
 
   /** Ensure that the internal array has at least `n` cells. */
-  def ensureSize(n: Int) {
+  def ensureSize(n: Int): Unit = {
     // Use a Long to prevent overflows
     val arrayLength = array.length
     if (n > arrayLength) {
@@ -42,11 +44,16 @@ class Buffer(sizeHint: Int = 16) {
 class SparseSetBuffer(
                  private val dense: Buffer = new Buffer(),
                  private val sparse: Buffer = new Buffer(),
-                 private val members: Int = 0) extends Set[Int] {
+                 private val members: Int = 0)
+  extends immutable.Set[Int] with immutable.SetOps[Int, immutable.Set, SparseSetBuffer] {
+
+  override protected def fromSpecific(coll: IterableOnce[Int]): SparseSetBuffer = ???
+
+  override protected def newSpecificBuilder: mutable.Builder[Int, SparseSetBuffer] = ???
+
+  override def empty = new SparseSetBuffer()
 
   def this(sizeHint: Int) = this(new Buffer(sizeHint), new Buffer(sizeHint))
-
-  override def apply(k: Int): Boolean = contains(k)
 
   def contains(k: Int): Boolean = {
     sparse.applicable(k) && {
@@ -55,7 +62,7 @@ class SparseSetBuffer(
     }
   }
 
-  def +(k: Int): SparseSetBuffer = {
+  def incl(k: Int): SparseSetBuffer = {
     sparse.ensureSize(k + 1)
     val a = sparse(k)
     val b = members
@@ -73,7 +80,7 @@ class SparseSetBuffer(
 
   override def size: Int = members
 
-  def -(elem: Int): SparseSetBuffer = {
+  def excl(elem: Int): SparseSetBuffer = {
     if (sparse.applicable(elem)) {
       val a = sparse(elem)
       if (a < members && dense(a) == elem) {

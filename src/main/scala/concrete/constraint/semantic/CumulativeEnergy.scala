@@ -20,6 +20,18 @@ case class Task(d: Variable, h: Variable, slb: Int, dlb: Int, eub: Int, hlb: Int
   def compare(t: Task): Int = java.lang.Double.compare(coef, t.coef)
 }
 
+class PartialSum(a: Seq[Int]) {
+  val b = new Array[Int](a.length + 1)
+
+  for (i <- 1 until a.length + 1) {
+    b(i) = b(i - 1) + a(i - 1)
+  }
+
+  def apply(i: Int, j: Int): Int = {
+    b(j + 1) - b(i)
+  }
+}
+
 /**
   * Requires that a set of tasks given by start times s, durations d, and
   * resource requirements r, never require more than a global resource bound
@@ -51,7 +63,7 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
 
     var xMin = Long.MaxValue / 2
     var xMax = Long.MinValue / 2
-    var surface = 0l
+    var surface = 0L
     val camax = ps.dom(b).last.toLong
 
     ps.fold(tasks) { (ps: ProblemState, t) =>

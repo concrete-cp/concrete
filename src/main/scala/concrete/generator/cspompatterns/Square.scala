@@ -10,7 +10,7 @@ import cspom.variable.CSPOMExpression
  */
 object Square extends ConstraintCompiler {
 
-  def functions = Functions('mul)
+  def functions = Functions("mul")
 
   type A = (CSPOMExpression[_], CSPOMExpression[_])
 
@@ -22,7 +22,7 @@ object Square extends ConstraintCompiler {
 
     val (r, a) = data
 
-    ConstraintCompiler.replaceCtr(fc, CSPOMConstraint(r, 'sq, Seq(a), fc.params), problem)
+    ConstraintCompiler.replaceCtr(fc, CSPOMConstraint(r, "sq", Seq(a), fc.params), problem)
 
   }
 

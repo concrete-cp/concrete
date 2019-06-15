@@ -78,7 +78,7 @@ class ElementVal(val result: Variable, val index: Variable, val valuesOpt: Array
 
   private val offset = valuesOpt.flatten.min
   var values: Array[Int] = _
-  var indices: Array[Seq[Int]] = _
+  var indices: Array[Array[Int]] = _
 
   def advise(ps: ProblemState, event: Event, position: Int): Int = ps.card(result) + ps.card(index)
 

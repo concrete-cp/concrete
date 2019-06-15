@@ -62,7 +62,7 @@ abstract class Constraint(val scope: Array[Variable])
       pos.getOrElseUpdate(v, new ArrayBuffer()) += p
     }
 
-    pos.mapValues(_.toArray).toMap //case (k, v) => k -> v.toArray }
+    pos.view.mapValues(_.toArray).toMap //case (k, v) => k -> v.toArray }
 
   }
   val positionInVariable: Array[Int] = Array.fill(arity)(-1)
@@ -84,7 +84,7 @@ abstract class Constraint(val scope: Array[Variable])
     consistent(ps, BitVector(modified))
   }
 
-  def consistent(problemState: ProblemState, modified: Traversable[Int]): Outcome = {
+  def consistent(problemState: ProblemState, modified: Iterable[Int]): Outcome = {
     revise(problemState) match {
       case _: ProblemState => problemState
       case c: Contradiction => c
@@ -112,7 +112,7 @@ abstract class Constraint(val scope: Array[Variable])
     */
   def arity: Int = scope.length
 
-  protected def modVars(modified: BitVector): Traversable[Variable] = modified.view.map(scope)
+  protected def modVars(modified: BitVector): Iterable[Variable] = modified.view.map(scope)
 
   def toString(problemState: ProblemState) = s"${this.getClass.getSimpleName}${
     scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
@@ -146,7 +146,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   override def hashCode: Int = id
 
-  @tailrec
+  @tailrec @inline
   final def ctp(doms: Array[Domain], tuple: Array[Int], i: Int = arity - 1): Boolean = {
     /* Need high optimization */
     i < 0 || (doms(i).contains(tuple(i)) && ctp(doms, tuple, i - 1))
@@ -301,7 +301,7 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   def diff(ps1: ProblemState, ps2: ProblemState): Seq[(Variable, (Domain, Domain))] = {
-    for (v <- scope if ps1.dom(v) ne ps2.dom(v)) yield {
+    for (v <- scope.toSeq if ps1.dom(v) ne ps2.dom(v)) yield {
       v -> ((ps1.dom(v), ps2.dom(v)))
     }
   }

@@ -33,28 +33,29 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
 
   override def revise(initState: ProblemState, modified: BitVector): Outcome = {
     // println(s"mod: $modified")
-    var state = initState
+
+    var state: Outcome = initState
 
     val queue = new BitSetQueue(modified.words)
 
 
     logger.trace("Checking uninitialized")
-    for (ng <- uninitialized) {
-      ng.findWatch(state) match {
+    state = state.fold(uninitialized) { case (ps, ng) =>
+      ng.findWatch(ps) match {
         case None =>
-          logger.warn(s"Unsat nogood ${ng.toString(state)}")
+          logger.warn(s"Unsat nogood ${ng.toString(ps)}")
           return Contradiction(ng.variables)
         case Some((watch1, witness1)) =>
-          ng.findWatch(state, from = watch1 + 1) match {
+          ng.findWatch(ps, from = watch1 + 1) match {
             case None =>
-              ng.infer(state, watch1) match {
+              ng.infer(ps, watch1) match {
                 case c: Contradiction =>
-                  logger.warn(s"Unsat nogood after inference ${ng.toString(state)}")
-                  return c
+                  logger.warn(s"Unsat nogood after inference ${ng.toString(ps)}")
+                  c
                 case ps: ProblemState =>
                   queue.offer(ng.literals(watch1).pos)
-                  logger.debug(s"Inferrable nogood ${ng.toString(state)}")
-                  state = ps
+                  logger.debug(s"Inferrable nogood ${ng.toString(ps)}")
+                  ps
               }
             case Some((watch2, witness2)) =>
               ng.watch1 = watch1
@@ -67,13 +68,14 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
               nbNogoods += 1
               currentNoGoods += 1
               maxNoGoods = math.max(maxNoGoods, nogoods.size)
+              ps
           }
       }
     }
 
     uninitialized.clear()
 
-    while(!queue.isEmpty) {
+    while (state.isState && !queue.isEmpty) {
       val pos = queue.poll()
       logger.trace(s"Modified $pos: ${scope(pos)}")
       val dom = state.dom(scope(pos))
@@ -81,43 +83,42 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
 
       // BEWARE OF CONCURRENT MODIFICATIONS! Hence the .toSeq.
 
-      for (ng <- watched1(pos).toSeq) {
-        logger.trace(ng.toString(state))
+      state = state.fold(watched1(pos).toSeq) { case (ps, ng) =>
+
+        logger.trace(ng.toString(ps))
         assert(ng.constraintPos(ng.watch1) == pos)
 
-        val s2 = checkW1(ng, dom, state)
+        val s2 = checkW1(ng, dom, ps)
 
-        if (s2 ne state) {
-          upd(ng, state, s2)
-
-          s2 match {
-            case c: Contradiction => return c
-            case s: ProblemState =>
-              queue.offer(ng.lit2.pos)
-              // logger.debug(diff(state, s).toString)
-              state = s
+        if (s2 ne ps) {
+          upd(ng, ps, s2)
+          s2.andThen { s =>
+            queue.offer(ng.lit2.pos)
+            s
           }
+        } else {
+          ps
         }
+
       }
 
       logger.trace(s"Checking watches2")
-      for (ng <- watched2(pos).toSeq) {
-        logger.trace(ng.toString(state))
+      state = state.fold(watched2(pos).toSeq) { case (ps, ng) =>
+        logger.trace(ng.toString(ps))
         assert(watched1(ng.lit1.pos).contains(ng))
         assert(ng.lit2.pos == pos)
 
-        val s2 = checkW2(ng, dom, state)
+        val s2 = checkW2(ng, dom, ps)
 
-        if (s2 ne state) {
-          upd(ng, state, s2)
-
-          s2 match {
-            case c: Contradiction => return c
-            case s: ProblemState =>
-              queue.offer(ng.lit1.pos)
-              // logger.trace(diff(state, s).toString)
-              state = s
+        if (s2 ne ps) {
+          upd(ng, ps, s2)
+          s2.andThen { s =>
+            queue.offer(ng.lit1.pos)
+            // logger.trace(diff(state, s).toString)
+            s
           }
+        } else {
+          ps
         }
 
       }
@@ -289,13 +290,13 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
     var witness1: Int = _
     var witness2: Int = _
 
-    def lit1 = literals(watch1)
-
-    def lit2 = literals(watch2)
-
     override def toString: String = literals.mkString("(", ", ", ")") + s" - w1 = $watch1 ($witness1) - w2 = $watch2 ($witness2) - a = $activity"
 
     def toString(ps: ProblemState): String = literals.map(_.toString(ps)).mkString("(", ", ", ")") + s" - w1 = $watch1/${lit1.pos} ($witness1) - w2 = $watch2/${lit2.pos} ($witness2) - a = $activity"
+
+    def lit1 = literals(watch1)
+
+    def lit2 = literals(watch2)
 
     def findWatch(ps: ProblemState, otherThan: Int = -1, from: Int = 0): Option[(Int, Int)] = {
       var i = from
@@ -339,7 +340,8 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
       case _ => false
     }
 
-    def watched: Seq[Alternative] = if (watch1 < 0 || watch2 < 0) literals else Seq(literals(watch1), literals(watch2))
+    //    def watched: Seq[Alternative] =
+    //      if (watch1 < 0 || watch2 < 0) literals else Seq(literals(watch1), literals(watch2))
 
     def matches(tuple: Array[Int]): Boolean =
       literals.forall { decision =>

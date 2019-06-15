@@ -92,10 +92,6 @@ object SQLWriter {
 
     def nature = column[Option[String]]("nature")
 
-    def name = column[String]("name")
-
-    def display = column[Option[String]]("display")
-
     def d = column[Option[Double]]("d")
 
     def k = column[Option[Double]]("k")
@@ -112,7 +108,11 @@ object SQLWriter {
 
     def idxName = index("idxName", name, unique = true)
 
+    def name = column[String]("name")
+
     def idxDisplay = index("idxDisplay", display, unique = true)
+
+    def display = column[Option[String]]("display")
   }
 
   class Config(tag: Tag) extends Table[(Int, String, Option[String])](tag, "Config") {
@@ -122,24 +122,24 @@ object SQLWriter {
 
     def description = column[Option[String]]("description")
 
-    def idxMd5 = index("idxConfig", config, unique = true)
-
     def config = column[String]("config")
+
+    def idxMd5 = index("idxConfig", config, unique = true)
   }
 
-  implicit val localDateToDate: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
-    l => Timestamp.valueOf(l),
-    d => d.toLocalDateTime
-  )
+  //  implicit val localDateToDate: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
+  //    l => Timestamp.valueOf(l),
+  //    d => d.toLocalDateTime
+  //  )
 
-  class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, String, LocalDateTime, Option[LocalDateTime], Option[String], String, Option[String])](tag, "Execution") {
+  class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, String, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
     def * = (executionId, configId, problemId, iteration, version, start, end, hostname, status, solution)
 
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
 
-    def start = column[LocalDateTime]("start")
+    def start = column[Timestamp]("start")
 
-    def end = column[Option[LocalDateTime]]("end")
+    def end = column[Option[Timestamp]]("end")
 
     def hostname = column[Option[String]]("hostname")
 
@@ -147,31 +147,31 @@ object SQLWriter {
 
     def status = column[String]("status", O.Default("started"))
 
-    def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
-
     def configId = column[Int]("configId")
-
-    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
-
-    def idxVCP = index("idxVCP", (configId, problemId, iteration, version), unique = true)
 
     def version = column[String]("version")
 
     def problemId = column[Int]("problemId")
 
     def iteration = column[Int]("iteration")
+
+    def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
+
+    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
+
+    def idxVCP = index("idxVCP", (configId, problemId, iteration, version), unique = true)
   }
 
   class ProblemTag(tag: Tag) extends Table[(String, Int)](tag, "ProblemTag") {
     def * = (problemTag, problemId)
 
-    def problemTag = column[String]("problemTag")
-
-    def problemId = column[Int]("problemId")
-
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
 
     def pkPT = primaryKey("pkPT", (problemTag, problemId))
+
+    def problemTag = column[String]("problemTag")
+
+    def problemId = column[Int]("problemId")
   }
 
   class Statistic(tag: Tag) extends Table[(String, Int, Option[String])](tag, "Statistic") {
@@ -179,13 +179,13 @@ object SQLWriter {
 
     def value = column[Option[String]]("value")
 
-    def executionId = column[Int]("executionId")
-
-    def name = column[String]("name")
-
     def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
 
     def pk = primaryKey("pkS", (name, executionId))
+
+    def executionId = column[Int]("executionId")
+
+    def name = column[String]("name")
   }
 
 }
@@ -226,7 +226,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
         }
 
     } else {
-      Future.successful(Unit)
+      Future.successful(())
     }
   }
 
@@ -263,12 +263,22 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
   }
 
 
-  def printSolution(solution: String, obj: Seq[(String, Any)]) {
+  def printSolution(solution: String, obj: Seq[(String, Any)]): Unit = {
     if (params.contains("sql.verboseSolution")) {
       addSolution(solution, executionId)
     } else if (obj.nonEmpty) {
       addSolution(obj.map { case (x, v) => s"$x = $v" }.mkString("\n"), executionId)
     }
+  }
+
+  def error(thrown: Throwable): Unit = {
+
+    val errors = toString(thrown)
+
+    System.err.println(errors)
+
+    addSolution(errors, executionId)
+
   }
 
   private def addSolution(solution: String, executionId: Int) = {
@@ -285,23 +295,13 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
     Await.ready(f, Duration.Inf)
   }
 
-  def error(thrown: Throwable) {
-
-    val errors = toString(thrown)
-
-    System.err.println(errors)
-
-    addSolution(errors, executionId)
-
-  }
-
-  private def toString(t: Throwable) = {
+  private def toString(t: Throwable): String = {
     val e = new StringWriter()
     t.printStackTrace(new PrintWriter(e))
     e.toString
   }
 
-  def disconnect(status: RunnerResult) {
+  def disconnect(status: RunnerResult): Unit = {
     // logger.warn("Disconnecting")
     try {
 
@@ -320,7 +320,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
       Await.ready(
         db.run {
           dbexec.map(e => (e.end, e.status)).update(
-            (Some(LocalDateTime.now()), result))
+            (Some(Timestamp.valueOf(LocalDateTime.now())), result))
         }
           .flatMap { _ =>
             db.run {
@@ -339,7 +339,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
       .iterator
       .filter { case (k, _) => k != "iteration" && k != "sql" }
       .map {
-        case (k, Unit) => s"-$k"
+        case (k, ()) => s"-$k"
         case (k, v) => s"-$k=$v"
       }.mkString(" ")
 
@@ -362,7 +362,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
       executions.map(e =>
         (e.problemId, e.configId, e.version, e.start, e.hostname, e.iteration)) returning
         executions.map(_.executionId) += ((
-        p, c, version, LocalDateTime.now(),
+        p, c, version, Timestamp.valueOf(LocalDateTime.now()),
         Some(InetAddress.getLocalHost.getHostName), it)))
 
     executionId.foreach { e =>

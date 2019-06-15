@@ -16,7 +16,7 @@ class RandomDiv(val pm: ParameterManager, val pool: Seq[Variable], rand: Random)
   private val poolSet: Set[Variable] = pool.toSet
 
   def select(state: ProblemState, i: Seq[Variable]): Seq[Variable] = {
-    val p = i.toStream.filter(poolSet)
+    val p = i.to(LazyList).filter(poolSet)
     if (rand.nextDouble() < factor) {
       logger.info(s"Performed random div")
       val r = rand.nextInt(p.size)

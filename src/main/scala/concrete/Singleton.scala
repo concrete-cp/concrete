@@ -56,7 +56,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     */
   def contains(i: Int): Boolean = i == singleValue
 
-  def -(i: Int): IntDomain = {
+  def excl(i: Int): IntDomain = {
     if (singleValue == i) EmptyIntDomain else this
   }
 
@@ -157,7 +157,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
 
   override def isEmpty = false
 
-  def keysIteratorFrom(start: Int): Iterator[Int] = {
+  def iteratorFrom(start: Int): Iterator[Int] = {
     if (start <= singleValue) iterator else Iterator.empty
   }
 

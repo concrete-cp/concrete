@@ -27,7 +27,8 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   def init(ps: ProblemState): ProblemState = ps
 
   def check(t: Array[Int]): Boolean = {
-    t.view.splitAt(size).zipped.exists(_ != _)
+    val (t1, t2) = t.view.splitAt(size)
+    (t1 lazyZip t2).exists(_ != _)
   }
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {

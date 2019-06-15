@@ -16,7 +16,6 @@ import cspom._
 import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc._
 import cspom.variable._
-import org.scalameter.Quantity
 
 import scala.util.{Failure, Random, Try}
 
@@ -29,11 +28,11 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
   var file: URL = _
   @Statistic
-  var parseTime: Quantity[Double] = _
+  var parseTime: Double = _
 
   def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM] = {
     Try {
-      val Seq(fn) = args
+      val Seq(fn: String) = args
       fn
     }
       .recoverWith {
@@ -44,7 +43,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   }
 
   def loadCSPOMURL(pm: ParameterManager, file: URL): Try[CSPOM] = {
-    val (tryLoad, time) = StatisticsManager.measureTry[CSPOM, Unit, Double](CSPOM.load(file, FlatZincFastParser))
+    val (tryLoad, time) = StatisticsManager.measureTry(CSPOM.load(file, FlatZincFastParser))
 
     parseTime = time
 

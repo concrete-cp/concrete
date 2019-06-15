@@ -84,7 +84,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
         gYes.put(g)
         true
       } else {
-        gNo += g.id
+        gNo = gNo.incl(g.id)
         gNoChange = true
         false
       }

@@ -30,7 +30,7 @@ class AllDiffTest extends FlatSpec with Matchers {
     withClue(cspom) {
       //cspom.constraints should have size 1
       assert(cspom.constraints.toSeq.exists {
-        c => c.function == 'alldifferent
+        c => c.function == "alldifferent"
       })
     }
   }

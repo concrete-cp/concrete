@@ -18,7 +18,7 @@ class XCSP3Writer(val pm:ParameterManager, problem:String, val stats: Statistics
   }
 
 
-  def printSolution(sol: String, obj: Seq[(String, Any)]) {
+  def printSolution(sol: String, obj: Seq[(String, Any)]): Unit = {
     writeStats()
     for ((_, v) <- obj) {
       Console.println(s"o $v")
@@ -32,11 +32,11 @@ class XCSP3Writer(val pm:ParameterManager, problem:String, val stats: Statistics
       }
   }
 
-  def error(e: Throwable) {
+  def error(e: Throwable): Unit = {
     // e.printStackTrace(Console.err)
   }
 
-  def disconnect(status: RunnerResult) {
+  def disconnect(status: RunnerResult): Unit = {
     writeStats()
     for (s <- lastSolution) {
       Console.println(s.split("\n").map("v " + _).mkString("\n"))

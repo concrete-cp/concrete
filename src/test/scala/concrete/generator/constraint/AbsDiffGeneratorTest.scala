@@ -21,7 +21,7 @@ final class AbsDiffGeneratorTest extends FlatSpec with Matchers with TryValues {
       val v1 = IntVariable(1, 2, 3)
       val v2 = IntVariable(1, 2, 3)
 
-      ctr(CSPOMConstraint(v0, 'absdiff, Seq(v1, v2)))
+      ctr(CSPOMConstraint(v0, "absdiff", Seq(v1, v2)))
     }
 
     val problem = new ProblemGenerator().generate(cspom).success.value._1

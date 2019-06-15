@@ -9,7 +9,7 @@ import cspom.compiler.{ConstraintCompiler, Delta, Functions}
  */
 object MergeSameCommutative extends ConstraintCompiler {
 
-  def functions = Functions('eq, 'ne, 'mul, 'nevec)
+  def functions = Functions("eq", "ne", "mul", "nevec")
 
   type A = Seq[CSPOMConstraint[_]]
 
@@ -45,7 +45,7 @@ object MergeSameCommutative extends ConstraintCompiler {
 
   def compile(c: CSPOMConstraint[_], problem: CSPOM, same: A): Delta = {
 
-    val eqC = CSPOMConstraint('eq)(c.result +: same.map(_.result): _*)
+    val eqC = CSPOMConstraint("eq")(c.result +: same.map(_.result): _*)
     ConstraintCompiler.replaceCtr(same.distinct, eqC, problem)
 
   }

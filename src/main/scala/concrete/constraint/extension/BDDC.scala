@@ -7,7 +7,7 @@ import concrete.util.SparseSet
 import mdd._
 
 /* MDDRelation comes with its own timestamp */
-class BDDC(_scope: Array[Variable], val relation: BDDRelation)
+final class BDDC(_scope: Array[Variable], val relation: BDDRelation)
   extends Constraint(_scope) with StatefulConstraint[SparseSet] {
 
   val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
@@ -71,7 +71,7 @@ class BDDC(_scope: Array[Variable], val relation: BDDRelation)
         gYes.put(g)
         true
       } else {
-        gNo += g.id
+        gNo = gNo.incl(g.id)
         false
       }
 

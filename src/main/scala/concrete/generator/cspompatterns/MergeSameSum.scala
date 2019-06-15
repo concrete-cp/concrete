@@ -13,7 +13,7 @@ object MergeSameSum extends ConstraintCompiler {
 
   type A = Seq[(CSPOMExpression[_], CSPOMConstraint[_], CSPOMExpression[_])]
 
-  def functions: CompiledFunctions = Functions('sum)
+  def functions: CompiledFunctions = Functions("sum")
 
   override def mtch(c1: CSPOMConstraint[_], problem: CSPOM): Option[A] = {
     if (c1.result.isTrue) {
@@ -22,7 +22,7 @@ object MergeSameSum extends ConstraintCompiler {
         val candidates = for {
           arg <- args1
           c2 <- problem.deepConstraints(arg)
-          if (c2 ne c1) && c2.result.isTrue && c2.function == 'sum
+          if (c2 ne c1) && c2.result.isTrue && c2.function == "sum"
         } yield c2
 
         val s = for {
@@ -69,7 +69,7 @@ object MergeSameSum extends ConstraintCompiler {
 
   def compile(c: CSPOMConstraint[_], problem: CSPOM, same: A): Delta = {
     same.foldLeft(Delta()) { case (delta, (a1, c2, a2)) =>
-      val eqC = CSPOMConstraint('eq)(a1, a2)
+      val eqC = CSPOMConstraint("eq")(a1, a2)
       delta ++ ConstraintCompiler.replaceCtr(c2, eqC, problem)
     }
 

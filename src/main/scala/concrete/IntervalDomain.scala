@@ -31,14 +31,14 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def isAssigned = false
 
-  def -(index: Int): IntDomain = {
+  def excl(index: Int): IntDomain = {
 
     if (index == span.lb) {
       IntDomain.ofInterval(span.lb + 1, span.ub)
     } else if (index == span.ub) {
       IntDomain.ofInterval(span.lb, span.ub - 1)
     } else if (contains(index)) {
-      toBVDomain - index
+      toBVDomain excl index
     } else {
       this
     }
@@ -220,7 +220,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def iterator: Iterator[Int] = span.allValues.iterator
 
-  def keysIteratorFrom(start: Int): Iterator[Int] = (start to last).iterator
+  def iteratorFrom(start: Int): Iterator[Int] = (start to last).iterator
 
   override def foreach[U](f: Int => U): Unit = {
     span.allValues.foreach(f)

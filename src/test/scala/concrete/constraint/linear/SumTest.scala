@@ -43,7 +43,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     val c = LinearEq(0, Array(1, -1, 1), Array(x, y, z))
     // c.register(new AdviseCount)
-    val pb = Problem(c.scope: _*)
+    val pb = new Problem(c.scope)
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.assign(y, 9).toState
@@ -212,7 +212,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     val c = LinearEq(0, Array(1, -1, -1), Array(x98, x1605, x985))
     //c.register(new AdviseCount)
-    val pb = Problem(c.scope: _*)
+    val pb = new Problem(c.scope)
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val mod = pb.initState.andThen { ps =>
@@ -231,7 +231,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     val c = LinearEq(0, Array(1, -1, 1), Array(x238, x14, x0))
     //c.register(new AdviseCount)
-    val pb = Problem(c.scope: _*)
+    val pb = new Problem(c.scope)
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
@@ -255,7 +255,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     val c = new LinearLe(0, Array(1, -1, 1), Array(x, y, z), Array(20, 19, 18))
     //c.register(new AdviseCount)
-    val pb = Problem(c.scope: _*)
+    val pb = new Problem(c.scope)
     pb.addConstraint(c)
     c.register(new AdviseCount)
 
@@ -276,7 +276,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val cspom = CSPOM { implicit cspom =>
       val r = new BoolVariable() as "r"
       val v0 = IntVariable(0 to 3) as "v0"
-      ctr(CSPOMConstraint(r)('sum)(Seq(1), Seq(v0), -1) withParam ("mode" -> "le"))
+      ctr(CSPOMConstraint(r)("sum")(Seq(1), Seq(v0), -1) withParam ("mode" -> "le"))
     }
 
     val s = Solver(cspom).get

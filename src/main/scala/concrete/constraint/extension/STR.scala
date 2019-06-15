@@ -1,7 +1,6 @@
 package concrete.constraint.extension
 
 import java.util
-import java.util.Arrays
 
 import concrete.Domain
 
@@ -22,12 +21,12 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
 
   def copy = new STR(array.clone, bound)
 
-  def +(t: Seq[Int]) = {
+  def +(t: Seq[Int]): STR = {
     assert(t.length == depth)
     new STR(t.toArray +: array, bound + 1)
   }
 
-  override def ++(t: Iterable[Seq[Int]]) = {
+  override def ++(t: Iterable[Seq[Int]]): STR = {
     assert(t.forall(_.length == depth))
     new STR(t.map(_.toArray) ++: array, bound + t.size)
   }
@@ -36,7 +35,7 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
 
-  def filterTrie(doms: Array[Domain], modified: List[Int]) = {
+  def filterTrie(doms: Array[Domain], modified: List[Int]): STR = {
     var b = bound
     var i = b - 1
     while (i >= 0) {
@@ -74,15 +73,15 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
     newDomains
   }
 
-  override def toString = s"$bound of ${array.size} tuples:\n" + iterator.map(_.mkString(" ")).mkString("\n")
+  override def toString: String = s"$bound of ${array.length} tuples:\n" + iterator.map(_.mkString(" ")).mkString("\n")
 
-  def iterator = array.iterator.take(bound)
+  def iterator: Iterator[Array[Int]] = array.iterator.take(bound)
 
-  def edges = if (array.isEmpty) 0 else bound * array(0).length
+  def edges: Int = if (array.isEmpty) 0 else bound * array(0).length
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
 
-  def findSupport(scope: Array[Domain], p: Int, i: Int) =
+  def findSupport(scope: Array[Domain], p: Int, i: Int): Option[Array[Int]] =
     iterator.find(t => t(p) == i && t.indices.forall(p => scope(p).contains(t(p))))
 
   def contains(t: Array[Int]): Boolean = {
@@ -107,9 +106,9 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
     true
   }
 
-  override def size = bound
+  override def size: Int = bound
 
-  def lambda = bound
+  def lambda: BigInt = bound
 
   @tailrec
   private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
@@ -117,10 +116,10 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
   }
 }
 
-final class MutableList(var nb: Int) extends Traversable[Int] {
+final class MutableList(var nb: Int) extends Iterable[Int] {
   private val data = new Array[Int](size)
 
-  def refill() {
+  def refill(): Unit = {
     nb = data.length
     var i = size - 1
     while (i >= 0) {
@@ -129,11 +128,11 @@ final class MutableList(var nb: Int) extends Traversable[Int] {
     }
   }
 
-  override def size = nb
+  override def size: Int = nb
 
-  def apply(index: Int) = data(index)
+  def apply(index: Int): Int = data(index)
 
-  def foreach[U](f: Int => U) {
+  override def foreach[U](f: Int => U): Unit = {
     var i = size - 1
     while (i >= 0) {
       f(data(i))
@@ -141,7 +140,9 @@ final class MutableList(var nb: Int) extends Traversable[Int] {
     }
   }
 
-  override def filter(f: Int => Boolean) = {
+  def iterator: Iterator[Int] = Iterator.range(0, size).map(data)
+
+  override def filter(f: Int => Boolean): MutableList = {
     var i = 0
     while (i < size) {
       if (!f(data(i))) {
@@ -153,14 +154,14 @@ final class MutableList(var nb: Int) extends Traversable[Int] {
     this
   }
 
-  def remove(index: Int) {
+  def remove(index: Int): Unit = {
     nb -= 1
     data(index) = data(size)
   }
 
-  def sorted = {
+  def sorted: Array[Int] = {
     val a = toArray
-    Arrays.sort(a)
+    util.Arrays.sort(a)
     a.reverse
   }
 

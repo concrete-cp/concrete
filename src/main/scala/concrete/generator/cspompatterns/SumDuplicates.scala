@@ -2,8 +2,8 @@ package concrete.generator.cspompatterns
 
 import concrete.generator.SumGenerator
 import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
-import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.compiler.ConstraintCompiler._
+import cspom.compiler.{ConstraintCompiler, Delta, Functions}
 import cspom.variable.{BoolExpression, CSPOMExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -14,14 +14,14 @@ object SumDuplicates extends ConstraintCompiler {
 
   type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[Any], Int], Int)
 
-  def functions = Functions('sum)
+  def functions = Functions("sum")
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[A] = {
     val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
 
     var duplicates = false
     val factors = collection.mutable.Map[CSPOMExpression[_], Int]()
-    for ((v, c) <- (vars, coefs).zipped) {
+    for ((v, c) <- vars lazyZip coefs) {
       factors.get(v) match {
         case Some(i) =>
           duplicates = true
@@ -54,7 +54,7 @@ object SumDuplicates extends ConstraintCompiler {
 
     } else {
       val newConstraint =
-        CSPOMConstraint(r)('sum)(factors.toSeq, variables.toSeq, const) withParams constraint.params
+        CSPOMConstraint(r)("sum")(factors.toSeq, variables.toSeq, const) withParams constraint.params
 
       //println(s"replacing $constraint with $newConstraint")
       replaceCtr(constraint, newConstraint, p)

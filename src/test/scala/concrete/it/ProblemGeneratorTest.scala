@@ -40,11 +40,11 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
       .loadCSPOMURL(classOf[ProblemGeneratorTest].getResource(file))
       .get
 
-    logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
+    logger.info(s"$cspom\n${cspom.referencedExpressions.size} vars, ${cspom.constraints.size} cons")
 
     CSPOMCompiler.compile(cspom, ConcretePatterns(pm)).get
 
-    logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
+    logger.info(s"$cspom\n${cspom.referencedExpressions.size} vars, ${cspom.constraints.size} cons")
 
     val problem = new ProblemGenerator(pm).generate(cspom).get._1
     //    match {
@@ -52,11 +52,11 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
     //      case Failure(e)            => fail(e)
     //    }
 
-    logger.info(problem + "\n" + problem.variables.length + " vars, " + problem.constraints.size + " cons")
+    logger.info(s"$problem\n${problem.variables.length} vars, ${problem.constraints.length} cons")
 
     new ACC(problem, pm).reduceAll(problem.initState.toState) match {
       case _: Contradiction => logger.info("UNSAT")
-      case newState: ProblemState => logger.info(problem.toString(newState));
+      case newState: ProblemState => logger.info(problem.toString(newState))
     }
 
   }

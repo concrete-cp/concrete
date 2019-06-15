@@ -2,18 +2,24 @@ package concrete.util
 
 import java.util
 
-import scala.collection.{SortedSetLike, mutable}
+import scala.collection.{mutable}
 
-final class ScalaBitSet(private val bitSet: util.BitSet = new util.BitSet()) extends mutable.SortedSet[Int] with SortedSetLike[Int, ScalaBitSet]
-  with mutable.SetLike[Int, ScalaBitSet] {
+/**
+  * Wrapper above java.util.BitSet that implements Scala mutable.SortedSet interface.
+  * Good Iterator and keysIteratorFrom implementations.
+  *
+  * @param bitSet
+  */
+final class ScalaBitSet(private val bitSet: util.BitSet = new util.BitSet())
+  extends mutable.SortedSet[Int] {
 
   override def empty = new ScalaBitSet()
 
   def this(initSize: Int) = this(new util.BitSet(initSize))
 
-  def iterator: Iterator[Int] = keysIteratorFrom(0)
+  def iterator: Iterator[Int] = iteratorFrom(0)
 
-  override def keysIteratorFrom(start: Int): Iterator[Int] = new Iterator[Int] {
+  override def iteratorFrom(start: Int): Iterator[Int] = new Iterator[Int] {
     private var c = bitSet.nextSetBit(start)
 
     def hasNext: Boolean = c >= 0
@@ -27,12 +33,12 @@ final class ScalaBitSet(private val bitSet: util.BitSet = new util.BitSet()) ext
 
   def contains(i: Int): Boolean = bitSet.get(i)
 
-  def -=(i: Int): ScalaBitSet.this.type = {
+  def subtractOne(i: Int): ScalaBitSet.this.type = {
     bitSet.clear(i)
     this
   }
 
-  def +=(i: Int): ScalaBitSet.this.type = {
+  def addOne(i: Int): ScalaBitSet.this.type = {
     bitSet.set(i)
     this
   }

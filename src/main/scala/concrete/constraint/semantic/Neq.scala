@@ -41,7 +41,7 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     }
   }
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val v0dom = ps.dom(v0)
     val r = !v0dom.isAssigned || {
       val v1dom = ps.dom(v1)
@@ -70,7 +70,7 @@ class NeqC(x: Variable, y: Int) extends Constraint(x) {
 
   def check(t: Array[Int]): Boolean = t(0) != y
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val d = ps.dom(x)
     if (!d.isAssigned || d.singleValue != y) ps else Contradiction(scope)
   }

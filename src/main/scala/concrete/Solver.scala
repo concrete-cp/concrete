@@ -29,8 +29,7 @@ import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.compiler.CSPOMCompiler
 import cspom.{CSPOM, Statistic, StatisticsManager}
-import org.scalameter.Quantity
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import scala.util.Try
 
@@ -43,7 +42,7 @@ object Solver {
       pg = new ProblemGenerator(pm)
       (problem, variables) <- pg.generate(cspom)
       solver <- apply(problem,
-        problem.variables.filter(x => cspom.expressionMap.expression(x.name).isDefined), pm)
+        problem.variables.toSeq.filter(x => cspom.expressionMap.expression(x.name).isDefined), pm)
     } yield {
       solver.statistics.register("compiler", CSPOMCompiler)
       solver.statistics.register("generator", pg)
@@ -62,20 +61,15 @@ object Solver {
       .asInstanceOf[Try[Solver]]
   }
 
-  def apply(problem: Problem): Try[Solver] = apply(problem, problem.variables, new ParameterManager)
+  def apply(problem: Problem): Try[Solver] = apply(problem, problem.variables.toSeq, new ParameterManager)
 }
 
-abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
+abstract class Solver(val problem: Problem, val params: ParameterManager)
+  extends Iterator[Map[Variable, Any]] with LazyLogging {
 
   @Statistic
   val nbConstraints: Int = problem.constraints.length
 
-  implicit class QuantityMath[T](quantity: Quantity[T])(implicit num: Numeric[T]) {
-    def +(q: Quantity[T]): Quantity[T] = {
-      require(q.units == quantity.units)
-      Quantity(num.plus(q.value, quantity.value), q.units)
-    }
-  }
 
   @Statistic
   val nbVariables: Int = problem.variables.length
@@ -94,7 +88,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   //    }
   //  }
   @Statistic
-  var preproCpu: Quantity[Double] = _
+  var preproCpu: Double = _
   //statistics.register("solver", this)
   //statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
@@ -150,7 +144,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   def javaCollection: java.util.List[java.util.Map[Variable, java.lang.Integer]] = integerIterator.toSeq.asJava
 
-  def integerIterator: Iterator[java.util.Map[Variable, java.lang.Integer]] = this.map {
+  def integerIterator: Iterator[java.util.Map[Variable, java.lang.Integer]] = iterator.map {
     s =>
       s.map {
         case (v, i: Int) => (v, i: java.lang.Integer)
@@ -185,7 +179,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         filter
       }
 
-    val (r, t) = StatisticsManager.measure[Outcome, Unit, Double](preprocessor.reduceAll(state))
+    val (r, t) = StatisticsManager.measure(preprocessor.reduceAll(state))
 
     this.preproCpu = t
     //println(Thread.currentThread().getStackTrace.toSeq)

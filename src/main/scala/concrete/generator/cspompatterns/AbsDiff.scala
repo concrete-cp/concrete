@@ -15,7 +15,7 @@ import ConstraintCompiler._
 object AbsDiff extends ConstraintCompiler {
   type A = (CSPOMConstraint[Any], CSPOMExpression[_], Set[(CSPOMConstraint[Any], Seq[CSPOMExpression[_]])])
 
-  def functions = Functions('abs)
+  def functions = Functions("abs")
 
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM) = c match {
     case absConstraint @ CSPOMConstraint(_, _, Seq(absArg), _) =>
@@ -23,7 +23,7 @@ object AbsDiff extends ConstraintCompiler {
      // println(problem.deepConstraints(absArg))
 
       val addConstraints = problem.deepConstraints(absArg).collect {
-        case addConstraint @ CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(
+        case addConstraint @ CSPOMConstraint(CSPOMConstant(true), "sum", Seq(
           IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(0)), _) if addConstraint.getParam("mode").contains("eq") &&
           coefs.sorted == Seq(-1, -1, 1) && (args zip coefs).find(_._1 == absArg).exists(_._2 == -1) =>
           (addConstraint, args.filter(_ != absArg))
@@ -48,7 +48,7 @@ object AbsDiff extends ConstraintCompiler {
          * so absConstraint.result = |other|
          */
 
-        val nc = CSPOMConstraint(absConstraint.result, 'absdiff, other)
+        val nc = CSPOMConstraint(absConstraint.result, "absdiff", other)
         val delta = acc ++ addCtr(nc, problem) //acc.added(problem.ctr(nc))
         /*
          *  Remove addConstraint if absArg is not referenced

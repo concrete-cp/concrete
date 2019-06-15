@@ -12,13 +12,13 @@ import cspom.{CSPOM, CSPOMConstraint}
   */
 object PBConstants extends ConstraintCompilerNoData {
 
-  def functions = Functions('pseudoboolean)
+  def functions = Functions("pseudoboolean")
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
     val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
     vars
       .collectFirst {
-        case c: CSPOMConstant[_] => Unit
+        case c: CSPOMConstant[_] => ()
       }
       .nonEmpty
   }
@@ -50,7 +50,7 @@ object PBConstants extends ConstraintCompilerNoData {
 
       case solverVariables =>
         val newConstraint =
-          CSPOMConstraint(constraint.result)('pseudoboolean)(varCoefs, solverVariables, const) withParams
+          CSPOMConstraint(constraint.result)("pseudoboolean")(varCoefs, solverVariables, const) withParams
             constraint.params
 
         //println(s"replacing $constraint with $newConstraint")

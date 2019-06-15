@@ -30,7 +30,6 @@ import concrete.heuristic._
 import concrete.heuristic.restart.{Geometric, NoRestarts, RestartStrategy}
 import concrete.util.SparseSeq
 import cspom.{Statistic, StatisticsManager}
-import org.scalameter.{Key, MeasureBuilder, Quantity}
 
 import scala.annotation.{elidable, tailrec}
 import scala.collection.mutable
@@ -58,10 +57,10 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   statistics.register("filter", filter)
   filter.contradictionListeners +:= heuristic
   val rsClass: Class[_ <: RestartStrategy] = params.classInPackage("mac.restart", "concrete.heuristic.restart", classOf[Geometric])
-  val searchMeasurer: MeasureBuilder[Unit, Double] = org.scalameter.`package`
-    .config(
-      Key.exec.benchRuns -> params.getOrElse("mac.benchRuns", 1),
-      Key.verbose -> false)
+//  val searchMeasurer: MeasureBuilder[Unit, Double] = org.scalameter.`package`
+//    .config(
+//      Key.exec.benchRuns -> params.getOrElse("mac.benchRuns", 1),
+//      Key.verbose -> false)
 
 
   private val superNG = params.contains("superng")
@@ -81,7 +80,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   var currentBTLeft: Option[Int] = None
 
   @Statistic
-  var searchCpu: Quantity[Double] = Quantity(0.0, "ms")
+  var searchCpu: Double = 0 //Quantity[Double] = Quantity(0.0, "ms")
   @Statistic
   var usedMem = 0L
   private var restart = true
@@ -108,7 +107,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
           val variables = new mutable.HashSet[Variable]()
           variables ++= problem.variables
 
-          for ((h, Seq(s1: ProblemState, s2: ProblemState)) <- (history.reverse.tail, stack.reverse.sliding(2).toSeq).zipped) {
+          for ((h, Seq(s1: ProblemState, s2: ProblemState)) <- history.reverse.tail lazyZip stack.reverse.sliding(2).toSeq) {
             var i = 0
             //println("new level")
             //println(h)
@@ -132,6 +131,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
                 logger.info(s"Learned $i nogoods of size ${positive.size + 1}")
 
               case Continue =>
+
+              case _ => throw new IllegalStateException()
             }
 
 
@@ -231,7 +232,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     }
   }
 
-  def reset() {
+  def reset(): Unit = {
 
     restart = true
     restartStrategy.reset()
@@ -249,15 +250,14 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
     val (macResult, macTime) =
       StatisticsManager.measure(
-        mac(modified, stack, maxBacktracks, nbAssignments),
-        searchMeasurer)
+        mac(modified, stack, maxBacktracks, nbAssignments))
 
     searchCpu += macTime
     running = false
 
     val (sol, newStack, btLeft, newAss) = macResult.get
 
-    logger.info(s"Took $macTime (${(newAss - nbAssignments) * 1000 / macTime.value}  aps)")
+    logger.info(s"Took $macTime (${(newAss - nbAssignments) * 1000 / macTime}  aps)")
 
     nbAssignments = newAss
     (sol, newStack, btLeft)

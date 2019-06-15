@@ -15,7 +15,7 @@ object VariableHeuristic {
     params.getRaw("heuristic.variable")
       .map {
         case h: Seq[_] => instantiate(params, h, decisionVariables, rand)
-        case s: String => instantiate(params, s.split(","), decisionVariables, rand)
+        case s: String => instantiate(params, s.split(",").toSeq, decisionVariables, rand)
       }
       .getOrElse(instantiate(params, default, decisionVariables, rand))
     //}

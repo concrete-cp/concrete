@@ -8,12 +8,12 @@ object Lex extends ConstraintCompiler {
 
   type A = LexType
 
-  def functions = Functions('lex, 'lexmatrix)
+  def functions = Functions("lex", "lexmatrix")
 
   override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM): Option[A] = Some {
     constraint.function match {
-      case 'lex => LexList
-      case 'lexmatrix => LexMatrix
+      case "lex" => LexList
+      case "lexmatrix" => LexMatrix
     }
   }
 
@@ -43,20 +43,20 @@ object Lex extends ConstraintCompiler {
 
     }
 
-    val reif = CSPOMConstraint(constraint.result)('and)(constraints.map(_.result): _*)
+    val reif = CSPOMConstraint(constraint.result)("and")(constraints.map(_.result): _*)
     ConstraintCompiler.replaceCtr(constraint, reif +: constraints, problem)
   }
 
   private def lexlist(list: Seq[CSPOMExpression[_]], strict: Boolean): Seq[CSPOMConstraint[_]] = {
     list.sliding(2)
-      .map(s => CSPOMConstraint(new BoolVariable())('lexleq)(s: _*))
+      .map(s => CSPOMConstraint(new BoolVariable())("lexleq")(s: _*))
       .toSeq
       .++ {
         if (strict) {
           list.sliding(2)
             .map(
               s =>
-                CSPOMConstraint(new BoolVariable())('nevec)(s: _*)
+                CSPOMConstraint(new BoolVariable())("nevec")(s: _*)
             )
             .toSeq
         } else {

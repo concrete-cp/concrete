@@ -56,7 +56,7 @@ abstract class Linear(
   // Control overflows
   require(
     Try(
-      (scope.map(_.initDomain.span), factors).zipped.map((d, i) => d.checkedMultiply(i)).reduce(_ checkedAdd _)
+      (scope.map(_.initDomain.span) lazyZip factors).map((d, i) => d.checkedMultiply(i)).reduce(_ checkedAdd _)
     ).isSuccess,
     s"$this overflows"
   )
@@ -80,11 +80,11 @@ abstract class Linear(
   }
 
   def toString(operator: String): String = {
-    (scope zip factors).map { case (v, f) => f + "." + v }.mkString(" + ") + s" $operator $constant"
+    (scope lazyZip factors).map { case (v, f) => s"$f.$v" }.mkString(" + ") + s" $operator $constant"
   }
 
   def toString(ps: ProblemState, operator: String): String = {
-    (scope zip factors).map { case (v, f) => f + "." + v.toString(ps) }.mkString(" + ") + s" $operator $constant"
+    (scope lazyZip factors).map { case (v, f) => s"$f.${v.toString(ps)}" }.mkString(" + ") + s" $operator $constant"
   }
 
   protected def size(dom: Domain, factor: Int): Int = {

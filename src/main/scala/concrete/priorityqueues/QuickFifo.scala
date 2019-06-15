@@ -29,7 +29,7 @@ final class QuickFifo[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     e2
   }
 
-  def clear() {
+  def clear(): Unit = {
     queue.clear()
     presence.clear()
   }

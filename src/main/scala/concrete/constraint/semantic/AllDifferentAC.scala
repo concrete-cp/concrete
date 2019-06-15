@@ -5,7 +5,7 @@ import concrete._
 import concrete.constraint.Constraint
 import concrete.util.{DirectedGraph, IntIntMap, ScalaBitSet}
 
-import scala.collection.mutable
+import scala.collection.immutable.Queue
 
 
 class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllDiffChecker {
@@ -31,39 +31,43 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
     findMaximumMatching(problemState)
       .andThen { ps =>
         for (i <- 0 until n) {
-          matching(i) = if (digraph.pred(i).isEmpty) -1 else digraph.pred(i).head
+          matching(i) = digraph.predecessors(i).headOption.getOrElse(-1)
         }
         filter(ps)
       }
   }
 
-  private def filter(initState: ProblemState): Outcome = {
+  override def init(ps: ProblemState): Outcome = ps
 
-    var ps: ProblemState = initState
+  override def simpleEvaluation: Int = 3
+
+  override def except: Set[Int] = Set()
+
+  override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int = arity * arity
+
+  private def filter(initState: ProblemState): Outcome = {
     val nodeSCC = buildSCC()
 
-    for (i <- 0 until n) {
+    (0 until n).foldLeft(initState) { (ps, i) =>
       val v = scope(i)
-      ps = ps.dom(v).find { k => val j = map(k); nodeSCC(i) != nodeSCC(j) && matching(i) == j }
+      val dom = ps.dom(v)
+      val newDom = dom.find { k => val j = map(k); nodeSCC(i) != nodeSCC(j) && matching(i) == j }
         .map { k =>
-          assert(ps.dom(v).contains(k))
-          ps.assign(v, k)
+          assert(dom.contains(k))
+          dom.assign(k)
         }
         .getOrElse {
-          val dom = ps.dom(v).filter { k =>
+          dom.filter { k =>
             val j = map(k)
             val b = nodeSCC(i) == nodeSCC(j)
             if (!b) digraph.removeArc(i, j)
             b
           }
-          assert(dom.nonEmpty)
-          ps.updateDomNonEmpty(v, dom)
         }
+      ps.updateDomNonEmpty(v, newDom)
     }
 
-    ps
   }
-
 
   private def buildSCC(): Array[Int] = {
     if (n2 > n * 2) {
@@ -78,13 +82,8 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
     scc
   }
 
-
   private def findMaximumMatching(ps: ProblemState): Outcome = {
-    for (i <- 0 until n2) {
-      digraph.succ(i).clear()
-      digraph.pred(i).clear()
-    }
-
+    digraph.clear()
     free.set(0, n2)
 
     for (i <- 0 until n) {
@@ -103,54 +102,59 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
     }
 
     ps.fold(0 until n) {
-      (s, i) => if (free.contains(i)) tryToMatch(i, s) else s
+      (s, i) => if (free.contains(i) && !tryToMatch(i, s)) Contradiction(scope) else s
     }
 
   }
 
-  private def tryToMatch(i: Int, ps: ProblemState): Outcome = {
-    val mate = augmentPathBFS(i)
-    if (mate == -1) {
-      Contradiction(scope)
-    } else {
+  private def tryToMatch(i: Int, ps: ProblemState): Boolean = {
+    val mate = augmentPathBFS(i, digraph.successors(i).iterator)
+    mate >= 0 && {
       free -= mate
       free -= i
-      var tmp = mate
-      while (tmp != i) {
-        digraph.removeArc(father(tmp), tmp)
-        digraph.addArc(tmp, father(tmp))
-        tmp = father(tmp)
-      }
-      ps
+      removePath(mate, i, digraph, father)
     }
   }
 
-  private def augmentPathBFS(root: Int): Int = {
-    val in = new ScalaBitSet(n2)
-    val fifo = mutable.Queue[Int](root)
-    while (fifo.nonEmpty) {
-      val x = fifo.dequeue()
-      // Optimized for profiler
-      val it = digraph.succ(x).iterator
-      while (it.hasNext) {
-        val y = it.next()
-        if (!in.contains(y)) {
-          father(y) = x
-          fifo.enqueue(y)
-          in += y
-          if (free.contains(y)) return y
+  /**
+    * @param from
+    * @param to
+    * @param digraph
+    * @param paths
+    * @return true
+    */
+  private def removePath(from: Int, to: Int, digraph: DirectedGraph, paths: Array[Int]): Boolean = {
+    from == to || {
+      digraph.removeArc(father(from), from)
+      digraph.addArc(from, father(from))
+      removePath(father(from), to, digraph, paths)
+    }
+  }
+
+  private def augmentPathBFS(x: Int,
+                             vertices: Iterator[Int],
+                             fifo: Queue[Int] = Queue(),
+                             in: ScalaBitSet = new ScalaBitSet(n2)): Int = {
+
+    if (vertices.hasNext) {
+      val y = vertices.next()
+      if (in.contains(y)) {
+        augmentPathBFS(x, vertices, fifo, in)
+      } else {
+        father(y) = x
+        in += y
+        if (free.contains(y)) {
+          y
+        } else {
+          augmentPathBFS(x, vertices, fifo.enqueue(y), in)
         }
       }
+    } else if (fifo.isEmpty) {
+      -1
+    } else {
+      val (next, dq) = fifo.dequeue
+      augmentPathBFS(next, digraph.successors(next).iterator, dq, in)
     }
 
-    -1
   }
-
-  override def init(ps: ProblemState): Outcome = ps
-
-  override def simpleEvaluation: Int = 3
-
-  override def except: Set[Int] = Set()
-
-  override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int = arity * arity
 }

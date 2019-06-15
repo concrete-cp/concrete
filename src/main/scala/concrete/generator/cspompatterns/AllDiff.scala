@@ -50,7 +50,7 @@ object AllDiffAsMDD extends ConstraintCompilerNoData {
 
   }
 
-  override def functions: CompiledFunctions = Functions('alldifferent)
+  override def functions: CompiledFunctions = Functions("alldifferent")
 
   def main(args: Array[String]): Unit = {
     val doms = List.fill(10)(1 to 9)
@@ -104,7 +104,7 @@ object AllDiff extends ProblemCompiler with LazyLogging {
     neighbors.map(_.result())
   }
 
-  private def greedy(neighbors: IndexedSeq[Set[Int]]): Seq[Set[Int]] = {
+  private def greedy(neighbors: Array[Set[Int]]): Seq[Set[Int]] = {
     def expand(currentClique: List[Int], candidates: List[Int]): List[Int] = {
       candidates match {
         case Nil => currentClique
@@ -137,7 +137,7 @@ object AllDiff extends ProblemCompiler with LazyLogging {
     val subsumed = scope.flatMap(problem.deepConstraints).filter(c => isSubsumed(c, scope))
 
     if (subsumed.nonEmpty) {
-      val allDiff = CSPOMConstraint('alldifferent)(scope.toSeq: _*)
+      val allDiff = CSPOMConstraint("alldifferent")(scope.toSeq: _*)
       logger.info("New alldiff: " + allDiff.toString(problem.displayName))
       var delta = addCtr(allDiff, problem)
 
@@ -167,13 +167,13 @@ object AllDiff extends ProblemCompiler with LazyLogging {
   //private val neighborsCache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = {
-    if (constraint.function == 'alldifferent && constraint.nonReified && constraint.getSeqParam("except").isEmpty) {
+    if (constraint.function == "alldifferent" && constraint.nonReified && constraint.getSeqParam("except").isEmpty) {
       Some(constraint.arguments)
-    } else if (constraint.function == 'eq && constraint.result.isFalse) {
+    } else if (constraint.function == "eq" && constraint.result.isFalse) {
       Some(constraint.arguments)
-    } else if (constraint.function == 'ne && constraint.nonReified) {
+    } else if (constraint.function == "ne" && constraint.nonReified) {
       Some(constraint.arguments)
-    } else if (constraint.function == 'sum && constraint.nonReified) {
+    } else if (constraint.function == "sum" && constraint.nonReified) {
       val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
 
       if (mode == SumMode.NE && constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2)) {
@@ -184,11 +184,11 @@ object AllDiff extends ProblemCompiler with LazyLogging {
     } else None
   }
 
-  def ALLDIFF_FUNCTIONS: Seq[Symbol] = Seq('alldifferent, 'eq, 'ne, 'sum)
+  def ALLDIFF_FUNCTIONS: Seq[String] = Seq("alldifferent", "eq", "ne", "sum")
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
     ALLDIFF_CONSTRAINT(constraint).orElse {
-      if (constraint.function == 'sum && constraint.nonReified) {
+      if (constraint.function == "sum" && constraint.nonReified) {
         val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
 
         if (mode == SumMode.LT && constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2)) {

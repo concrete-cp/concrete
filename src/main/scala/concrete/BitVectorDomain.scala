@@ -9,7 +9,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   extends IntDomain with LazyLogging {
   assert(size >= 2, "BitVectorSets must have at least two elements")
   assert(Math.addExact(offset, bitVector.lastSetBit) == offset + bitVector.lastSetBit)
-  assert(bitVector.cardinality == size, bitVector + " : " + bitVector.cardinality + " != " + size)
+  assert(bitVector.cardinality == size, s"$bitVector : ${bitVector.cardinality} != $size")
 
   lazy val span = Interval(head, last)
   override val last: Int = offset + bitVector.lastSetBit
@@ -38,7 +38,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
-  def -(index: Int): IntDomain = {
+  def excl(index: Int): IntDomain = {
     if (contains(index)) {
       IntDomain.ofBitVector(offset, bitVector - (index - offset), size - 1)
     } else {
@@ -232,7 +232,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   def iterator: Iterator[Int] = new BVDIterator(head)
 
-  def keysIteratorFrom(start: Int): Iterator[Int] = new BVDIterator(next(start - 1))
+  def iteratorFrom(start: Int): Iterator[Int] = new BVDIterator(next(start - 1))
 
   override def next(i: Int): Int = {
     val b = math.max(0, i - offset + 1)

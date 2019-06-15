@@ -96,7 +96,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     e
   }
 
-  def clear() {
+  def clear(): Unit = {
     (0 to last).foreach(queues(_).clear())
     last = -1
     size = 0

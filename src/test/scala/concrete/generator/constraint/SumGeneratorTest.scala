@@ -49,7 +49,7 @@ class SumGeneratorTest extends FlatSpec with Matchers {
     val cspom = CSPOM { implicit problem =>
       val v0 = IntVariable(0 to 10)
       val v1 = IntVariable(0 to 10)
-      problem.defineBool { r => CSPOMConstraint(r)('sum)(Seq(1, 1), Seq(v0, v1), CSPOMConstant(0)) withParam ("mode" -> "eq") } as "r"
+      problem.defineBool { r => CSPOMConstraint(r)("sum")(Seq(1, 1), Seq(v0, v1), CSPOMConstant(0)) withParam ("mode" -> "eq") } as "r"
     }
 
     CSPOMCompiler.compile(cspom, Seq(MergeEq)).get

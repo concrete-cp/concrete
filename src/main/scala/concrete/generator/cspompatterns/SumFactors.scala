@@ -12,7 +12,7 @@ object SumFactors extends ConstraintCompiler {
 
   type A = (Seq[CSPOMExpression[Any]], Seq[Int], Int)
 
-  def functions = Functions('sum)
+  def functions = Functions("sum")
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[(Seq[CSPOMExpression[Any]], Seq[Int], Int)] = {
     val (args, coefs, result, mode) = SumGenerator.readCSPOM(c)
@@ -33,7 +33,7 @@ object SumFactors extends ConstraintCompiler {
     val (args, coefs, result) = data
 
     ConstraintCompiler.replaceCtr(c,
-      CSPOMConstraint(c.result)('sum)(coefs, args, result) withParams c.params,
+      CSPOMConstraint(c.result)("sum")(coefs, args, result) withParams c.params,
       p)
   }
 

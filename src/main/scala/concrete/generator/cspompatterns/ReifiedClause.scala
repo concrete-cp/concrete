@@ -18,7 +18,7 @@ object ReifiedClause extends ConstraintCompiler {
 
   type A = (CSPOMExpression[_], CSPOMSeq[_], Seq[CSPOMExpression[_]])
 
-  def functions: Functions = Functions('clause)
+  def functions: Functions = Functions("clause")
 
   override def constraintMatcher: PartialFunction[CSPOMConstraint[_], (CSPOMExpression[Any], CSPOMSeq[_], Seq[CSPOMExpression[Any]])] = {
     case CSPOMConstraint(res, _, Seq(p: CSPOMSeq[_], CSPOMSeq(n)), params) if !res.isTrue =>

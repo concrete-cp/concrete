@@ -4,12 +4,12 @@ trait Matrix {
 
   def allowed: Iterator[Array[Int]]
 
-  def set(tuple: Seq[Int], status: Boolean): Unit
+  def set(tuple: Array[Int], status: Boolean): Unit
 
   @annotation.varargs
-  def set(status: Boolean, tuple: Int*): Unit = set(tuple, status)
+  def set(status: Boolean, tuple: Int*): Unit = set(tuple.toArray, status)
 
-  def setAll(tuple: Traversable[Seq[Int]], status: Boolean): Matrix = {
+  def setAll(tuple: Iterable[Array[Int]], status: Boolean): Matrix = {
     for (t <- tuple) set(t, status)
     this
   }

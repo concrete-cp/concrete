@@ -50,9 +50,9 @@ class CSPOMSolution(private val cspom: ExpressionMap, private val variables: Map
     }
   }
 
-  def +[B1 >: Any](kv: (String, B1)): Map[String, B1] = throw new UnsupportedOperationException
+  def updated[B1 >: Any](k: String, v: B1): Map[String, B1] = throw new UnsupportedOperationException
 
-  def -(key: String): Map[String, Any] = throw new UnsupportedOperationException
+  def removed(key: String): Map[String, Any] = throw new UnsupportedOperationException
 
   //def apply(key: String): Any = get(key).get
 

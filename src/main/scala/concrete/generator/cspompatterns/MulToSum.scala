@@ -6,7 +6,7 @@ import cspom.compiler._
 import cspom.variable.{CSPOMConstant, IntExpression}
 
 object MulToSum extends ConstraintCompilerNoData {
-  override def functions = Functions('mul)
+  override def functions = Functions("mul")
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
     c.arguments.collect { case CSPOMConstant(_) => true }.lengthCompare(1) == 0

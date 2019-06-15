@@ -22,7 +22,7 @@ object NValues extends ConstraintCompilerNoData {
 
     val occurrences: Seq[BoolVariable] = for (v <- new ContiguousIntRangeSet(domain).toSeq) yield {
       val aux = new BoolVariable()
-      newConstraints ::= CSPOMConstraint(aux)('member)(seq, CSPOMConstant(v))
+      newConstraints ::= CSPOMConstraint(aux)("member")(seq, CSPOMConstant(v))
       aux
     }
 
@@ -36,7 +36,7 @@ object NValues extends ConstraintCompilerNoData {
     ConstraintCompiler.replaceCtr(constraint, newConstraints, problem)
   }
 
-  def functions = Functions('nvalues)
+  def functions = Functions("nvalues")
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = true
 }

@@ -18,7 +18,7 @@ import cspom.variable.CSPOMSeq
 //  }
 object NegToCNF extends ConstraintCompilerNoData {
 
-  def functions = Functions('not)
+  def functions = Functions("not")
 
   override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = true
 

@@ -58,7 +58,7 @@ object MDDStats extends App with LazyLogging {
 
   val pg = new ProblemGenerator(pm)
 
-  val eg = pg.gm.known('extension).asInstanceOf[ExtensionGenerator]
+  val eg = pg.gm.known("extension").asInstanceOf[ExtensionGenerator]
 
   var ea = List[Double]()
   var la = List[BigInt]()
@@ -102,7 +102,7 @@ object MDDStats extends App with LazyLogging {
 
     for {
       c <- cspom.constraints
-      if (c.function == 'extension && c.arguments.size > 2)
+      if c.function == "extension" && c.arguments.size > 2
       g <- c.getParam[MDDRelation]("relation")
 
     } {

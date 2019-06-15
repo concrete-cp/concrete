@@ -26,7 +26,7 @@ final class StatelessLinearEq(
 
   private val negFactors = factors.map(-_)
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     if (updateF(ps)._1.contains(0)) ps else Contradiction(scope)
   }
 

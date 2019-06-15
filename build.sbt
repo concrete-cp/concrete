@@ -8,9 +8,9 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.10-SNAPSHOT"
+version := "3.10"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.13.0"
 
 javaOptions in ThisBuild += "-Xss16M"
 
@@ -20,25 +20,23 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
-	"com.github.concrete-cp" %% "cspom" % "3.0-SNAPSHOT",
-	"org.postgresql" % "postgresql" % "42.2.5",
-	"com.typesafe.slick" %% "slick" % "3.3.0",
-	"com.typesafe" % "config" % "1.3.4",
-  "org.scalatest" %% "scalatest" % "3.0.7" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.17" % "test",
-	"com.github.davidmoten" % "rtree" % "0.8.6",
+  "com.github.concrete-cp" %% "cspom" % "3.0",
+  "org.postgresql" % "postgresql" % "42.2.5",
+  "com.typesafe.slick" %% "slick" % "3.3.2",
+  "com.typesafe" % "config" % "1.3.4",
+  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+  "com.github.davidmoten" % "rtree" % "0.8.6",
   "org.eclipse.collections" % "eclipse-collections" % "9.2.0"
-	)
+)
 
 scalacOptions ++= Seq(
   "-Xdisable-assertions",
-	"-deprecation"
-//	"-unchecked", 
-,	"-Xlint" 
-//	"-feature",
-, 	"-Ywarn-unused-import"
-   , "-target:jvm-1.8"
+  "-deprecation",
+  //	"-unchecked", 
+  "-Xlint",
+  //	"-feature",
+  "-target:jvm-1.8",
 )
 
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
@@ -53,12 +51,12 @@ logBuffered in Test := false
 fork in Test := true
 fork := true
 
-publishTo :=  {
+publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
     Some("snapshots" at nexus + "content/repositories/snapshots")
   else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 
 publishArtifact in Test := false
@@ -75,13 +73,13 @@ pomExtra in Global := {
     <url>github.com/concrete-cp/concrete.git</url>
   </scm>
 
-  <developers>
-    <developer>
-      <id>scand1sk</id>
-      <name>Julien Vion</name>
-      <url>http://vion.free.fr/perso</url>
-    </developer>
-  </developers>
+    <developers>
+      <developer>
+        <id>scand1sk</id>
+        <name>Julien Vion</name>
+        <url>http://vion.free.fr/perso</url>
+      </developer>
+    </developers>
 }
 
 lazy val root = (project in file(".")).
@@ -90,7 +88,7 @@ lazy val root = (project in file(".")).
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion,
       BuildInfoKey.action("buildTime") {
         System.currentTimeMillis
-    }),
+      }),
     buildInfoPackage := "concrete"
   )
 

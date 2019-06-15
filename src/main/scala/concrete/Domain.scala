@@ -4,8 +4,8 @@ import bitvectors.BitVector
 import concrete.util.Interval
 import cspom.Statistic
 
-import scala.collection.immutable.{SortedSet, TreeSet}
-import scala.collection.{SortedSetLike, mutable}
+import scala.collection.immutable.{SortedSetOps, TreeSet}
+import scala.collection.{immutable, mutable}
 
 object Domain {
   @Statistic
@@ -19,7 +19,7 @@ object Domain {
 class DomainBuilder extends mutable.Builder[Int, Domain] {
   private val set = TreeSet.newBuilder[Int]
 
-  override def +=(elem: Int): DomainBuilder.this.type = {
+  def addOne(elem: Int): DomainBuilder.this.type = {
     set += elem
     this
   }
@@ -31,31 +31,22 @@ class DomainBuilder extends mutable.Builder[Int, Domain] {
   }
 }
 
-abstract class Domain extends SortedSet[Int] with SortedSetLike[Int, Domain] {
+abstract class Domain extends immutable.SortedSet[Int]
+  with SortedSetOps[Int, immutable.SortedSet, Domain] {
+
   def ordering: Ordering[Int] = Ordering.Int
-
-  @deprecated
-  override def apply(i: Int): Boolean = contains(i)
-
-  override def newBuilder: mutable.Builder[Int, Domain] = new DomainBuilder
 
   override def empty: Domain = EmptyIntDomain
 
   def next(i: Int): Int
 
-  def nextOption(i: Int): Option[Int] = {
-    if (i >= last) None else Some(next(i))
-  }
+  // override def newBuilder: mutable.Builder[Int, Domain] = new DomainBuilder
 
   def prev(i: Int): Int
 
-  def prevOption(i: Int): Option[Int] = {
-    if (i <= head) None else Some(prev(i))
-  }
-
   def median: Int
 
-  def +(elem: Int): Domain = throw new UnsupportedOperationException
+  def incl(elem: Int): Domain = throw new UnsupportedOperationException
 
   def assign(value: Int): Domain
 
@@ -69,11 +60,11 @@ abstract class Domain extends SortedSet[Int] with SortedSetLike[Int, Domain] {
 
   def removeAfter(lb: Int): Domain
 
-  override def from(from: Int): Domain = removeUntil(from)
+  override def rangeFrom(from: Int): Domain = removeUntil(from)
 
-  override def to(to: Int): Domain = removeAfter(to)
+  override def rangeTo(to: Int): Domain = removeAfter(to)
 
-  override def until(until: Int): Domain = removeFrom(until)
+  override def rangeUntil(until: Int): Domain = removeFrom(until)
 
   override def range(from: Int, until: Int): Domain = this & (from, until - 1)
 
@@ -90,7 +81,6 @@ abstract class Domain extends SortedSet[Int] with SortedSetLike[Int, Domain] {
   def span: Interval
 
   def spanFrom(from: Int): Option[Interval] = spanSlice(from = Some(from))
-  def spanTo(to: Int): Option[Interval] = spanSlice(to = Some(to))
 
   def spanSlice(from: Option[Int] = None, to: Option[Int] = None): Option[Interval] = {
     for {
@@ -101,6 +91,16 @@ abstract class Domain extends SortedSet[Int] with SortedSetLike[Int, Domain] {
       i
     }
   }
+
+  def nextOption(i: Int): Option[Int] = {
+    if (i >= last) None else Some(next(i))
+  }
+
+  def prevOption(i: Int): Option[Int] = {
+    if (i <= head) None else Some(prev(i))
+  }
+
+  def spanTo(to: Int): Option[Interval] = spanSlice(to = Some(to))
 
   def singleValue: Int
 
@@ -138,4 +138,8 @@ abstract class Domain extends SortedSet[Int] with SortedSetLike[Int, Domain] {
   def filterBounds(f: Int => Boolean): Domain
 
   def shift(o: Int): Domain
+
+  override protected def fromSpecific(coll: IterableOnce[Int]): Domain = ???
+
+  override protected def newSpecificBuilder: mutable.Builder[Int, Domain] = ???
 }

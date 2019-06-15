@@ -7,7 +7,6 @@ import concrete.runner.sql.SQLWriter
 import concrete.{ParameterManager, Solver, Variable}
 import cspom.compiler.CSPOMCompiler
 import cspom.{Statistic, StatisticsManager, UNSATException}
-import org.scalameter.Quantity
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
@@ -17,7 +16,7 @@ trait ConcreteRunner extends LazyLogging {
   //logger.addHandler(new MsLogHandler)
   val statistics = new StatisticsManager()
   @Statistic
-  var loadTime: Quantity[Double] = _
+  var loadTime: Double = _
 
   /**
     * Loads problem and builds solver according to given parameters and args
@@ -60,7 +59,7 @@ trait ConcreteRunner extends LazyLogging {
 
     // Regular try/catch required to catch OutOfMemoryErrors
     val status = try {
-      val (tryLoad, lT) = StatisticsManager.measureTry[Solver, Unit, Double] {
+      val (tryLoad, lT) = StatisticsManager.measureTry {
         load(pm, remaining)
       }
       loadTime = lT
@@ -75,7 +74,7 @@ trait ConcreteRunner extends LazyLogging {
           }
           FullExplore
         } else {
-          solv.toIterable.headOption match {
+          solv.nextOption match {
             case None => FullExplore
             case Some(s) =>
               solution(solv, s, writer, pm)
@@ -108,20 +107,24 @@ trait ConcreteRunner extends LazyLogging {
     Usage : Concrete file
     """
 
-  def options(args: Array[String]): (ParameterManager, Seq[String]) =
-    args.foldLeft((new ParameterManager, new ArrayBuffer[String])) {
-      case ((pm, realArgs), u) =>
+  def options(args: Array[String]): (ParameterManager, Seq[String]) = {
+    var pm = new ParameterManager()
+    val realArgs = new ArrayBuffer[String]()
+    for (u <- args) {
         if (u.startsWith("-")) {
-          val (key, value) = u.split("=") match {
-            case Array(key, value) => (key.drop(1), value)
-            case Array(tag) => (tag.drop(1), Unit)
+          val (key, value) = u.split("=").toSeq match {
+            case Seq(key: String, value: String) => (key.drop(1), value)
+            case Seq(tag: String) => (tag.drop(1), ())
             case e => throw new InvalidParameterException(e.mkString("[", ", ", "]"))
           }
-          (pm.updated(key, value), realArgs)
+          pm = pm.updated(key, value)
         } else {
-          (pm, realArgs += u)
+          realArgs += u
         }
     }
+
+    (pm, realArgs.toSeq)
+  }
 
   def defaultWriter(pm: ParameterManager, problem: String, sm: StatisticsManager): ConcreteWriter =
     new FZWriter(pm, problem, statistics)

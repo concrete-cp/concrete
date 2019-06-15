@@ -10,7 +10,7 @@ import cspom.compiler.ConstraintCompiler._
 
 object SetIn extends ConstraintCompilerNoData {
 
-  def functions = Functions('set_in)
+  def functions = Functions("set_in")
 
   def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean =
     constraint.nonReified

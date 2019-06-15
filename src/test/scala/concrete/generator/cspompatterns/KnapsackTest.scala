@@ -21,8 +21,8 @@ class KnapsackTest extends FlatSpec with Matchers with Inspectors {
 
         forAll(mdd) { t: Seq[Int] =>
           val p +: w +: quantities = t
-          (quantities, weights).zipped.map(_ * _).sum shouldBe w
-          (quantities, profits).zipped.map(_ * _).sum shouldBe p
+          (quantities lazyZip weights).map(_ * _).sum shouldBe w
+          (quantities lazyZip profits).map(_ * _).sum shouldBe p
         }
       }
 

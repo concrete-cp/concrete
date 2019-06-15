@@ -22,10 +22,10 @@ final class MatrixGeneral(sizes: Array[Int], offsets: Array[Int], initialState: 
   }
   private var cardinality: Int = if (initialState) size else 0
 
-  override def check(tuple: Array[Int]) = matrix(matrixIndex(tuple))
+  override def check(tuple: Array[Int]): Boolean = matrix(matrixIndex(tuple))
 
-  override def set(tuple: Seq[Int], status: Boolean): Unit = {
-    val index = matrixIndex(tuple.toArray)
+  override def set(tuple: Array[Int], status: Boolean): Unit = {
+    val index = matrixIndex(tuple)
     val oldStatus = matrix(index)
     if (oldStatus != status) {
       matrix(index)

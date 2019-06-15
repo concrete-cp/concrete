@@ -8,7 +8,7 @@ import scala.collection.mutable
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.xml.{Node, Text}
+import scala.math.Ordering.Double.TotalOrdering
 
 object Compet extends App {
   lazy val systemConfig = ConfigFactory.load //defaults from src/resources
@@ -42,11 +42,11 @@ object Compet extends App {
   val executionQuery = {
     sql"""
     SELECT "problemId", "configId", iteration, status, solution, totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3
-    FROM "Execution" where iteration=0 -- and "configId" >= 0
+    FROM "Execution" where iteration=0 and "configId" != -3
     """.as[Execution]
   }
 
-  val configQuery = sql"""SELECT "configId", config, description FROM "Config" -- WHERE "configId" IN (#${nature.mkString(", ")})"""
+  val configQuery = sql"""SELECT "configId", config, description FROM "Config" WHERE "configId" != -3 --IN (#${nature.mkString(", ")})"""
     .as[Config]
 
 
@@ -76,8 +76,8 @@ object Compet extends App {
         .sortBy { case ((prob, iter), _) => (prob.problem, iter) }
     }
 
-  val order = // (-1 to -21 by -1) ++
-    Array(66, 70, 71)
+  val order =  Seq(2, -1, -2, -4, -5, -6, -7)
+
   val fut = for (
     pe <- groupedExecutions; cfgsSeq <- DB.run(configQuery);
     cfgs = cfgsSeq.map(c => c.configId -> c.desc).toMap
@@ -85,7 +85,7 @@ object Compet extends App {
 
     val scores = new mutable.HashMap[Int, Double].withDefaultValue(0)
 
-    val catScores = new mutable.HashMap[String, collection.mutable.Map[Int, Double]]
+    val catScores = new mutable.HashMap[String, mutable.Map[Int, Double]]
 
     for (((problem, iteration), executions) <- pe) {
       println()
@@ -93,7 +93,7 @@ object Compet extends App {
 
       val probScores = new mutable.HashMap[Int, Double].withDefaultValue(0)
 
-      for (Seq(e1, e2) <- executions.combinations(2)) {
+      for (Seq(e1: ExecutionResult, e2: ExecutionResult) <- executions.combinations(2)) {
         val c = e1.compareTo(e2)
         if (c > 0) {
           probScores(e1.configId) += 1
@@ -143,7 +143,7 @@ object Compet extends App {
       //println(scores)
       //println(s"best = ${scores.toSeq.map(_._2).sorted.reverse}")
 
-      println(order.map(c => f"${if (scores(c) > best) "\\bf " else ""} ${scores(c)}%.0f").mkString(" & ") + " \\\\")
+      println(order.map(c => f"${if (scores(c) > best) "\\bf " else ""} ${scores(c)}%.1f").mkString(" & ") + " \\\\")
     }
 
     (cfgs, scores) //.map { case (k, v) => s"$k. ${cfgs(k)}" -> v }
@@ -151,10 +151,10 @@ object Compet extends App {
   }
   val (cfgs, scores) = Await.result(fut, Duration.Inf)
 
-  def attributeEquals(name: String, value: String)(node: Node): Boolean = {
-    node.attribute(name).get.contains(Text(value))
-  }
-
+//  def attributeEquals(name: String, value: String)(node: Node): Boolean = {
+//    node.attribute(name).get.contains(Text(value))
+//  }
+//
 
   case class Problem(
                       problemId: Int,
@@ -163,7 +163,7 @@ object Compet extends App {
                       nbCons: Int,
                       nature: String,
                       _tags: String) {
-    lazy val tags: Seq[String] = _tags.split(",")
+    lazy val tags: Seq[String] = _tags.split(",").toSeq
     lazy val nat = Nature(nature)
   }
 
@@ -224,7 +224,7 @@ object Compet extends App {
 
     def nature: Nature = problem.nat
 
-    override def toString = result.toString
+    override def toString: String = result.toString
 
   }
 
@@ -269,7 +269,7 @@ object Compet extends App {
 
   println()
 
-  for ((c, v) <- scores.toSeq.sortBy(_._2)) {
+  for ((c, v) <- scores.toSeq.sortBy(_._2)(TotalOrdering)) {
     println(f"$c. ${cfgs(c)}: $v%.2f")
   }
 

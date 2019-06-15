@@ -1,25 +1,25 @@
 package concrete.util
 
-import scala.collection.generic.ImmutableMapFactory
-import scala.collection.immutable.MapLike
-
 import IdentityMap.{Wrapper, wrap}
 
-class IdentityMap[A, +B] private(underlying: Map[Wrapper[A], B])
-  extends Map[A, B] with MapLike[A, B, IdentityMap[A, B]] {
+import scala.collection.immutable
 
-  def +[B1 >: B](kv: (A, B1)) =
-    new IdentityMap(underlying + ((wrap(kv._1), kv._2)))
+class IdentityMap[A, +B] (
+                           private val underlying: immutable.Map[Wrapper[A], B] = Map.empty[Wrapper[A], B])
+  extends immutable.AbstractMap[A, B]  {
 
-  def -(key: A) =
+  def updated[B1 >: B](k: A, v: B1) =
+    new IdentityMap(underlying + (wrap(k) -> v))
+
+  def removed(key: A) =
     new IdentityMap(underlying - wrap(key))
 
-  def iterator =
+  def iterator: Iterator[(A, B)] =
     underlying.iterator.map {
       case (kw, v) => (kw.value, v)
     }
 
-  def get(key: A) =
+  def get(key: A): Option[B] =
     underlying.get(wrap(key))
 
   override def size: Int =
@@ -27,26 +27,21 @@ class IdentityMap[A, +B] private(underlying: Map[Wrapper[A], B])
 
   override def empty =
     new IdentityMap(underlying.empty)
-
-  override def stringPrefix =
-    "IdentityMap"
 }
 
-object IdentityMap extends ImmutableMapFactory[IdentityMap] {
-  def empty[A, B] =
-    new IdentityMap(Map.empty)
+object IdentityMap  {
 
-  private class Wrapper[A](val value: A) {
+  class Wrapper[A](val value: A) {
     override def toString: String =
       value.toString
 
-    override def equals(other: Any) = other match {
+    override def equals(other: Any): Boolean = other match {
       case otherWrapper: Wrapper[_] =>
         value.asInstanceOf[AnyRef] eq otherWrapper.value.asInstanceOf[AnyRef]
       case _ => false
     }
 
-    override def hashCode =
+    override def hashCode: Int =
       System.identityHashCode(value)
   }
 

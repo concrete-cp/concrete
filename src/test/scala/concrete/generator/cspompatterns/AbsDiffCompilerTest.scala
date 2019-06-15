@@ -35,7 +35,7 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
       val v1 = cspom.variable("v1").get
       val r2 = cspom.variable("r2").get
 
-      val Seq(CSPOMConstraint(`r2`, 'absdiff, Seq(`v0`, `v1`), _)) = cspom.constraints.toSeq
+      val Seq(CSPOMConstraint(`r2`, "absdiff", Seq(`v0`, `v1`), _)) = cspom.constraints.toSeq
 
       // println(cspom)
     }

@@ -8,7 +8,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-
+import ScalaCheckPropertyChecks._
 
 /**
   * @author vion

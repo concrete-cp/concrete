@@ -14,7 +14,7 @@ import cspom.{CSPOM, CSPOMConstraint}
   */
 object SumConstants extends ConstraintCompilerNoData {
 
-  def functions = Functions('sum)
+  def functions = Functions("sum")
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = {
     val vars = SumGenerator.readCSPOM(c)._1
@@ -46,7 +46,7 @@ object SumConstants extends ConstraintCompilerNoData {
 
       case solverVariables =>
         val newConstraint =
-          CSPOMConstraint(constraint.result)('sum)(varCoefs, solverVariables, const) withParams
+          CSPOMConstraint(constraint.result)("sum")(varCoefs, solverVariables, const) withParams
             constraint.params
 
         //println(s"replacing $constraint with $newConstraint")

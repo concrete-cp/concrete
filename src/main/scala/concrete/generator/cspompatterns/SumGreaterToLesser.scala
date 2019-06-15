@@ -14,7 +14,7 @@ import cspom.{CSPOM, CSPOMConstraint}
 object SumGreaterToLesser extends ConstraintCompiler {
   type A = SumMode
 
-  def functions = Functions('sum)
+  def functions = Functions("sum")
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[SumMode] = {
     SumGenerator.readMode(c)
@@ -33,7 +33,7 @@ object SumGreaterToLesser extends ConstraintCompiler {
     }
 
 
-    val newConstraint = CSPOMConstraint(c.result)('sum)(constants.map(-_), vars, -k) withParams (c.params + ("mode" -> newMode))
+    val newConstraint = CSPOMConstraint(c.result)("sum")(constants.map(-_), vars, -k) withParams (c.params + ("mode" -> newMode))
 
     replaceCtr(c, newConstraint, p)
 

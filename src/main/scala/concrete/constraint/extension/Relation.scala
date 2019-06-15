@@ -13,8 +13,8 @@ trait Relation extends Iterable[Array[Int]] {
   def contains(t: Array[Int]): Boolean
   def +(t: Seq[Int]): Self2
   def -(t: Seq[Int]): Self2
-  def ++(t: Iterable[Seq[Int]]) = t.foldLeft(Relation.this)(_ + _)
-  def --(t: Iterable[Seq[Int]]) = t.foldLeft(Relation.this)(_ - _)
+  def ++(t: Iterable[Seq[Int]]): Relation = t.foldLeft(Relation.this)(_ + _)
+  def --(t: Iterable[Seq[Int]]): Relation = t.foldLeft(Relation.this)(_ - _)
   def edges: Int
   // def copy: Self2
   def findSupport(scope: Array[Domain], p: Int, i: Int): Option[Array[Int]]

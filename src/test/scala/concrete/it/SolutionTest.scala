@@ -2,12 +2,12 @@ package concrete
 package it
 
 import org.scalatest.FlatSpec
-
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.runner.FZConcrete
 import cspom.compiler.CSPOMCompiler
 
+import scala.collection.{immutable, mutable}
 import scala.util.Random
 
 class SolutionTest extends FlatSpec {
@@ -55,7 +55,7 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
       val (pb, vars) = prob
 
 
-      val solver: MAC = MAC(pb, pb.variables, pm).get
+      val solver: MAC = MAC(pb, immutable.ArraySeq.unsafeWrapArray(pb.variables), pm).get
 
       var state = pb.initState.andThen(solver.init).andThen(solver.preprocess(solver.filter, _))
 

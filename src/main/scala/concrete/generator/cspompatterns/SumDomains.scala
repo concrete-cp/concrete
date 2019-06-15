@@ -13,7 +13,7 @@ import cspom.{CSPOMConstraint, UNSATException}
 
 import scala.util.{Failure, Try}
 
-object SumDomains extends VariableCompiler('sum) with LazyLogging {
+object SumDomains extends VariableCompiler("sum") with LazyLogging {
 
   def compiler(c: CSPOMConstraint[_]) = throw new IllegalStateException
 
@@ -33,7 +33,7 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
           case NE => IntInterval.all
         }
 
-        val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * Finite(c)).toIndexedSeq
+        val coefspan = (iargs lazyZip coef).map((a, c) => IntExpression.span(a) * Finite(c)).toIndexedSeq
 
         val filt = for {
           i <- iargs.indices
@@ -65,7 +65,7 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
   }
 }
 
-object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
+object PseudoBoolDomains extends VariableCompiler("pseudoboolean") {
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(IntExpression.constSeq(coef), CSPOMSeq(args), CSPOMConstant(result: Int)), _) =>
 
@@ -82,7 +82,7 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
         }
         .get
 
-      val coefspan = (iargs, coef).zipped.map((a, c) => BoolExpression.span(a) * IntInterval.singleton(c))
+      val coefspan = (iargs lazyZip coef).map((a, c) => BoolExpression.span(a) * IntInterval.singleton(c))
 
       val filt = for (i <- args.indices) yield {
         val result = iargs.indices

@@ -13,7 +13,7 @@ object ValueSelector {
     params.getRaw("heuristic.value")
       .map {
         case h: Seq[_] => instantiate(params, h, rand)
-        case s: String => instantiate(params, s.split(","), rand)
+        case s: String => instantiate(params, s.split(",").toSeq, rand)
         case c: Any => instantiate(params, Seq(c), rand)
       }
       .getOrElse(instantiate(params, default, rand))

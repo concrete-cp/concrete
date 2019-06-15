@@ -22,7 +22,7 @@ final class MDDRelation(val mdd: MDD) extends Relation with LazyLogging {
     val s = mdd.findSupport(domains.asInstanceOf[Array[Set[Int]]], p, i, support)
     assert(s.forall(contains))
     assert(s.forall { sup =>
-      (sup, domains).zipped.forall((s, d) => d.contains(s))
+      (sup lazyZip domains).forall((s, d) => d.contains(s))
     })
     s
   }

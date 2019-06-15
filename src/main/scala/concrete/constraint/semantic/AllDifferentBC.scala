@@ -44,13 +44,13 @@ final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) wit
 
   def advise(ps: ProblemState, p: Int): Int = eval
 
-  private def swap(array: Array[HInterval], i: Int, j: Int) {
+  private def swap(array: Array[HInterval], i: Int, j: Int): Unit = {
     val tmp = array(i)
     array(i) = array(j)
     array(j) = tmp
   }
 
-  private def qSortMax(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int) {
+  private def qSortMax(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int): Unit = {
     if (from < to) {
       val pivotIndex = (from + to) / 2
       val pivot = array(pivotIndex).ub(doms)
@@ -74,7 +74,7 @@ final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) wit
     }
   }
 
-  private def qSortMin(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int) {
+  private def qSortMin(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int): Unit = {
     if (from < to) {
       val pivotIndex = (from + to) / 2
       val pivot = array(pivotIndex).lb(doms)
@@ -98,7 +98,7 @@ final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) wit
     }
   }
 
-  private def sortIt(doms: Array[Domain]) {
+  private def sortIt(doms: Array[Domain]): Unit = {
     qSortMin(doms, minsorted, 0, minsorted.length - 1)
     qSortMax(doms, maxsorted, 0, maxsorted.length - 1)
 
@@ -108,7 +108,7 @@ final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) wit
     bounds(0) = last
 
     @tailrec
-    def proceed(min: Int, max: Int, i: Int, j: Int) {
+    def proceed(min: Int, max: Int, i: Int, j: Int): Unit = {
       if (i < arity && min <= max) {
         if (min != last) {
           nb += 1
@@ -143,7 +143,7 @@ final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) wit
   }
 
   @tailrec
-  private def pathset(tab: Array[Int], start: Int, end: Int, to: Int) {
+  private def pathset(tab: Array[Int], start: Int, end: Int, to: Int): Unit = {
     if (start != end) {
       val next = tab(start)
       tab(start) = to

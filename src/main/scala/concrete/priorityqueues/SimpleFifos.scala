@@ -1,24 +1,18 @@
-package concrete.priorityqueues;
+package concrete.priorityqueues
 
 import scala.annotation.tailrec
 
-/**
- *
- * @author scand1sk
- *
- * @param <T>
- */
 final class SimpleFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   val NB_LISTS = 8
 
   val queues: Array[DLNode[T]] = Array.fill(NB_LISTS)(new HeadDLNode())
 
-  var last = -1
+  var last: Int = -1
 
   private val presence = new Presence
 
-  def offer(e: T, list: Int) = {
+  def offer(e: T, list: Int): Boolean = {
     val present = presence.isPresent(e)
     if (present && list == e.currentList) false
     else {
@@ -42,7 +36,7 @@ final class SimpleFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   @tailrec
   private def poll(i: Int): T = {
-    assume(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
+    assume(i <= last, s"$$i > $last\n${queues.map(n => n.isEmpty).mkString("\n")}")
     val q = queues(i)
     if (q.isEmpty) poll(i + 1)
     else {
@@ -54,18 +48,18 @@ final class SimpleFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     }
   }
 
-  def poll() = {
+  def poll(): T = {
     val e = poll(0)
     presence.unsetPresent(e)
     e
   }
 
-  def clear() {
+  def clear(): Unit = {
     (0 to last).foreach(queues(_).clear())
     last = -1
     presence.clear()
   }
 
-  def isEmpty = last < 0
+  def isEmpty: Boolean = last < 0
 
 }

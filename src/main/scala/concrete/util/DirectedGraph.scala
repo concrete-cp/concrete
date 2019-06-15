@@ -1,9 +1,19 @@
 package concrete.util
 
-class DirectedGraph(val n: Int) {
-  val nodes = new ScalaBitSet(n)
-  private val successors = Array.fill(n)(new ScalaBitSet())
-  private val predecessors = Array.fill(n)(new ScalaBitSet())
+import scala.collection.mutable
+
+class DirectedGraph(val nbVertices: Int) {
+  type Vertex = Int
+  val nodes = new ScalaBitSet(nbVertices)
+  val successors: Array[ScalaBitSet] = Array.fill(nbVertices)(new ScalaBitSet())
+  val predecessors: Array[ScalaBitSet] = Array.fill(nbVertices)(new ScalaBitSet())
+
+  def clear(): Unit = {
+    for (i <- 0 until nbVertices) {
+      successors(i).clear()
+      predecessors(i).clear()
+    }
+  }
 
   def removeNode(x: Int): Boolean = {
     nodes.remove(x) && {
@@ -31,22 +41,7 @@ class DirectedGraph(val n: Int) {
     successors(from).contains(to)
   }
 
-  def addArc(from: Int, to: Int): Boolean = {
-    assert(successors(from)(to) == predecessors(to)(from), "Graph is not coherent")
-    addNode(from)
-    addNode(to)
-    successors(from).add(to) & predecessors(to).add(from)
-  }
-
-  def addNode(x: Int): Boolean = {
-    nodes.add(x)
-  }
-
   def hasNode(x: Int): Boolean = nodes.contains(x)
-
-  def succ(x: Int): ScalaBitSet = successors(x)
-
-  def pred(x: Int): ScalaBitSet = predecessors(x)
 
   override def toString: String = nodes.iterator
     .map {
@@ -59,12 +54,12 @@ class DirectedGraph(val n: Int) {
   def findAllSCC(): Array[Int] = {
     var index = 0
     var currentSCC = 0
-    val stack = new BitSetStack(n)
-    val indices = Array.fill(n)(-1)
-    val lowLinks = new Array[Int](n)
-    val scc = new Array[Int](n)
+    val stack = new BitSetStack(nbVertices)
+    val indices = Array.fill(nbVertices)(-1)
+    val lowLinks = new Array[Int](nbVertices)
+    val scc = new Array[Int](nbVertices)
 
-    for (v <- 0 until n) {
+    for (v <- 0 until nbVertices) {
       if (indices(v) < 0) {
         strongConnect(v)
       }
@@ -107,4 +102,107 @@ class DirectedGraph(val n: Int) {
 
     scc
   }
+
+  // Lifted from "Modern Compiler Implementation in Java", 2nd ed. chapter 19.2
+  def computeDominatorTree(root: Int): Array[Int] = {
+
+    val bucket = Array.fill(nbVertices)(new mutable.HashSet[Int]())
+    val dfnum = Array.fill(nbVertices)(-1)
+    val vertex = Array.fill(nbVertices)(-1)
+    val parent = Array.fill(nbVertices)(-1)
+    val semi = Array.fill(nbVertices)(-1)
+    val ancestor = Array.fill(nbVertices)(-1)
+    val idom = Array.fill(nbVertices)(-1)
+    val samedom = Array.fill(nbVertices)(-1)
+    val best = Array.fill(nbVertices)(-1)
+
+    def dfs(p: Int = -1, n: Int = root, N: Int = 0): Int = {
+      if (dfnum(n) < 0) {
+        dfnum(n) = N
+        vertex(N) = n
+        parent(n) = p
+        var k = N + 1
+        for (w <- successors(n)) {
+          k = dfs(n, w, k)
+        }
+        k
+      } else {
+        N
+      }
+    }
+
+    def ancestorWithLowestSemi(v: Int): Int = {
+      val a = ancestor(v)
+      if (ancestor(a) >= 0) {
+        val b = ancestorWithLowestSemi(a)
+        ancestor(v) = ancestor(a)
+        if (dfnum(semi(b)) < dfnum(semi(best(v)))) {
+          best(v) = b
+        }
+      }
+      best(v)
+    }
+
+    def link(p: Int, n: Int): Unit = {
+      ancestor(n) = p
+      best(n) = n
+    }
+
+    val N = dfs()
+
+    for (i <- (N - 1) until 0 by -1) {
+      val n = vertex(i); val p = parent(n); var s = p
+
+      for (v <- predecessors(n)) {
+        val sPrime = if (dfnum(v) <= dfnum(n)) {
+          v
+        } else {
+          semi(ancestorWithLowestSemi(v))
+        }
+        if (dfnum(sPrime) < dfnum(s)) {
+          s = sPrime
+        }
+      }
+
+      semi(n) = s
+      bucket(s) += n
+      link(p, n)
+
+      for (v <- bucket(p)) {
+        val y = ancestorWithLowestSemi(v)
+        if (semi(y) == semi(v)) {
+          idom(v) = p
+        } else {
+          samedom(v) = y
+        }
+      }
+      bucket(p).clear()
+    }
+
+    for (i <- 0 until N) {
+      val n = vertex(i)
+      if (samedom(n) >= 0) {
+        idom(n) = idom(samedom(n))
+      }
+    }
+    idom
+  }
+
+
+  def completeTree(tree: Array[Int], root: Int): Array[ScalaBitSet] = {
+    ???
+  }
+
+  def addArc(from: Int, to: Int): Boolean = {
+    assert(successors(from)(to) == predecessors(to)(from), "Graph is not coherent")
+    addNode(from)
+    addNode(to)
+    successors(from).add(to) & predecessors(to).add(from)
+  }
+
+  def addNode(x: Int): Boolean = {
+    nodes.add(x)
+  }
+
+
 }

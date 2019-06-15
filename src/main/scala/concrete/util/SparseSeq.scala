@@ -1,17 +1,16 @@
 package concrete.util
 
-import scala.collection.SeqLike
 import scala.collection.mutable.ArrayBuffer
 
 object SparseSeq {
-  def apply[A](a: A*) = new SparseSeq(a.to[ArrayBuffer], a.length)
+  def apply[A](a: A*) = new SparseSeq(new ArrayBuffer[A]().addAll(a), a.length)
 }
 
 class SparseSeq[A](
-    val values: ArrayBuffer[A],
-    override val length: Int) extends Seq[A] with SeqLike[A, Seq[A]] {
+                    val values: ArrayBuffer[A],
+                    override val length: Int) extends Seq[A] {
 
-  def this() = this(new ArrayBuffer, 0)
+  def this() = this(new ArrayBuffer[A](), 0)
 
   override def foreach[U](f: A => U): Unit = {
     var i = 0

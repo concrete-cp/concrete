@@ -10,7 +10,7 @@ import cspom.variable.{CSPOMSeq, IntExpression, SimpleExpression}
 
 object DiffNWCumulative extends ConstraintCompilerNoData {
 
-  def functions = Functions('diffn)
+  def functions = Functions("diffn")
 
   def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = true
 
@@ -29,18 +29,18 @@ object DiffNWCumulative extends ConstraintCompilerNoData {
 
     implicit def cspom: CSPOM = problem
 
-    val Seq(x, y) = xtransp
-    val Seq(dx, dy) = dtransp
+    val Seq(x: Seq[SimpleExpression[Int]], y: Seq[SimpleExpression[Int]]) = xtransp
+    val Seq(dx: Seq[SimpleExpression[Int]], dy: Seq[SimpleExpression[Int]]) = dtransp
 
     val minX = CSPOMSeqOperations(x).cmin
-    val maxX = CSPOMSeqOperations((x, dx).zipped.map(_ + _)).cmax
+    val maxX = CSPOMSeqOperations((x lazyZip dx).map(_ + _)).cmax
 
     val minY = CSPOMSeqOperations(y).cmin
-    val maxY = CSPOMSeqOperations((y, dy).zipped.map(_ + _)).cmax
+    val maxY = CSPOMSeqOperations((y lazyZip dy).map(_ + _)).cmax
 
     val c1 = cumulative(x, dx, dy, maxY - minY)
     val c2 = cumulative(y, dy, dx, maxX - minX)
-    // val d = CSPOMConstraint('diffn)(xs, ds)
+    // val d = CSPOMConstraint("diffn")(xs, ds)
 
     ConstraintCompiler.addCtr(Seq(c1, c2), problem)
 

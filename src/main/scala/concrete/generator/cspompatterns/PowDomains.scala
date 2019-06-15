@@ -8,7 +8,7 @@ import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.{IntExpression, SimpleExpression}
 import ConstraintCompiler._
 
-object PowDomains extends VariableCompiler('int_pow_deactivated) {
+object PowDomains extends VariableCompiler("int_pow_deactivated") {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), _) =>

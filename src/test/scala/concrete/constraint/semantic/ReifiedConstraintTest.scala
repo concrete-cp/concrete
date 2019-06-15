@@ -111,7 +111,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       val r = new BoolVariable() as "r"
       val v0 = IntVariable(1 to 3) as "v0"
       val v1 = IntVariable(0 to 3) as "v1"
-      ctr(CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(v0, v1), 1) withParam ("mode" -> "eq"))
+      ctr(CSPOMConstraint(r)("sum")(Seq(1, -1), Seq(v0, v1), 1) withParam ("mode" -> "eq"))
     }
 
     val s = Solver(cspom).get
@@ -149,7 +149,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       val v0 = IntVariable(0 to 3) as "v0"
       val v1 = IntVariable(0, 1) as "v1"
       val v2 = IntVariable(0, 1) as "v2"
-      ctr(CSPOMConstraint(r)('sum)(Seq(1, 1, 1), Seq(v0, v1, v2), 0) withParam ("mode" -> "eq"))
+      ctr(CSPOMConstraint(r)("sum")(Seq(1, 1, 1), Seq(v0, v1, v2), 0) withParam ("mode" -> "eq"))
     }
 
     val s = Solver(cspom).get
@@ -194,7 +194,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val cspom = CSPOM { implicit cspom =>
       val r = new BoolVariable() as "r"
       val v0 = IntVariable(0 to 3) as "v0"
-      ctr(CSPOMConstraint(r)('sum)(Seq(-1), Seq(v0), -1) withParam ("mode" -> "le"))
+      ctr(CSPOMConstraint(r)("sum")(Seq(-1), Seq(v0), -1) withParam ("mode" -> "le"))
     }
 
     val s = Solver(cspom).get

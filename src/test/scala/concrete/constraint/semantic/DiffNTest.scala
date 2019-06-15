@@ -72,7 +72,7 @@ class DiffNTest extends FlatSpec with Matchers with OptionValues with LazyLoggin
         ctr(coordinates(i)(dim) + sizes(i)(dim) <= max(dim))
       }
 
-      ctr(CSPOMConstraint('diffn)(coordinates.map(seq2CSPOMSeq(_)), sizes.map(seq2CSPOMSeq(_))))
+      ctr(CSPOMConstraint("diffn")(coordinates.map(seq2CSPOMSeq(_)), sizes.map(seq2CSPOMSeq(_))))
 
       goal(CSPOMGoal.Minimize(max(0)))
     }
@@ -87,7 +87,7 @@ class DiffNTest extends FlatSpec with Matchers with OptionValues with LazyLoggin
     //        println(sol.get("maxX"))
     //        println("------")
     //      }
-    solver.toTraversable.lastOption.value("maxX") shouldBe 14
+    solver.reduceLeftOption((_, next) => next).value("maxX") shouldBe 14
 
     logger.info(stats.toString)
 

@@ -13,7 +13,6 @@ import cspom.xcsp.XCSP3Parser
 
 import scala.collection.mutable
 import scala.util.{Failure, Random, Success, Try}
-import scala.xml.Elem
 
 object XCSP3Concrete extends CSPOMRunner with App {
   lazy val cache = new mutable.HashMap[URL, XCSP3SolutionChecker]
@@ -74,7 +73,7 @@ object XCSP3Concrete extends CSPOMRunner with App {
 
       val annotationDecision: Option[Seq[String]] = cspom.goal.flatMap(_.params.get("annotationDecision"))
           .map {
-            case ann: Seq[String] => ann
+            case ann: Seq[String] @unchecked => ann
           }
 
       // If decision variables not annoted, use declared (non-auxiliary) variables
@@ -92,30 +91,31 @@ object XCSP3Concrete extends CSPOMRunner with App {
     heuristic.get
   }
 
-  def description(args: Seq[String]) =
+  def description(args: Seq[String]): String =
     args match {
       case Seq(fileName) => fileName
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
-  def controlCSPOM(solution: Map[String, Any], obj: Option[Any]) = {
+  def controlCSPOM(solution: Map[String, Any], obj: Option[Any]): Option[String] = {
     solutionChecker.checkSolution(solution, obj, declaredVariables)
   }
 
   override def outputCSPOM(cspom: ExpressionMap, solution: CSPOMSolution, obj: Option[Variable]): String = {
-    xmlSolution(declaredVariables, solution, obj.flatMap(solution.get)).toString
+    xmlSolution(declaredVariables, solution, obj.flatMap(solution.get))
   }
 
 
-  def xmlSolution(variables: Seq[String], solution: Map[String, Any], obj: Option[Any]): Elem = {
-    <instantiation cost={obj.map(o => xml.Text(concrete.util.Math.any2Int(o).toString))}>
+  def xmlSolution(variables: Seq[String], solution: Map[String, Any], obj: Option[Any]): String = {
+    s"""<instantiation
+        ${obj.map(o => s"cost = '${concrete.util.Math.any2Int(o)}'").getOrElse("")}>
       <list>
-        {variables.mkString(" ")}
+        ${variables.mkString(" ")}
       </list>
       <values>
-        {variables.map(v => concrete.util.Math.any2Int(solution(v))).mkString(" ")}
+        ${variables.map(v => concrete.util.Math.any2Int(solution(v))).mkString(" ")}
       </values>
-    </instantiation>
+    </instantiation>"""
   }
 
   run(args) match {

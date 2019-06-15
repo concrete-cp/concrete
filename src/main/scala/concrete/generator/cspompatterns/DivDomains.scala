@@ -6,7 +6,7 @@ import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 
-object DivDomains extends VariableCompiler('div) {
+object DivDomains extends VariableCompiler("div") {
 
   // r = i0/i1
   // -> i0 = r * i1

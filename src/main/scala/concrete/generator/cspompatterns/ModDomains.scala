@@ -6,7 +6,7 @@ import cspom.util.{Finite, Infinitable, IntInterval, RangeSet}
 import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.{IntExpression, SimpleExpression}
 
-object ModDomains extends VariableCompiler('mod) {
+object ModDomains extends VariableCompiler("mod") {
 
   // r = i0 % i1
 

@@ -21,7 +21,7 @@ package concrete
 
 import concrete.constraint.Constraint
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object Problem {
   def apply(variables: Variable*) = new Problem(variables.toArray)
@@ -64,28 +64,29 @@ final class Problem(val variables: Array[Variable], val goal: Goal = Satisfy) {
 
   def initState(decisionVariables: Set[Variable]): Outcome = ProblemState(this, decisionVariables)
 
-  def toString(state: ProblemState) = {
+  def toString(state: ProblemState): String = {
     variables.map(_.toString(state)).mkString("\n") + "\n" +
       constraints.iterator
         .map { c =>
-          c.id + ". " + (
-            if (state.entailed.hasInactiveVar(c)) c.toString(state) + " [entailed]" else c.toString(state))
+          s"${c.id}. ${
+            if (state.entailed.hasInactiveVar(c)) c.toString(state) + " [entailed]" else c.toString(state)
+          }"
         }
         .mkString("\n") + "\n" + stats(state)
   }
 
-  def stats(state: ProblemState) = {
+  def stats(state: ProblemState): String = {
     val entailed = -1 //state.entailed.cardinality
 
-    s"Total ${variables.size} variables, ${constraints.size - entailed} active constraints and $entailed entailed constraints"
+    s"Total ${variables.length} variables, ${constraints.length - entailed} active constraints and $entailed entailed constraints"
   }
 
   //val maxDomainSize = variables.iterator.map(_.dom.size).max
 
-  def maxCId = _nextCId - 1
+  def maxCId: Int = _nextCId - 1
 
   // def nd = variables.iterator.map(_.dom.size).sum
-  def variable(name: String) = variableMap(name)
+  def variable(name: String): Variable = variableMap(name)
 
   def getVariables: java.util.List[Variable] = variables.toSeq.asJava
 

@@ -5,11 +5,11 @@ import cspom.compiler.{ConstraintCompiler, VariableCompiler}
 import cspom.util.IntInterval
 import cspom.variable.{IntExpression, SimpleExpression}
 
-object MinDomains extends VariableCompiler('min) {
+object MinDomains extends VariableCompiler("min") {
 
   def compiler(c: CSPOMConstraint[_]): Seq[(SimpleExpression[_], SimpleExpression[Int])] = {
     c match {
-      case CSPOMConstraint(r: SimpleExpression[_], _, a: Seq[SimpleExpression[Int]], _) =>
+      case CSPOMConstraint(r: SimpleExpression[_], _, a: Seq[SimpleExpression[Int]] @unchecked, _) =>
         val ir = IntExpression.coerce(r)
 
         val itv = a.map(IntExpression.span)
@@ -22,7 +22,7 @@ object MinDomains extends VariableCompiler('min) {
   }
 }
 
-object MaxDomains extends VariableCompiler('max) {
+object MaxDomains extends VariableCompiler("max") {
 
   def compiler(c: CSPOMConstraint[_]): Seq[(SimpleExpression[_], SimpleExpression[Int])] = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, a: Seq[SimpleExpression[Int]], _) =>

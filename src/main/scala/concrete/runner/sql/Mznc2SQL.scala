@@ -15,27 +15,14 @@ object Mznc2SQL extends App {
   lazy val DB = Database.forConfig("database", systemConfig)
 
   val configs = Map(
-    "choco4-free" -> -1,
-    "choco5-free" -> -2,
-    "chuffed-free" -> -3,
-    "concrete-free" -> -4,
-    "g12fd-free" -> -5,
-    "gecode-fd" -> -6,
-    "haifacsp-free" -> -7,
-    "izplus-free" -> -8,
-    "jacop-fd" -> -9,
-    "lcg-glucose-free" -> -10,
-    "mistral-free" -> -11,
-    "mzn-cbc-free" -> -12,
-    "mzn-gurobi-free" -> -13,
-    "or-tools-cp-free" -> -14,
-    "or-tools-lcg-core-free" -> -15,
-    "or-tools-lcg-free" -> -16,
-    "oscar-free" -> -17,
-    "picat-cp-fd" -> -18,
-    "picat-sat-free" -> -19,
-    "sicstus-fd" -> -20,
-    "yuck-free" -> -21)
+    "choco-fd" -> -1,
+    "chuffed-fd" -> -2,
+    "concrete-fd" -> -3,
+    "gecode-fd" -> -4,
+    "jacop-fd" -> -5,
+    "or-tools-fd" -> -6,
+    "sicstus-fd" -> -7,
+  )
 
   val initF = Future.sequence {
     configs.map {
@@ -48,7 +35,7 @@ object Mznc2SQL extends App {
   }
   // .flatMap(_ => DB.run(sqlu"""DELETE FROM "Execution" WHERE "configId" < 0"""))
 
-  val processF = Source.fromFile("/home/vion/expes/mznc-2017").getLines.grouped(1 + configs.size).flatMap {
+  val processF = Source.fromFile("/home/vion/expes/mznc-2018").getLines.grouped(1 + configs.size).flatMap {
     case problemLine :: results =>
 
       val pd = problemLine.split("\t").map(_.trim)
@@ -95,7 +82,7 @@ object Mznc2SQL extends App {
                   sql"""
                        |INSERT INTO "Execution" ("configId", "problemId", "iteration", "start", "status", "solution", version)
                        |VALUES ($configId, $p, $iteration, now(), $sqlStatus, $solution, 'mznc2017')
-                       |ON CONFLICT ON CONSTRAINT "Execution_configId_problemId_iteration_version_key" DO UPDATE
+                       |ON CONFLICT ON CONSTRAINT "execution_configid_problemid_iteration_version_key" DO UPDATE
                        |  SET status = EXCLUDED.status, solution = EXCLUDED.solution
                        |RETURNING "executionId"
                   """.stripMargin

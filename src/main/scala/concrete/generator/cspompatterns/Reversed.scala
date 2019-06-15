@@ -10,28 +10,28 @@ import cspom.variable.{BoolVariable, CSPOMConstant}
 
 object Reversed extends ConstraintCompiler {
 
-  type A = Symbol
+  type A = String
 
-  def functions = Functions('eq, 'ne, 'sum)
+  def functions = Functions("eq", "ne", "sum")
 
-  override def constraintMatcher: PartialFunction[CSPOMConstraint[_], Symbol] = {
+  override def constraintMatcher: PartialFunction[CSPOMConstraint[_], String] = {
     case CSPOMConstraint(CSPOMConstant(false), s, _, _) => s
   }
 
   def compile(c: CSPOMConstraint[_], p: CSPOM, data: A): Delta = {
     val nc = data match {
-      case 'eq =>
+      case "eq" =>
         val bools = (for (Seq(a, b) <- c.arguments.sliding(2)) yield {
-          CSPOMConstraint(new BoolVariable())('ne)(a, b)
+          CSPOMConstraint(new BoolVariable())("ne")(a, b)
         }).toSeq
 
         CSPOMDriver.clause(bools.map(_.result): _*)() +: bools
 
-      case 'ne =>
+      case "ne" =>
         require(c.arguments.size == 2)
-        Seq(CSPOMConstraint('eq)(c.arguments: _*))
+        Seq(CSPOMConstraint("eq")(c.arguments: _*))
 
-      case 'sum =>
+      case "sum" =>
         val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
 
         val (revCoefs: Seq[Int], revConstant, revMode) = mode match {
@@ -40,7 +40,7 @@ object Reversed extends ConstraintCompiler {
           case LT => (coefs.map(-_), -const, LE)
           case LE => (coefs.map(-_), -const, LT)
         }
-        Seq(CSPOMConstraint('sum)(revCoefs, vars, revConstant) withParam "mode" -> revMode.toString)
+        Seq(CSPOMConstraint("sum")(revCoefs, vars, revConstant) withParam "mode" -> revMode.toString)
 
     }
 

@@ -8,7 +8,7 @@ import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 import ConstraintCompiler._
 
-object MulDomains extends VariableCompiler('mul) {
+object MulDomains extends VariableCompiler("mul") {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), _) =>

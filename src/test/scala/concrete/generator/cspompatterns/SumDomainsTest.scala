@@ -6,9 +6,9 @@ import cspom.CSPOM.ctr
 import cspom.compiler.{CSPOMCompiler, MergeEq}
 import cspom.util.{IntInterval, RangeSet}
 import cspom.variable.{IntExpression, IntVariable}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
 
-class SumDomainsTest extends FlatSpec with Matchers {
+class SumDomainsTest extends FlatSpec with Matchers with OptionValues {
 
   "SumDomains" should "filter >" in {
     val cspom = CSPOM { implicit p =>
@@ -19,7 +19,7 @@ class SumDomainsTest extends FlatSpec with Matchers {
 
     CSPOMCompiler.compile(cspom, Seq(MergeEq, SumDomains))
 
-    val Some(v0: IntVariable) = cspom.variable("V0")
+    val v0 = cspom.variable("V0").value
     IntExpression.implicits.ranges(v0) shouldBe RangeSet(IntInterval.atLeast(1))
   }
 
@@ -32,7 +32,7 @@ class SumDomainsTest extends FlatSpec with Matchers {
 
     CSPOMCompiler.compile(cspom, Seq(MergeEq, SumDomains))
 
-    val Some(v0: IntVariable) = cspom.variable("V0")
+    val v0 = cspom.variable("V0").value
     IntExpression.implicits.ranges(v0) shouldBe RangeSet(IntInterval.atLeast(0))
 
   }

@@ -55,7 +55,7 @@ final class Inverse(x: Array[Variable], y: Array[Variable], xOffset: Int, yOffse
         }
         res
       }
-      .fold(mod.until(x.length) ++ xMod) { (ps, xPos) =>
+      .fold(mod.rangeUntil(x.length) ++ xMod) { (ps, xPos) =>
         // Check whether variables in X have been assigned, filter variables in
         // Y accordingly
         val dom = ps.dom(x(xPos))

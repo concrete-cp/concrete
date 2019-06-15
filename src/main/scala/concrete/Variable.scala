@@ -30,7 +30,7 @@ final class Variable(
     val name: String,
     val initDomain: Domain) extends Identified with PTag with DLNode[Variable] with Weighted {
 
-  var id = -1
+  var id: Int = -1
 
   private var _constraints: Array[Constraint] = Array.empty
 
@@ -38,11 +38,11 @@ final class Variable(
 
   private var _positionInConstraint: Array[Array[Int]] = Array.empty
 
-  override def toString = name
+  override def toString: String = name
 
   def toString(ps: ProblemState) = s"$name ${ps.dom(this)}"
 
-  def constraints = _constraints
+  def constraints: Array[Constraint] = _constraints
 
   def addConstraint(newConstraint: Constraint): Int = {
     val existing = _constraints.indexOf(newConstraint)
@@ -61,24 +61,10 @@ final class Variable(
     }
   }
 
-  def dynamicConstraints = _extensionConstraints
-  def positionInConstraint(constraintPosition: Int) = _positionInConstraint(constraintPosition)
+  def dynamicConstraints: List[ExtensionConstraint] = _extensionConstraints
+  def positionInConstraint(constraintPosition: Int): Array[Int] = _positionInConstraint(constraintPosition)
 
-//  def getWDegEntailed(state: ProblemState) = {
-//
-//    val ac = state.activeConstraints(this)
-//    var wDeg = 0
-//    var i = ac.nextSetBit(0)
-//    while (i >= 0) {
-//      wDeg += constraints(i).weight
-//      i = ac.nextSetBit(i + 1)
-//    }
-//    wDeg
-//  }
-
-  //var dDeg = 0
-
-  def getDDegEntailed(state: ProblemState) = {
+  def getDDegEntailed(state: ProblemState): Int = {
     state.activeConstraints(this).cardinality
   }
 

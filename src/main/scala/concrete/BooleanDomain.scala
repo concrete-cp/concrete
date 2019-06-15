@@ -70,7 +70,7 @@ object BooleanDomain {
         this
       }
 
-    def -(value: Int): BooleanDomain = value match {
+    def excl(value: Int): BooleanDomain = value match {
       case 0 => TRUE
       case 1 => FALSE
       case _ => throw new AssertionError("Out of bounds")
@@ -136,7 +136,7 @@ object BooleanDomain {
 
     def removeUntil(ub: Int): BooleanDomain = if (ub > 1) EMPTY else this
 
-    def -(value: Int): BooleanDomain = if (value == 1) EMPTY else this
+    def excl(value: Int): BooleanDomain = if (value == 1) EMPTY else this
 
     override def filter(f: Int => Boolean): BooleanDomain = if (f(1)) this else EMPTY
 
@@ -188,7 +188,7 @@ object BooleanDomain {
 
     def removeUntil(ub: Int): BooleanDomain = if (ub > 0) EMPTY else this
 
-    def -(value: Int): BooleanDomain = if (value == 0) EMPTY else this
+    def excl(value: Int): BooleanDomain = if (value == 0) EMPTY else this
 
     override def filter(f: Int => Boolean): BooleanDomain = if (f(0)) this else EMPTY
 
@@ -240,7 +240,7 @@ object BooleanDomain {
 
     def removeUntil(ub: Int): BooleanDomain = this
 
-    def -(v: Int): BooleanDomain = this
+    def excl(v: Int): BooleanDomain = this
 
     override def filter(f: Int => Boolean): BooleanDomain = this
 
@@ -308,7 +308,7 @@ sealed trait BooleanDomain extends Domain {
 
   def iterator: Iterator[Int] = as01.iterator
 
-  def keysIteratorFrom(start: Int): Iterator[Int] = as01.keysIteratorFrom(start)
+  def iteratorFrom(start: Int): Iterator[Int] = as01.iteratorFrom(start)
 
   def span: Interval = as01.span
 

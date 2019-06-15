@@ -10,7 +10,7 @@ final class LinearNe(
                       factors: Array[Int],
                       scope: Array[Variable]) extends Linear(constant, factors, scope, SumMode.NE) with LazyLogging {
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     var const = constant
     var i = arity - 1
     while (i >= 0) {

@@ -32,7 +32,7 @@ final class LeC(val v: Variable, val constant: Int) extends Constraint(Array(v))
 
   def advise(ps: ProblemState, event: Event, p: Int) = 1
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = if (ps.dom(v).head <= constant) ps else Contradiction(scope)
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = if (ps.dom(v).head <= constant) ps else Contradiction(scope)
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = ps.removeAfter(v, constant).entail(this)
 
@@ -51,7 +51,7 @@ final class LtC(val v: Variable, var constant: Int) extends Constraint(Array(v))
   def revise(ps: ProblemState, mod: BitVector): Outcome = ps.removeFrom(v, constant) //.entail(this)
   def simpleEvaluation = 1
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = if (ps.dom(v).head < constant) ps else Contradiction(scope)
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = if (ps.dom(v).head < constant) ps else Contradiction(scope)
 
   override def toString(ps: ProblemState) = s"${v.toString(ps)} < $constant"
 }
@@ -67,7 +67,7 @@ final class GeC(val v: Variable, val constant: Int) extends Constraint(Array(v))
 
   def simpleEvaluation = 1
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = if (ps.dom(v).last >= constant) ps else Contradiction(scope)
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = if (ps.dom(v).last >= constant) ps else Contradiction(scope)
 
   override def toString(ps: ProblemState) = s"${v.toString(ps)} >= $constant"
 }
@@ -82,7 +82,7 @@ final class GtC(val v: Variable, var constant: Int) extends Constraint(Array(v))
   def revise(ps: ProblemState, mod: BitVector): Outcome = ps.removeTo(v, constant) //.entail(this)
   def simpleEvaluation = 1
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = if (ps.dom(v).last > constant) ps else Contradiction(scope)
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = if (ps.dom(v).last > constant) ps else Contradiction(scope)
 
   override def toString(ps: ProblemState) = s"${v.toString(ps)} > $constant"
 }
@@ -127,7 +127,7 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   }
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val max0 = ps.dom(v0).last + constant
     val min1 = ps.dom(v1).head
 

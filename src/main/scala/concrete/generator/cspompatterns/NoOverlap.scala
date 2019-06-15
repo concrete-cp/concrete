@@ -15,7 +15,7 @@ import ConstraintCompiler._
   */
 object NoOverlap extends ConstraintCompilerNoData {
 
-  def functions = Functions('noOverlap)
+  def functions = Functions("noOverlap")
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = true
 
@@ -25,7 +25,7 @@ object NoOverlap extends ConstraintCompilerNoData {
     // val zeroIgnored = c.getParam[Boolean]("zeroIgnored").get
     val cumulative = false
     if (cumulative) {
-      val constraint = CSPOMConstraint('cumulative)(origins, lengths, seq2CSPOMSeq(Seq.fill(origins.length)(CSPOMConstant(1))), 1)
+      val constraint = CSPOMConstraint("cumulative")(origins, lengths, seq2CSPOMSeq(Seq.fill(origins.length)(CSPOMConstant(1))), 1)
       replaceCtr(c, constraint, p)
     } else {
       val constraints = for (i <- origins.indices; j <- origins.indices if i < j) yield {
@@ -34,8 +34,8 @@ object NoOverlap extends ConstraintCompilerNoData {
         val choice2 = new BoolVariable()
         Seq(
           CSPOMDriver.clause(choice1, choice2)(),
-          CSPOMConstraint(choice1)('sum)(Seq(1, -1, 1), Seq(origins(i), origins(j), lengths(i)), 0) withParam "mode" -> "le",
-          CSPOMConstraint(choice2)('sum)(Seq(-1, 1, 1), Seq(origins(i), origins(j), lengths(j)), 0) withParam "mode" -> "le")
+          CSPOMConstraint(choice1)("sum")(Seq(1, -1, 1), Seq(origins(i), origins(j), lengths(i)), 0) withParam "mode" -> "le",
+          CSPOMConstraint(choice2)("sum")(Seq(-1, 1, 1), Seq(origins(i), origins(j), lengths(j)), 0) withParam "mode" -> "le")
         //}
       }
 

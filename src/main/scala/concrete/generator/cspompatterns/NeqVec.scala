@@ -12,7 +12,7 @@ import cspom.variable.{CSPOMConstant, CSPOMExpression, CSPOMSeq, CSPOMVariable}
 object NeqVec extends ConstraintCompiler {
   type A = (CSPOMConstraint[_], Set[CSPOMExpression[_]], Set[CSPOMConstraint[_]])
 
-  def functions = Functions('ne, 'nevec)
+  def functions = Functions("ne", "nevec")
 
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM): Option[A] = {
 
@@ -28,7 +28,7 @@ object NeqVec extends ConstraintCompiler {
         }
     }
       .collect {
-        case Seq(orConstraint@CSPOMConstraint(CSPOMConstant(true), 'clause, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _)) if negative.isEmpty =>
+        case Seq(orConstraint@CSPOMConstraint(CSPOMConstant(true), "clause", Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _)) if negative.isEmpty =>
           val orVariables: Set[CSPOMExpression[_]] = positive.toSet
           val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
           (orConstraint, orVariables, neConstraints)
@@ -48,7 +48,7 @@ object NeqVec extends ConstraintCompiler {
       case _ => throw new IllegalArgumentException(s"$neConstraints contains malformed ne/nevec constraint")
     }
 
-    val newC = problem.ctr(CSPOMConstraint('nevec)(x, y))
+    val newC = problem.ctr(CSPOMConstraint("nevec")(x, y))
 
     ConstraintCompiler.replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
 

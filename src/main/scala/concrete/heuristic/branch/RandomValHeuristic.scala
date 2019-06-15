@@ -15,7 +15,9 @@ class RandomValHeuristic(heuristics: Seq[BranchHeuristic], factors: Seq[Double],
     var totalFact: Double = 0.0
     val r = rand.nextDouble()
 
-    for ((h, f) <- (heuristics.dropRight(1), factors).zipped) {
+    val it = (heuristics.dropRight(1) lazyZip factors).iterator
+    while (it.hasNext) {
+      val (h, f) = it.next()
       totalFact += f
       if (r < totalFact) {
         return h.branch(v, dom, ps)
@@ -30,7 +32,7 @@ class RandomValHeuristic(heuristics: Seq[BranchHeuristic], factors: Seq[Double],
 
   override def shouldRestart: Boolean = heuristics.lengthCompare(1) > 0 || heuristics.exists(_.shouldRestart)
 
-  override def toString: String = s"Random ${(heuristics, factors).zipped.mkString(", ")}"
+  override def toString: String = s"Random ${(heuristics lazyZip factors).mkString(", ")}"
 
   override def event[S <: Outcome](e: EventObject, ps: S): S = heuristics.foldLeft(ps)((ps, h) => h.event(e, ps))
 }

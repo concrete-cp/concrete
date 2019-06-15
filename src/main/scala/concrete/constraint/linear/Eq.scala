@@ -136,7 +136,7 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome =
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome =
     if (ps.dom(x).shift(b) disjoint ps.dom(y)) Contradiction(scope) else ps
 
   def simpleEvaluation: Int = 1
@@ -176,7 +176,7 @@ final class EqACNeg private[linear](
   def advise(ps: ProblemState, event: Event, pos: Int): Int =
     if (skip(ps)) -1 else ps.card(x) + ps.card(y)
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
     val r = (xDom.span + yDom.span).contains(b) && (
@@ -231,7 +231,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   override def revise(ps: ProblemState, mod: BitVector): Outcome =
     fixPoint(ps)
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val xSpan = ps.span(x)
 
     val negX = if (neg) -xSpan else xSpan

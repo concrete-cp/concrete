@@ -8,7 +8,7 @@ import cspom.variable.CSPOMSeq
 
 object PseudoBool extends ConstraintCompilerNoData {
 
-  def functions = Functions('sum)
+  def functions = Functions("sum")
 
   override def matchBool(c: CSPOMConstraint[_], p: CSPOM): Boolean = c match {
     case CSPOMConstraint(_, _, Seq(CSPOMSeq(args), _), _) => args.forall {
@@ -23,7 +23,7 @@ object PseudoBool extends ConstraintCompilerNoData {
 
     ConstraintCompiler.replaceCtr(
       c,
-      new CSPOMConstraint(c.result, 'pseudoboolean, c.arguments, c.params),
+      new CSPOMConstraint(c.result, "pseudoboolean", c.arguments, c.params),
       p)
   }
 

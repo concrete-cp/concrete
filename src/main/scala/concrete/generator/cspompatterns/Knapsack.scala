@@ -10,9 +10,11 @@ import cspom.variable.{CSPOMSeq, IntExpression, SimpleExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd._
 
+import scala.collection.mutable
+
 object Knapsack extends ConstraintCompilerNoData {
 
-  def functions = Functions('knapsack)
+  def functions = Functions("knapsack")
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
     constraint.result.isTrue && constraint.arguments.forall(_.fullyDefined)
@@ -77,7 +79,7 @@ object Knapsack extends ConstraintCompilerNoData {
 
     //val span = (x, factors).zipped.map { (x, f) => x.span * Finite(f) }.reduce(_ + _)
 
-    val nodes = new JavaMap[(Int, concrete.util.Interval), MDD]()
+    val nodes = new mutable.HashMap[(Int, concrete.util.Interval), MDD]()
     val doms = x.map(new ContiguousIntRangeSet(_).toSeq)
     val spans = x.map(_.span).map {
       case FiniteIntInterval(l, u) => concrete.util.Interval(l, u)

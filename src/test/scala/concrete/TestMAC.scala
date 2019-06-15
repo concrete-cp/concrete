@@ -38,7 +38,7 @@ class TestMAC extends FlatSpec with Matchers {
     problem
   }
 
-  def allDiff(p: Problem, q: Seq[Variable]) {
+  def allDiff(p: Problem, q: Seq[Variable]): Unit = {
     p.addConstraint(new AllDifferentBC(q.toArray))
     for (Seq(x, y) <- q.combinations(2)) {
       p.addConstraint(new Neq(x, y))
@@ -49,7 +49,7 @@ class TestMAC extends FlatSpec with Matchers {
   def view(queens: Seq[Variable], solution: Map[String, Int]): String =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")
 
-  val sols = List(
+  val sols: List[(Int, Int)] = List(
     4 -> 2,
     8 -> 92,
     9 -> 352,

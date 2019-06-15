@@ -16,11 +16,11 @@ import scala.collection.mutable
 object AllDiffConstant extends ConstraintCompiler {
   type A = (Seq[Int], Seq[SimpleExpression[Int]])
 
-  def functions = Functions('alldifferent)
+  def functions = Functions("alldifferent")
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[A] = {
     c match {
-      case CSPOMConstraint(CSPOMConstant(true), _, arguments: Seq[SimpleExpression[Int]], _) =>
+      case CSPOMConstraint(CSPOMConstant(true), _, arguments: Seq[SimpleExpression[Int]] @unchecked, _) =>
 
         val (constants, variables) = pickAndRemoveConstants(arguments, ranges)
         if (constants.nonEmpty) {
@@ -48,7 +48,7 @@ object AllDiffConstant extends ConstraintCompiler {
     val except = constraint.getSeqParam[Int]("except").toSet
 
     val map = mutable.Map[SimpleExpression[Int], RangeSet[Infinitable]]() ++ constraint.arguments.map {
-      case v: SimpleExpression[Int] => v -> ranges(v)
+      case v: SimpleExpression[Int] @unchecked => v -> ranges(v)
       case e => throw new IllegalArgumentException(s"$e not supported")
     }
 

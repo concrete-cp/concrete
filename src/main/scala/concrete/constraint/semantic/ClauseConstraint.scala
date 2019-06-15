@@ -16,7 +16,8 @@ case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc 
   override def toString = s"Clause(${positive.mkString(", ")}${if (positive.nonEmpty && negative.nonEmpty) ", " else ""}${negative.map("-" + _).mkString(", ")})"
 }
 
-final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable]) extends Constraint(positive ++ negative: _*) {
+final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable])
+  extends Constraint(positive ++ negative) {
 
   require(arity >= 2, "Clause constraints must have at least two variables")
 
@@ -38,7 +39,8 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     seekEntailment(ps)
       .map { i =>
         assert {
-          watch1 = i; watch1 >= 0
+          watch1 = i;
+          watch1 >= 0
         }
         ps.entail(this)
       }
@@ -58,11 +60,59 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
       }
   }
 
+  private def enforce(ps: ProblemState, position: Int): Outcome = {
+    if (position < posLength) {
+      ps.tryAssign(scope(position), 1)
+    } else {
+      ps.tryAssign(scope(position), 0)
+    }
+  }
+
+  private def seekWatch(ps: ProblemState, from: Int): Int = {
+    var i = from
+    while (i < posLength) {
+      if (ps.dom(scope(i)).contains(1)) {
+        return i
+      }
+      i += 1
+    }
+    while (i < arity) {
+      if (ps.dom(scope(i)).contains(0)) {
+        return i
+      }
+      i += 1
+    }
+    -1
+  }
+
+  private def seekEntailment(ps: ProblemState): Option[Int] = {
+    (0 until posLength)
+      .find(i => ps.dom(scope(i)) == TRUE)
+      .orElse {
+        (posLength until arity)
+          .find(i => ps.dom(scope(i)) == FALSE)
+      }
+    //    var i = 0
+    //    while (i < posLength) {
+    //      if (ps.dom(ids(i)) == TRUE) {
+    //        return Some(i)
+    //      }
+    //      i += 1
+    //    }
+    //    while (i < arity) {
+    //      if (ps.dom(ids(i)) == FALSE) {
+    //        return Some(i)
+    //      }
+    //      i += 1
+    //    }
+    //    None
+  }
+
   def advise(ps: ProblemState, event: Event, p: Int): Int = if (p == watch1 || p == watch2) 1 else -1
 
   override def check(t: Array[Int]): Boolean = {
     val (p, n) = t.view.splitAt(posLength)
-    p.contains(1) || n.contains(0)
+    p.exists(_ == 1) || n.exists(_ == 0)
   }
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
@@ -115,44 +165,11 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     }
   }
 
-  private def enforce(ps: ProblemState, position: Int): Outcome = {
-    if (position < posLength) {
-      ps.tryAssign(scope(position), 1)
-    } else {
-      ps.tryAssign(scope(position), 0)
-    }
-  }
-
   private def isFalse(ps: ProblemState, pos: Int): Boolean = {
     if (pos < posLength) {
       ps.dom(scope(pos)) == FALSE
     } else {
       ps.dom(scope(pos)) == TRUE
-    }
-  }
-
-  private def seekWatch(ps: ProblemState, from: Int): Int = {
-    var i = from
-    while (i < posLength) {
-      if (ps.dom(scope(i)).contains(1)) {
-        return i
-      }
-      i += 1
-    }
-    while (i < arity) {
-      if (ps.dom(scope(i)).contains(0)) {
-        return i
-      }
-      i += 1
-    }
-    -1
-  }
-
-  private def isTrue(ps: ProblemState, pos: Int): Boolean = {
-    if (pos < posLength) {
-      ps.dom(scope(pos)) == TRUE
-    } else {
-      ps.dom(scope(pos)) == FALSE
     }
   }
 
@@ -169,9 +186,6 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     }
   }
 
-  override def toString(ps: ProblemState): String =
-    "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
-
   override def controlRevision(ps: ProblemState): Boolean = {
     if (seekEntailment(ps).isEmpty) {
       require(watch1 >= 0)
@@ -182,34 +196,22 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     true
   }
 
+  private def isTrue(ps: ProblemState, pos: Int): Boolean = {
+    if (pos < posLength) {
+      ps.dom(scope(pos)) == TRUE
+    } else {
+      ps.dom(scope(pos)) == FALSE
+    }
+  }
+
+  override def toString(ps: ProblemState): String =
+    "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
+
   private def canBeTrue(ps: ProblemState, p: Int) = {
     if (p < posLength) {
       ps.dom(scope(p)).contains(1)
     } else {
       ps.dom(scope(p)).contains(0)
     }
-  }
-
-  private def seekEntailment(ps: ProblemState): Option[Int] = {
-    (0 until posLength)
-      .find(i => ps.dom(scope(i)) == TRUE)
-      .orElse {
-        (posLength until arity)
-          .find(i => ps.dom(scope(i)) == FALSE)
-      }
-    //    var i = 0
-    //    while (i < posLength) {
-    //      if (ps.dom(ids(i)) == TRUE) {
-    //        return Some(i)
-    //      }
-    //      i += 1
-    //    }
-    //    while (i < arity) {
-    //      if (ps.dom(ids(i)) == FALSE) {
-    //        return Some(i)
-    //      }
-    //      i += 1
-    //    }
-    //    None
   }
 }

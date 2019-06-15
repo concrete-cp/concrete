@@ -5,22 +5,24 @@ import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Func
 import cspom.extension.MDDRelation
 import cspom.variable.{CSPOMConstant, CSPOMSeq, SimpleExpression}
 import cspom.{CSPOM, CSPOMConstraint}
-import mdd.{JavaMap, MDD, MDD0, MDDLeaf}
+import mdd.{MDD, MDD0, MDDLeaf}
 import ConstraintCompiler._
+
+import scala.collection.mutable
 
 object Regular extends ConstraintCompilerNoData {
 
-  def functions = Functions('regular)
+  def functions = Functions("regular")
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
     constraint.result.isTrue
   }
 
   /**
-    * The sequence of values in array 'x' (which must all be in the range 1..S)
-    * is accepted by the DFA of 'Q' states with input 1..S and transition
-    * function 'd' (which maps (1..Q, 1..S) -> 0..Q)) and initial state 'q0'
-    * (which must be in 1..Q) and accepting states 'F' (which all must be in
+    * The sequence of values in array "x"' (which must all be in the range 1..S)
+    * is accepted by the DFA of "Q"' states with input 1..S and transition
+    * function "d"' (which maps (1..Q, 1..S) -> 0..Q)) and initial state "q0"'
+    * (which must be in 1..Q) and accepting states "F"' (which all must be in
     * 1..Q).  We reserve state 0 to be an always failing state.
     */
 
@@ -32,7 +34,7 @@ object Regular extends ConstraintCompilerNoData {
 
     val Some(dfa) = constraint.getParam[Map[(Any, Any), Any]]("dfa")
 
-    val values = dfa.keys.map(_._2).toSeq.distinct.to[collection.IndexedSeq] //x.map(IntExpression.implicits.iterable).toIndexedSeq
+    val values = dfa.keys.map(_._2).toSeq.distinct.toIndexedSeq
 
     val regular = mdd(IndexedSeq.fill(x.length)(values), q0, f.toSet, dfa).reduce()
     //
@@ -40,7 +42,7 @@ object Regular extends ConstraintCompilerNoData {
   }
 
   def mdd[T](v: IndexedSeq[Seq[T]], initState: T, finalStates: Set[T], dfa: Map[(T, T), T]): MDD = {
-    val cache = new JavaMap[(Int, T), MDD]()
+    val cache = new mutable.HashMap[(Int, T), MDD]()
 
     def parse(depth: Int, state: T): MDD = cache.getOrElseUpdate((depth, state), {
       if (depth >= v.length) {

@@ -25,7 +25,7 @@ final class StatelessLinearLe(
 
   import StatelessBoundPropagation._
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     if (updateF(ps)._1.lb <= 0) ps else Contradiction(scope)
   }
 

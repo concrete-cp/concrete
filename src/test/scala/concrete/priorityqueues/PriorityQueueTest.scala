@@ -38,7 +38,7 @@ final class PriorityQueueTest extends FlatSpec with Matchers with TimeLimits wit
   //    test(new ScalaIOBinomialHeap[IntNode](key))
   //  }
 
-  def test(q: PriorityQueue[IntNode]) {
+  def test(q: PriorityQueue[IntNode]): Unit = {
     //for (j <- 3001 to 5000) {
     //INTS.foreach(i => i.unsetPresent())
     forAll { data: Seq[Int] =>

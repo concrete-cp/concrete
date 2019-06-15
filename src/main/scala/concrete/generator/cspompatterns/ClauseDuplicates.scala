@@ -10,7 +10,7 @@ object ClauseDuplicates extends ConstraintCompiler {
   type A = (Seq[CSPOMExpression[_]], Seq[CSPOMExpression[_]])
 
   override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM): Option[A] = constraint match {
-    case CSPOMConstraint(_, 'clause, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _) =>
+    case CSPOMConstraint(_, "clause", Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _) =>
       val allVars = positive.values ++ negative.values
       if (allVars.length != allVars.distinct.length) {
         Some((positive, negative))
@@ -34,5 +34,5 @@ object ClauseDuplicates extends ConstraintCompiler {
     }
   }
 
-  override def functions: CompiledFunctions = Functions('clause)
+  override def functions: CompiledFunctions = Functions("clause")
 }

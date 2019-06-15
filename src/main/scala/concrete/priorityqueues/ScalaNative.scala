@@ -12,9 +12,9 @@ final class ScalaNative[T <: PTag] extends PriorityQueue[T] {
 
   private val presence = new Presence
 
-  def isEmpty = queue.isEmpty
+  def isEmpty: Boolean = queue.isEmpty
 
-  def offer(elt: T, eval: Int) = {
+  def offer(elt: T, eval: Int): Boolean = {
     if (presence.isPresent(elt)) {
       false
     } else {
@@ -24,13 +24,13 @@ final class ScalaNative[T <: PTag] extends PriorityQueue[T] {
     }
   }
 
-  def poll() = {
+  def poll(): T = {
     val elt = queue.dequeue().elt
     presence.unsetPresent(elt)
     elt
   }
 
-  override def clear() {
+  override def clear(): Unit = {
     queue.clear()
     presence.clear()
   }

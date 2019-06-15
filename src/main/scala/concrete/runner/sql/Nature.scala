@@ -17,7 +17,7 @@ object Nature {
 case object Satisfy extends Nature
 
 sealed abstract class Optimize(_variable: String) extends Nature {
-  def variable: Seq[String] = _variable.split("\\|\\|")
+  def variable: Seq[String] = _variable.split("\\|\\|").toSeq
 }
 
 

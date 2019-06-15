@@ -5,7 +5,7 @@ import concrete.constraint.AdviseCount
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class CircuitTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+class XCSPCircuitTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "Circuit constraint" should "check" in {
     val length = 10
@@ -13,7 +13,7 @@ class CircuitTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
       new Variable(s"v$i", IntDomain.ofInterval(0, length - 1))
     )
 
-    val circuit = new Circuit(vars, 0, new Variable("size", IntDomain.ofInterval(2, 10)))
+    val circuit = new XCSPCircuit(vars, 0, new Variable("size", IntDomain.ofInterval(2, 10)))
 
     assert(circuit.check(Array(1, 2, 3, 4, 0, 5, 6, 7, 8, 9, 5)))
     assert(circuit.check(Array(1, 2, 5, 3, 4, 0, 6, 7, 8, 9, 4)))
@@ -49,7 +49,7 @@ class CircuitTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
 
     val problem = Problem(vars :+ size: _*)
 
-    val circuit = new Circuit(vars, 0, size)
+    val circuit = new XCSPCircuit(vars, 0, size)
     problem.addConstraint(circuit)
     circuit.register(new AdviseCount)
     val ps = problem.initState.toState

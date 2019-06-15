@@ -6,6 +6,8 @@ import com.typesafe.scalalogging.LazyLogging
 import mdd._
 import java.util
 
+import scala.collection.immutable
+
 final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   type Self2 = BDDRelation
   lazy val lambda: BigInt = bdd.lambda()
@@ -29,7 +31,7 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
 
   def contains(t: Array[Int]): Boolean = {
     // logger.warn("BDDRelation.contains was called")
-    bdd.contains(t)
+    bdd.contains(immutable.ArraySeq.unsafeWrapArray(t))
   }
 
   def vertices: Int = bdd.vertices()

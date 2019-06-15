@@ -44,6 +44,8 @@ case class NewSolutionEvent(sol: Map[Variable, Int]) extends EventObject(sol)
 
 case object ContradictionEvent extends EventObject(None)
 
-case class AssignmentEvent(variable: Seq[Variable], value: Seq[Int]) extends EventObject(variable)
+case class AssignmentEvent(variable: Seq[Variable], value: Seq[Int]) extends EventObject(variable) {
+  def assignments: Iterable[(Variable, Int)] = variable lazyZip value
+}
 
 case class BadDecision(decision: Decision) extends EventObject(decision)

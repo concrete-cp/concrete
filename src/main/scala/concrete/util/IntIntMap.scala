@@ -2,24 +2,24 @@ package concrete.util
 
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 
 class IntIntMap(private val intIntMap: IntIntHashMap = new IntIntHashMap())
-  extends mutable.Map[Int, Int] with mutable.MapLike[Int, Int, IntIntMap] {
+  extends mutable.AbstractMap[Int, Int] {
 
   override def empty = new IntIntMap()
 
   def this(initialCapacity: Int) = this(new IntIntHashMap(initialCapacity))
 
-  override def +=(kv: (Int, Int)): IntIntMap.this.type = {
+  override def addOne(kv: (Int, Int)): IntIntMap.this.type = {
     justPut(kv._1, kv._2)
     this
   }
 
   def justPut(key: Int, value: Int): Unit = intIntMap.put(key, value)
 
-  override def -=(key: Int): IntIntMap.this.type = {
+  override def subtractOne(key: Int): IntIntMap.this.type = {
     intIntMap.removeKey(key)
     this
   }

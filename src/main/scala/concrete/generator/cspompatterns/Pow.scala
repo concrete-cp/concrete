@@ -11,7 +11,7 @@ import ConstraintCompiler._
 
 object Pow extends ConstraintCompilerNoData {
 
-  def functions = Functions('int_pow)
+  def functions = Functions("int_pow")
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
     constraint.result.isTrue
@@ -54,7 +54,7 @@ object Pow extends ConstraintCompilerNoData {
         val rb = xb.pow(y)
         if (lb <= rb && ub >= rb) {
           if (rb.isValidInt) {
-            Some(y -> MDD(Array(rb.intValue())))
+            Some(y -> MDD(Array(rb.intValue)))
           } else {
             throw new ArithmeticException(s"$rb: integer overflow")
           }

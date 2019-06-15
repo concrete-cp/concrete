@@ -1,40 +1,42 @@
-package concrete.priorityqueues;
+package concrete.priorityqueues
 
-import java.util.Arrays
+import java.util
+
 import cspom.Statistic
+
 import scala.annotation.tailrec
 
 final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQueue[T] {
 
   @Statistic
-  private var nbOffer = 0;
+  private var nbOffer = 0
   @Statistic
-  private var nbUpdate = 0;
+  private var nbUpdate = 0
   @Statistic
-  private var nbPoll = 0;
+  private var nbPoll = 0
   @Statistic
-  private var nbClear = 0;
+  private var nbClear = 0
   @Statistic
-  private var offerSize = 0L;
+  private var offerSize = 0L
   @Statistic
-  private var updateSize = 0L;
+  private var updateSize = 0L
   @Statistic
-  private var pollSize = 0L;
+  private var pollSize = 0L
 
   /* 2 + log_2(Integer.MAX_VALUE) */
-  private val MAX_ARRAY_SIZE = 33;
+  private val MAX_ARRAY_SIZE = 33
 
   // private final Key<T> key;
 
   private val trees = new Array[BinomialHeapNode](initSize)
 
-  private var size = 0;
+  private var size = 0
 
   private var map = new Array[BinomialHeapNode](MAX_ARRAY_SIZE)
 
-  private var iter = 0;
+  private var iter = 0
 
-  private var last = -1;
+  private var last = -1
 
   // @Statistic
   // public static int insert = 0;
@@ -43,7 +45,7 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
   // @Statistic
   // public static int remove = 0;
 
-  def this() = this(100);
+  def this() = this(100)
 
   /**
    * Increases the capacity of this instance to ensure that it can hold at
@@ -52,18 +54,18 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
    * @param minCapacity
    *            the desired minimum capacity
    */
-  private def ensureCapacity(minCapacity: Int) {
-    val oldCapacity = map.length;
+  private def ensureCapacity(minCapacity: Int): Unit = {
+    val oldCapacity = map.length
     if (minCapacity > oldCapacity) {
-      val newCapacity = math.max(minCapacity, (oldCapacity * 3) / 2 + 1);
+      val newCapacity = math.max(minCapacity, (oldCapacity * 3) / 2 + 1)
       // minCapacity is usually close to size, so this is a win:
 
-      map = Arrays.copyOf(map, newCapacity)
+      map = util.Arrays.copyOf(map, newCapacity)
     }
 
   }
 
-  def offer(arg0: T, newKey: Int) = {
+  def offer(arg0: T, newKey: Int): Boolean = {
     val id = arg0.id
 
     var node =
@@ -75,49 +77,49 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
       }
 
     if (node == null) {
-      node = new BinomialHeapNode(arg0);
-      map(id) = node;
+      node = new BinomialHeapNode(arg0)
+      map(id) = node
     }
 
-    val oldKey = node.key;
+    val oldKey = node.key
 
-    node.key = newKey;
+    node.key = newKey
 
     if (node.isPresent(iter)) {
-      nbUpdate += 1;
-      updateSize += size;
+      nbUpdate += 1
+      updateSize += size
       if (newKey < oldKey) {
-        node.decreaseKey(false);
+        node.decreaseKey(false)
       } else if (newKey > oldKey) {
-        increaseKey(node);
+        increaseKey(node)
       }
-      false;
+      false
     } else {
-      nbOffer += 1;
-      offerSize += size;
-      node.clear();
+      nbOffer += 1
+      offerSize += size
+      node.clear()
 
-      carryMerge(node, 0);
-      node.setPresent(iter);
-      size += 1;
-      true;
+      carryMerge(node, 0)
+      node.setPresent(iter)
+      size += 1
+      true
     }
   }
 
   def poll(): T = {
-    val min = minTree();
-    deleteRoot(min);
-    min.unsetPresent();
-    nbPoll += 1;
-    pollSize += size;
-    size -= 1;
-    min.data;
+    val min = minTree()
+    deleteRoot(min)
+    min.unsetPresent()
+    nbPoll += 1
+    pollSize += size
+    size -= 1
+    min.data
   }
 
-  def isEmpty = size == 0
+  def isEmpty: Boolean = size == 0
 
   @tailrec
-  private def mergeAll(node: BinomialHeapNode) {
+  private def mergeAll(node: BinomialHeapNode): Unit = {
     if (node != null) {
       val next = node.right
       node.right = null
@@ -127,13 +129,13 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
     }
   }
 
-  private def deleteRoot(root: BinomialHeapNode) {
+  private def deleteRoot(root: BinomialHeapNode): Unit = {
     assert(root.parent == null)
     trees(root.rank) = null
     mergeAll(root.child)
   }
 
-  private def minTree() = {
+  private def minTree(): BinomialHeapNode = {
     var min = trees(last)
     while (min == null) {
       last -= 1
@@ -142,28 +144,28 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
 
     var i = last - 1
     while (i >= 0) {
-      val tree = trees(i);
+      val tree = trees(i)
       if (tree != null && tree < min) {
-        min = tree;
+        min = tree
       }
       i -= 1
     }
-    min;
+    min
   }
 
-  def clear() {
+  def clear(): Unit = {
     while (last >= 0) {
       trees(last) = null
       last -= 1
     }
 
-    iter += 1;
-    size = 0;
-    nbClear += 1;
+    iter += 1
+    size = 0
+    nbClear += 1
   }
 
   @tailrec
-  private def carryMerge(tree: BinomialHeapNode, i: Int) {
+  private def carryMerge(tree: BinomialHeapNode, i: Int): Unit = {
     trees(i) match {
       case null =>
         trees(i) = tree
@@ -176,34 +178,34 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
          * maintain heap property.
          */
         if (storedTree < tree) {
-          storedTree.addSubTree(tree);
-          carryMerge(storedTree, i + 1);
+          storedTree.addSubTree(tree)
+          carryMerge(storedTree, i + 1)
         } else {
-          tree.addSubTree(storedTree);
-          carryMerge(tree, i + 1);
+          tree.addSubTree(storedTree)
+          carryMerge(tree, i + 1)
         }
     }
 
   }
 
-  private def increaseKey(node: BinomialHeapNode) {
-    val root = node.decreaseKey(true);
-    deleteRoot(root);
-    root.clear();
-    carryMerge(root, 0);
+  private def increaseKey(node: BinomialHeapNode): Unit = {
+    val root = node.decreaseKey(true)
+    deleteRoot(root)
+    root.clear()
+    carryMerge(root, 0)
   }
 
-  override def toString = trees.mkString("\n")
+  override def toString: String = trees.mkString("\n")
 
   private final class BinomialHeapNode(var data: T) extends Ordered[BinomialHeapNode] {
 
     var key: Int = 0
 
-    var child: BinomialHeapNode = null
+    var child: BinomialHeapNode = _
 
-    var right: BinomialHeapNode = null
+    var right: BinomialHeapNode = _
 
-    var parent: BinomialHeapNode = null
+    var parent: BinomialHeapNode = _
 
     var rank = 0
 
@@ -217,11 +219,11 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
       } else this
     }
 
-    def compare(c: BinomialHeapNode) = key - c.key
+    def compare(c: BinomialHeapNode): Int = key - c.key
 
-    override def <(c: BinomialHeapNode) = key < c.key
+    override def <(c: BinomialHeapNode): Boolean = key < c.key
 
-    private def swap(node: BinomialHeapNode) {
+    private def swap(node: BinomialHeapNode): Unit = {
       val data = this.data
       map(data.id) = node
       map(node.data.id) = this
@@ -233,50 +235,50 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
 
     }
 
-    def clear() {
-      child = null;
-      right = null;
-      parent = null;
-      rank = 0;
+    def clear(): Unit = {
+      child = null
+      right = null
+      parent = null
+      rank = 0
     }
 
-    def addSubTree(subTree: BinomialHeapNode) {
+    def addSubTree(subTree: BinomialHeapNode): Unit = {
       if (child != null) {
-        subTree.right = child;
+        subTree.right = child
       }
-      rank += 1;
-      child = subTree;
-      subTree.parent = this;
+      rank += 1
+      child = subTree
+      subTree.parent = this
     }
 
-    override def toString() = {
-      val stb = new StringBuilder();
-      tree(stb, 0);
-      stb.toString();
+    override def toString: String = {
+      val stb = new StringBuilder()
+      tree(stb, 0)
+      stb.toString()
     }
 
-    private def tree(stb: StringBuilder, depth: Int) {
+    private def tree(stb: StringBuilder, depth: Int): Unit = {
       (0 until depth).foreach(stb.append("--"))
 
       stb.append(data).append(" (").append(key).append(", ").append(rank)
-        .append(")\n");
+        .append(")\n")
       if (child != null) {
-        child.tree(stb, depth + 1);
+        child.tree(stb, depth + 1)
       }
       if (right != null) {
-        right.tree(stb, depth);
+        right.tree(stb, depth)
       }
     }
 
-    def setPresent(iter: Int) {
-      inQueue = iter;
+    def setPresent(iter: Int): Unit = {
+      inQueue = iter
     }
 
-    def unsetPresent() {
-      inQueue = -1;
+    def unsetPresent(): Unit = {
+      inQueue = -1
     }
 
-    def isPresent(iter: Int) = inQueue == iter
+    def isPresent(iter: Int): Boolean = inQueue == iter
 
   }
 

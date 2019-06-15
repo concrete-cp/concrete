@@ -12,7 +12,7 @@ object UnaryClause extends ConstraintCompiler {
 
   type A = (Boolean, CSPOMExpression[_])
 
-  def functions = Functions('clause)
+  def functions = Functions("clause")
 
   override def constraintMatcher = {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), params) if positive.length + negative.length == 1 =>

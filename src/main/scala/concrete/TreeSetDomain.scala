@@ -21,11 +21,11 @@ final class TreeSetDomain(val set: TreeSet[Int])
   def singleValue = throw new IllegalStateException
 
   override def next(i: Int): Int = {
-    set.keysIteratorFrom(i + 1).next()
+    set.iteratorFrom(i + 1).next()
   }
 
   override def prev(i: Int): Int = {
-    set.until(i).last
+    set.rangeUntil(i).last
   }
 
   def isAssigned = false
@@ -49,7 +49,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     IntDomain.ofTreeSet(filtLeft.dropRight(count))
   }
 
-  def -(index: Int): IntDomain = {
+  def excl(index: Int): IntDomain = {
     val newSet = set - index
     if (set eq newSet) this else IntDomain.ofTreeSet(newSet)
   }
@@ -58,7 +58,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     if (lb > last) {
       this
     } else {
-      IntDomain.ofTreeSet(set.until(lb))
+      IntDomain.ofTreeSet(set.rangeUntil(lb))
     }
   }
 
@@ -66,7 +66,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     if (lb >= last) {
       this
     } else {
-      IntDomain.ofTreeSet(set.to(lb))
+      IntDomain.ofTreeSet(set.rangeTo(lb))
     }
   }
 
@@ -74,7 +74,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     if (ub <= head) {
       this
     } else {
-      IntDomain.ofTreeSet(set.from(ub))
+      IntDomain.ofTreeSet(set.rangeFrom(ub))
     }
   }
 
@@ -82,13 +82,13 @@ final class TreeSetDomain(val set: TreeSet[Int])
     if (ub < head) {
       this
     } else {
-      IntDomain.ofTreeSet(set.from(ub + 1))
+      IntDomain.ofTreeSet(set.rangeFrom(ub + 1))
     }
   }
 
   def &(lb: Int, ub: Int): IntDomain = {
     if (lb > head || ub < last) {
-      IntDomain.ofTreeSet(set.from(lb).to(ub))
+      IntDomain.ofTreeSet(set.rangeFrom(lb).rangeTo(ub))
     } else {
       this
     }
@@ -208,6 +208,6 @@ final class TreeSetDomain(val set: TreeSet[Int])
 
   def iterator: Iterator[Int] = set.iterator
 
-  override def keysIteratorFrom(start: Int): Iterator[Int] = set.keysIteratorFrom(start)
+  override def iteratorFrom(start: Int): Iterator[Int] = set.iteratorFrom(start)
 
 }

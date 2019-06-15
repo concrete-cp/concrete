@@ -19,14 +19,14 @@ object Polarity {
 
 object ACCSE_Clause extends ACCSE[Polarity] {
 
-  def functions: Seq[Symbol] = Seq('clause)
+  def functions: Seq[String] = Seq("clause")
 
 
   override def canonize(args: List[Arg]): List[Arg] = args
 
   override def define(subexp: List[Arg], aux: CSPOMVariable[_]): (Arg, CSPOMConstraint[_]) = {
     val (negative, positive) = subexp.partition(_._2 == Negative)
-    val constraint = CSPOMConstraint(aux)('clause)(seq2CSPOMSeq(positive.map(_._1)), seq2CSPOMSeq(negative.map(_._1)))
+    val constraint = CSPOMConstraint(aux)("clause")(seq2CSPOMSeq(positive.map(_._1)), seq2CSPOMSeq(negative.map(_._1)))
     val arg = (aux, Positive)
     (arg, constraint)
   }
@@ -61,6 +61,6 @@ object ACCSE_Clause extends ACCSE[Polarity] {
 
   override def argsToConstraint(original: CSPOMConstraint[_], args: Args): CSPOMConstraint[_] = {
     val (negative, positive) = args.partition(_._2 == Negative)
-    CSPOMConstraint(original.result)('clause)(seq2CSPOMSeq(positive.keys), seq2CSPOMSeq(negative.keys))
+    CSPOMConstraint(original.result)("clause")(seq2CSPOMSeq(positive.keys), seq2CSPOMSeq(negative.keys))
   }
 }

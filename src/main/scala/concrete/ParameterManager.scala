@@ -1,12 +1,12 @@
 package concrete
 
-;
+
 
 import java.util.Properties
 
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable.{SortedMap, TreeMap}
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
@@ -24,7 +24,7 @@ final class ParameterManager(
 
   def this() = this(new TreeMap(), new mutable.HashSet[String]())
 
-  def +(name: String): ParameterManager = updated(name, Unit)
+  def +(name: String): ParameterManager = updated(name, ())
 
   /**
     * Updates some parameter, overriding default or previous value.
@@ -107,7 +107,7 @@ final class ParameterManager(
     * @return
     */
   override def toString: String = parameters.iterator.map {
-    case (k, Unit) => k
+    case (k, ()) => k
     case (k, v) => s"$k = $v"
   }.mkString(", ")
 

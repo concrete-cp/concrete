@@ -17,7 +17,7 @@ final class EntailmentManager(
                                     val entailedReified: Set[Int],
                                     val wDegsMinus: Vector[Int]) {
 
-  def addConstraints(constraints: Seq[Constraint]): EntailmentManager = {
+  def addConstraints(constraints: Iterable[Constraint]): EntailmentManager = {
     var ac = activeConstraints
     for (c <- constraints) {
       for (i <- c.scope.indices) {

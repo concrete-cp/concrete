@@ -9,14 +9,16 @@ import cspom.{CSPOM, CSPOMGoal}
 import cspom.compiler.CSPOMCompiler
 import cspom.extension.MDDRelation
 import cspom.flatzinc.FlatZincFastParser
-import cspom.xcsp.XCSPParser
+import cspom.xcsp.XCSP3Parser
 import mdd.{BDD, SetWithMax}
 import slick.jdbc.PostgresProfile.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 object UniversalSet extends Set[Int] {
   override def contains(i: Int): Boolean = true
@@ -25,9 +27,9 @@ object UniversalSet extends Set[Int] {
 
   override def head: Int = 0
 
-  override def +(elem: Int): Set[Int] = ???
+  override def incl(elem: Int): Set[Int] = this
 
-  override def -(elem: Int): Set[Int] = ???
+  override def excl(elem: Int): Set[Int] = ???
 
   override def iterator: Iterator[Int] = ???
 }
@@ -50,20 +52,20 @@ object ProblemStats extends App {
 
   val updates = query.flatMap { r =>
     Future.sequence {
-      r.par.map { p =>
+      r.map { p =>
 
 
         data(new URL(s"file:///home/vion/${p._2}")) match {
-          case Success((nature: String, stats: Map[Symbol, Double])) =>
+          case Success((nature: String, stats: Map[String, Double])) =>
             println(p)
             println(nature)
             println(stats)
 
             val q = for (u <- SQLWriter.problems if u.problemId === p._1)
               yield (u.nature, u.nbVars, u.d, u.k, u.lambda, u.looseness, u.mddEdges, u.mddVertices, u.bddVertices)
-            val action = q.update((Some(nature), stats.get('n).map(_.toInt), stats.get('d).map(_.toInt), stats.get('k),
-              stats.get('lambda), stats.get('l), stats.get('mddEdges), stats.get('mddVertices),
-              stats.get('bddVertices)))
+            val action = q.update((Some(nature), stats.get("n").map(_.toInt), stats.get("d").map(_.toInt), stats.get("k"),
+              stats.get("lambda"), stats.get("l"), stats.get("mddEdges"), stats.get("mddVertices"),
+              stats.get("bddVertices")))
             DB.run(action)
 
           case Failure(e) => System.err.println(e)
@@ -77,10 +79,10 @@ object ProblemStats extends App {
   val r = Await.result(updates, Duration.Inf)
   println(r)
 
-  def data(file: URL): Try[(String, Map[Symbol, Double])] = {
+  def data(file: URL): Try[(String, Map[String, Double])] = {
 
     def parser = file.getFile match {
-      case f if f.contains(".xml") => XCSPParser
+      case f if f.contains(".xml") => XCSP3Parser
       case f if f.contains(".fzn") => FlatZincFastParser
     }
 
@@ -91,7 +93,7 @@ object ProblemStats extends App {
           case FlatZincFastParser =>
             CSPOMCompiler.compile(cspomProblem, FZPatterns())
 
-          case XCSPParser =>
+          case XCSP3Parser =>
             CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
 
           case _ => Failure(new IllegalStateException())
@@ -119,9 +121,9 @@ object ProblemStats extends App {
         var k = 0
         var lambda = 0.0d
         var l = 0.0d
-        var bddV = 0l
-        var mddE = 0l
-        var mddV = 0l
+        var bddV = 0L
+        var mddE = 0L
+        var mddV = 0L
 
         var count = 0
 
@@ -162,13 +164,13 @@ object ProblemStats extends App {
         //    println(s"lm = ${lt / et}")
 
         (nature, Map(
-          'd -> d,
-          'k -> k,
-          'lambda -> lambda.doubleValue(),
-          'l -> l,
-          'mddEdges -> mddE,
-          'bddVertices -> bddV,
-          'mddVertices -> mddV
+          "d" -> d,
+          "k" -> k,
+          "lambda" -> lambda.doubleValue(),
+          "l" -> l,
+          "mddEdges" -> mddE,
+          "bddVertices" -> bddV,
+          "mddVertices" -> mddV
         ))
       }
   }

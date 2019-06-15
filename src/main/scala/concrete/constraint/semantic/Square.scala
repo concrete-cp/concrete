@@ -78,7 +78,7 @@ final class SquareAC(val x: Variable, val y: Variable)
     math.abs(yValue) < Square.MAX_SQUARE && xDomain.contains(yValue * yValue)
   }
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val domY = ps.dom(y)
     val domX = ps.dom(x)
     if (domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX))) {

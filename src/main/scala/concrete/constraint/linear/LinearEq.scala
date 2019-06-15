@@ -26,7 +26,7 @@ final class LinearEq(
 
   private val negFactors = factors.map(-_)
 
-  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
     val (doms, f, vars, max) = updateF(ps, mod)
     clearMod()
     if (f.contains(0)) {

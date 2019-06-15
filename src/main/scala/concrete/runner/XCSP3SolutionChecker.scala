@@ -10,7 +10,7 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.postgresql.util.ReaderInputStream
 import org.xcsp.checker.SolutionChecker
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 
