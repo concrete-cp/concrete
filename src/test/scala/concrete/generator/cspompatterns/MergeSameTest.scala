@@ -1,5 +1,7 @@
 package concrete.generator.cspompatterns
 
+import java.io.FileNotFoundException
+
 import cspom.CSPOM
 import cspom.compiler._
 import org.scalatest.concurrent.TimeLimits
@@ -15,7 +17,9 @@ class MergeSameTest extends FlatSpec with Matchers with TimeLimits with TryValue
 //  }
 
   "MergeSame" should "not alter the problem" in {
-    val url = Option(getClass.getResource("Queens-0008-m1.xml.xz")).get
+    val file = "Queens-0008-m1.xml.xz"
+    val url = Option(getClass.getResource(file))
+      .getOrElse(throw new FileNotFoundException(s"Could not find $file"))
     assert(
       CSPOM.load(url)
         .map(cspom => CSPOMCompiler.compile(cspom, Seq(MergeSame, MergeEq, RemoveUselessEq)))

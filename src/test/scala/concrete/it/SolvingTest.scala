@@ -319,7 +319,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
   this: FunSpec =>
 
 
-  val slow = Set(
+  val slow: Set[String] = Set(
     "CostasArray-10.xml.xz",
     "driverlogw-01c.xml.xz",
     "Hanoi-04.xml.xz",
@@ -341,7 +341,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
     "OpenStacks-m2-pb-10-10-1.xml.xz",
     "Cabinet-5561_X2.xml.xz",
     "Pb-mps-v2-20-10-bm23.xml.xz",
-    "1d_rubiks_cube.fzn.xz"
+    "1d_rubiks_cube.fzn.xz",
+
+    "testMainCOP/Fapp-m2s-03-0300_c18.xml.lzma",
   )
 
   def count(name: String, expectedResult: AnyVal, pm: ParameterManager,
