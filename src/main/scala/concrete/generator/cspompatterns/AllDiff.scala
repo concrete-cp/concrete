@@ -15,51 +15,6 @@ import scala.collection.mutable
 import scala.util.Random
 
 
-object AllDiffAsMDD extends ConstraintCompilerNoData {
-  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean =
-    constraint.nonReified &&
-    constraint.getSeqParam("except").isEmpty
-
-  override def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
-    val vars = constraint.arguments.map {
-      case IntExpression(e) => e
-    }
-    val doms = vars.map(IntExpression.implicits.iterable(_).toSeq).toList
-    logger.warn(s"Generating alldiff for $vars")
-    val m = mdd(doms).reduce()
-    val c = CSPOM.IntSeqOperations(vars) in new MDDRelation(m)
-    logger.warn(c.toString)
-    replaceCtr(constraint,
-      c,
-      problem
-    )
-  }
-
-  def mdd(vars: List[Seq[Int]], values: Set[Int] = Set(), cache: mutable.Map[Set[Int], MDD] = new mutable.HashMap()): MDD = {
-    cache.getOrElseUpdate(values, {
-      vars match {
-        case Nil => MDDLeaf
-        case head :: tail =>
-          MDD.fromTrie(
-            head.filterNot(values)
-              .map(i => i -> mdd(tail, values + i, cache))
-              .filter(_._2.nonEmpty)
-          )
-      }
-    })
-
-  }
-
-  override def functions: CompiledFunctions = Functions("alldifferent")
-
-  def main(args: Array[String]): Unit = {
-    val doms = List.fill(10)(1 to 9)
-    val m = mdd(doms)
-    println(m)
-    m.take(10).foreach(println)
-  }
-}
-
 /**
   * Aggregates cliques of alldifferent constraints. Uses a small tabu search engine
   * to detect max-cliques.
@@ -188,10 +143,11 @@ object AllDiff extends ProblemCompiler with LazyLogging {
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
     ALLDIFF_CONSTRAINT(constraint).orElse {
-      if (constraint.function == "sum" && constraint.nonReified) {
-        val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
+      if (constraint.function == "sum" && constraint.nonReified &&
+        (constraint.arguments(0) == neCoefs1 || constraint.arguments(0) == neCoefs2)) {
+        val (vars, _, constant, mode) = SumGenerator.readCSPOM(constraint)
 
-        if (mode == SumMode.LT && constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2)) {
+        if (mode == SumMode.LT && constant == 0) {
           Some(vars)
         } else {
           None

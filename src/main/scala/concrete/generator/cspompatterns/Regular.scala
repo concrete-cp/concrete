@@ -1,12 +1,13 @@
 package concrete.generator.cspompatterns
 
+import concrete.util.Math.any2Int
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
+import cspom.compiler.ConstraintCompiler._
+import cspom.compiler.{ConstraintCompilerNoData, Delta, Functions}
 import cspom.extension.MDDRelation
 import cspom.variable.{CSPOMConstant, CSPOMSeq, SimpleExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd.{MDD, MDD0, MDDLeaf}
-import ConstraintCompiler._
 
 import scala.collection.mutable
 
@@ -32,19 +33,34 @@ object Regular extends ConstraintCompilerNoData {
     CSPOMConstant(q0),
     CSPOMConstant.seq(f: Seq[_])) = constraint.arguments
 
-    val Some(dfa) = constraint.getParam[Map[(Any, Any), Any]]("dfa")
+    val dfaAny = constraint.getParam[Map[(Any, Any), Any]]("dfa").get
+
+    val dfa: Map[(Int, Int), Int] = dfaAny.iterator
+      .map {
+        case ((source, value), dest) => (any2Int(source), any2Int(value)) -> any2Int(dest)
+      }
+      .toMap
 
     val values = dfa.keys.map(_._2).toSeq.distinct.toIndexedSeq
 
-    val regular = mdd(IndexedSeq.fill(x.length)(values), q0, f.toSet, dfa).reduce()
+    val regular = mdd(
+      IndexedSeq.fill(x.length)(values),
+      any2Int(q0),
+      f.map(any2Int).toSet,
+      dfa).reduce()
+
+    if (regular.isEmpty) {
+      logger.warn(s"MDD $regular is empty for constraint ${constraint.toString(problem.displayName)}")
+    }
+
     //
-    replaceCtr(constraint, x in new MDDRelation(regular), problem)
+    replaceCtr(constraint, x in new MDDRelation(regular, reduced = true), problem)
   }
 
-  def mdd[T](v: IndexedSeq[Seq[T]], initState: T, finalStates: Set[T], dfa: Map[(T, T), T]): MDD = {
-    val cache = new mutable.HashMap[(Int, T), MDD]()
+  def mdd(v: IndexedSeq[Seq[Int]], initState: Int, finalStates: Set[Int], dfa: Map[(Int, Int), Int]): MDD = {
+    val cache = new mutable.HashMap[(Int, Int), MDD]()
 
-    def parse(depth: Int, state: T): MDD = cache.getOrElseUpdate((depth, state), {
+    def parse(depth: Int, state: Int): MDD = cache.getOrElseUpdate((depth, state), {
       if (depth >= v.length) {
         if (finalStates(state)) {
           MDDLeaf

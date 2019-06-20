@@ -125,7 +125,12 @@ object XCSPPatterns {
     def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = true
 
     def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
-      val Seq(IntExpression.simpleSeq(variables), IntExpression.simpleSeq(lengths)) = constraint.arguments
+      val (variables, lengths) = constraint.arguments match {
+        case Seq(SimpleExpression.simpleSeq(vars), SimpleExpression.simpleSeq(lgts)) =>
+          (vars, lgts)
+        case _ => throw new IllegalStateException(
+          s"${constraint.toString(problem.displayName)} does not match Ordered constraint")
+      }
 
       require(variables.length == lengths.length + 1)
 

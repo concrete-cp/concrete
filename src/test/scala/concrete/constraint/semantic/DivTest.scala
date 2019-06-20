@@ -78,6 +78,21 @@ class DivTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
     }
   }
 
+  it should "filter the same as enumerators, test case" in {
+
+    val vx = new Variable("x", IntDomain.ofSeq(76, -4, 47, 23, -11, -58, -51, -51, 38, -83, 91, -61, 60))
+    val vy = new Variable("y", IntDomain.ofSeq(9))
+    val vz = new Variable("z", IntDomain.ofSeq(0))
+    val c = new DivAC(vx, vy, vz, skipIntervals = false)
+
+    ConstraintComparator.compare(
+      Array(vx, vy, vz),
+      c,
+      new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        def check(t: Array[Int]): Boolean = c.check(t)
+      })
+  }
+
   "DivBC" should "comply with MiniZinc specifications" in {
 
     Inspectors.forAll(Seq((7, 4, 1), (-7, 4, -1), (7, -4, -1), (-7, -4, 1))) {

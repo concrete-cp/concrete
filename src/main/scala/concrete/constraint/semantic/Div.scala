@@ -161,18 +161,21 @@ class DivAC(v0: Variable, v1: Variable, result: Variable, val skipIntervals: Boo
       case 2 =>
         //println(s"Searching for a support of result = $value")
 
-        for {
-          b <- doms(1)
-          r <- if (signum(value) == signum(b)) 0 until math.abs(b) else 0 until -math.abs(b) by -1
-        } {
-          val a = b * value + r
-          if (doms(0).contains(a)) {
-            //println(s"Found $a = $b * $value + $r")
-            return Some(Array(a, b, value))
-          }
-        }
-        None
-      // super[TupleEnumerator].findSupport(doms, position, value)
+//        val couples = for {
+//          b <- doms(1).iterator
+//          r <- if (signum(value) == signum(b)) 0 until math.abs(b) else 0 until -math.abs(b) by -1
+//        } yield {
+//          (b * value + r, b)
+//          //          if (doms(0).contains(a)) {
+//          //            //println(s"Found $a = $b * $value + $r")
+//          //            return Some(Array(a, b, value))
+//          //          }
+//        }
+//
+//        couples.find(c => doms(0).contains(c._1))
+//          .map(c => Array(c._1, c._2, value))
+      // None
+      super[TupleEnumerator].findSupport(doms, position, value)
     }
   }
 
