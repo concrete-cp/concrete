@@ -11,11 +11,11 @@ import cspom.CSPOMConstraint
 import cspom.variable.{CSPOMConstant, SimpleExpression}
 
 object SumGenerator {
-  def readCSPOM(constraint: CSPOMConstraint[_]): (IndexedSeq[SimpleExpression[Any]], Seq[Int], Int, SumMode) = {
+  def readCSPOM(constraint: CSPOMConstraint[_]): (IndexedSeq[SimpleExpression[Any]], LazyList[Int], Int, SumMode) = {
     require(constraint.arguments.lengthCompare(3) == 0)
     try {
       val CSPOMConstant.seq(anyCoefs) = constraint.arguments(0)
-      val coefs = anyCoefs.map(util.Math.any2Int)
+      val coefs = anyCoefs.to(LazyList).map(util.Math.any2Int)
       val SimpleExpression.simpleSeq(vars) = constraint.arguments(1)
       val CSPOMConstant(c) = constraint.arguments(2) //map cspom2concreteVar
 
@@ -23,7 +23,7 @@ object SumGenerator {
       val constant = util.Math.any2Int(c)
 
       val mode = readMode(constraint)
-        .getOrElse(throw new IllegalArgumentException("Constraint " + constraint + " has no valid mode"))
+        .getOrElse(throw new IllegalArgumentException(s"Constraint $constraint has no valid mode"))
 
       (vars, coefs, constant, mode)
     } catch {
@@ -108,7 +108,7 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           case (Seq(-1), LT, k) => ACBC.withBC(new GtC(x, -k))
           case (Seq(1), NE, k) => ACBC.withBC(new NeqC(x, k))
           case _ =>
-            val c = general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
+            val c = general(solverVariables, varParams, constant, mode: SumMode)
             logger.info(s"$c is non-specialized unary linear constraint")
             c
         }
@@ -127,11 +127,11 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           case (Seq(1, 1), EQ, k) => Eq(neg = true, x, k, y)
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized binary linear constraint")
-            general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
+            general(solverVariables, varParams, constant, mode: SumMode)
         }
 
       case _ =>
-        general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
+        general(solverVariables, varParams, constant, mode: SumMode)
 
     }
 

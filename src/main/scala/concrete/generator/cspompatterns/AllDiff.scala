@@ -6,12 +6,9 @@ import concrete.constraint.linear.SumMode
 import concrete.generator.SumGenerator
 import cspom.compiler.ConstraintCompiler._
 import cspom.compiler._
-import cspom.extension.MDDRelation
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
-import mdd.{MDD, MDDLeaf}
 
-import scala.collection.mutable
 import scala.util.Random
 
 
@@ -121,6 +118,21 @@ object AllDiff extends ProblemCompiler with LazyLogging {
 
   //private val neighborsCache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
 
+  def ALLDIFF_FUNCTIONS: Seq[String] = Seq("alldifferent", "eq", "ne", "sum")
+
+  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
+    ALLDIFF_CONSTRAINT(constraint).orElse {
+      if (constraint.function == "sum" && constraint.nonReified) {
+        val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
+
+        PartialFunction.condOpt(mode) {
+          case SumMode.LT | SumMode.GT
+            if constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2) =>
+            vars
+        }
+      } else None
+    }
+
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = {
     if (constraint.function == "alldifferent" && constraint.nonReified && constraint.getSeqParam("except").isEmpty) {
       Some(constraint.arguments)
@@ -138,22 +150,6 @@ object AllDiff extends ProblemCompiler with LazyLogging {
       }
     } else None
   }
-
-  def ALLDIFF_FUNCTIONS: Seq[String] = Seq("alldifferent", "eq", "ne", "sum")
-
-  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
-    ALLDIFF_CONSTRAINT(constraint).orElse {
-      if (constraint.function == "sum" && constraint.nonReified &&
-        (constraint.arguments(0) == neCoefs1 || constraint.arguments(0) == neCoefs2)) {
-        val (vars, _, constant, mode) = SumGenerator.readCSPOM(constraint)
-
-        if (mode == SumMode.LT && constant == 0) {
-          Some(vars)
-        } else {
-          None
-        }
-      } else None
-    }
 
   private def BronKerbosch2(neighbors: IndexedSeq[Set[Int]]): Seq[Set[Int]] = {
 

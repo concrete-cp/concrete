@@ -18,7 +18,7 @@ class NoGoodsTest extends FlatSpec with Matchers {
 
     val ng = constraint.addNoGood(Seq(Assign(v1, 1)), v2, IntDomain.ofSeq(2, 3))
 
-    println(ng)
+    // println(ng)
 
     constraint.eventAll(state, InsideRemoval)
 //    val mod = constraint.revise(state)

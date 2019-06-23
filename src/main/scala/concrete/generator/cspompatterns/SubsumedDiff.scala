@@ -19,7 +19,7 @@ object SubsumedDiff extends ConstraintCompilerNoData {
     ConstraintCompiler.removeCtr(constraint, problem)
   }
 
-  private def haveSubsumingConstraint(constraint: CSPOMConstraint[_], problem: CSPOM) = {
+  private def haveSubsumingConstraint(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
     val smallestDegree = constraint.fullScope.minBy(problem.unsafeConstraints(_).size)
 
     problem.unsafeConstraints(smallestDegree).exists(

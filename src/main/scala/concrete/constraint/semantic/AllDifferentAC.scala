@@ -3,26 +3,28 @@ package concrete.constraint.semantic
 import bitvectors.BitVector
 import concrete._
 import concrete.constraint.Constraint
-import concrete.util.{DirectedGraph, IntIntMap, ScalaBitSet}
+import concrete.util.{DirectedGraph, IntIntMap}
 
 import scala.collection.immutable.Queue
+import scala.collection.{immutable, mutable}
 
 
 class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllDiffChecker {
   private val n = scope.length
   private val map = {
     val allValues = scope.flatMap(_.initDomain).distinct
-    val m = new IntIntMap(allValues.length)
-    for ((v, i) <- allValues.zipWithIndex) {
-      m.justPut(v, i + n)
-    }
-    m
+    allValues.zipWithIndex
+      .foldLeft(new IntIntMap(allValues.length)) {
+        case (m, (v, i)) => m.addOne(v -> (i + n))
+      }
   }
   private val n2 = n + map.size
   private val digraph = new DirectedGraph(n2 + 1)
-  private val free = new ScalaBitSet(n2)
+  private val free = new mutable.BitSet(n2)
   private val father = new Array[Int](n2)
   private val matching = Array.fill(n)(-1)
+
+  private val full = (0 until n2).to(immutable.BitSet)
   // var i = 0
 
   def this(vars: Variable*) = this(vars.toArray)
@@ -51,19 +53,21 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
     (0 until n).foldLeft(initState) { (ps, i) =>
       val v = scope(i)
       val dom = ps.dom(v)
-      val newDom = dom.find { k => val j = map(k); nodeSCC(i) != nodeSCC(j) && matching(i) == j }
-        .map { k =>
+      val newDom = dom.find { k =>
+        val j = map(k); nodeSCC(i) != nodeSCC(j) && matching(i) == j
+      } match {
+        case Some(k) =>
           assert(dom.contains(k))
           dom.assign(k)
-        }
-        .getOrElse {
+        case None =>
           dom.filter { k =>
             val j = map(k)
             val b = nodeSCC(i) == nodeSCC(j)
             if (!b) digraph.removeArc(i, j)
             b
           }
-        }
+      }
+
       ps.updateDomNonEmpty(v, newDom)
     }
 
@@ -84,7 +88,7 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
 
   private def findMaximumMatching(ps: ProblemState): Outcome = {
     digraph.clear()
-    free.set(0, n2)
+    free |= full //set(0, n2)
 
     for (i <- 0 until n) {
       val mate = matching(i)
@@ -134,7 +138,7 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
   private def augmentPathBFS(x: Int,
                              vertices: Iterator[Int],
                              fifo: Queue[Int] = Queue(),
-                             in: ScalaBitSet = new ScalaBitSet(n2)): Int = {
+                             in: mutable.BitSet = new mutable.BitSet(n2)): Int = {
 
     if (vertices.hasNext) {
       val y = vertices.next()
@@ -143,7 +147,7 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
       } else {
         father(y) = x
         in += y
-        if (free.contains(y)) {
+        if (free(y)) {
           y
         } else {
           augmentPathBFS(x, vertices, fifo.enqueue(y), in)

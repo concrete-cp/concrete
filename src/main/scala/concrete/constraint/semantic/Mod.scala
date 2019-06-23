@@ -27,7 +27,7 @@ For $x$, the interval is obviously infinite, so I am only interested in *tighten
   *         x % y = z
   */
 class ModBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC with ItvArrayFixPoint {
-  val ops = Array(reviseX(_), reviseY(_), reviseZ(_))
+  val ops = Array(reviseX, reviseY, reviseZ)
 
   def init(ps: ProblemState): Outcome = Div.remove0Bound(ps.span(y))
     .map(ps.shaveDom(y, _))
@@ -109,9 +109,9 @@ class ModBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
 
 
     // X is of the same sign as Z
-    val xo = if (z.lb >= 0) {
+    val xo = if (z.lb > 0) {
       itv(0).spanFrom(0)
-    } else if (z.ub <= 0) {
+    } else if (z.ub < 0) {
       itv(0).spanTo(0)
     } else {
       Some(itv(0).span)

@@ -1,12 +1,10 @@
 package concrete.util
 
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 
-class DirectedGraphTest extends FlatSpec {
+class DirectedGraphTest extends FlatSpec with Matchers {
 
-  behavior of "DirectedGraphTest"
-
-  it should "buildDomTree" in {
+  "DirectedGraph" should "buildDomTree" in {
     // Test case from Lengauer & Tarjan 1979
 
     val graph = new DirectedGraph(13)
@@ -59,7 +57,8 @@ class DirectedGraphTest extends FlatSpec {
     graph.addArc(12, 8)
 
     val tree = graph.computeDominatorTree(0)
-    println(tree.toSeq)
+
+    tree shouldBe Seq(-1, 0, 0, 0, 0, 0, 3, 3, 0, 0, 7, 0, 4)
   }
 
 

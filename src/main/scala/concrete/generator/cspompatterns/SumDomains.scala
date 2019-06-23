@@ -36,12 +36,13 @@ object SumDomains extends VariableCompiler("sum") with LazyLogging {
         val coefspan = (iargs lazyZip coef).map((a, c) => IntExpression.span(a) * Finite(c)).toIndexedSeq
 
         val filt = for {
-          i <- iargs.indices
+          (i, c) <- iargs.indices zip coef
           others <- Try(
             iargs.indices
               .filter(_ != i)
               .map(coefspan)
-              .foldLeft(initBound)(_ - _))
+              .foldLeft(initBound)(_ - _)
+          )
             .recoverWith {
               case e: Exception =>
                 logger.warn(s"$e when computing bounds of $c")
@@ -49,7 +50,7 @@ object SumDomains extends VariableCompiler("sum") with LazyLogging {
             }
             .toOption
         } yield {
-          iargs(i) -> reduceDomain(iargs(i), others / coef(i))
+          iargs(i) -> reduceDomain(iargs(i), others / c)
         }
 
         val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1

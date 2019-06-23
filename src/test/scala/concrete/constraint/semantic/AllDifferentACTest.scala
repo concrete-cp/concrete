@@ -43,9 +43,6 @@ class AllDifferentACTest extends FlatSpec with Matchers {
     }.toState
 
     mod.dom(v2) should contain theSameElementsAs Seq(2, 4)
-
-    println(c.toString(mod))
-
   }
 
 }

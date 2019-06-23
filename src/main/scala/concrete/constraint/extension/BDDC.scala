@@ -31,6 +31,7 @@ final class BDDC(_scope: Array[Variable], val relation: BDDRelation)
 
     val oldGno = ps(this)
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
+    val dSizes = domains.map(_.size)
     val supported = domains.map(d => new IntDomainBuilder(d.head, 1 + d.last - d.head))
     val cardinalities = Array.fill(arity)(0)
 
@@ -60,7 +61,7 @@ final class BDDC(_scope: Array[Variable], val relation: BDDRelation)
           supported(i) += g.index
           cardinalities(i) += 1
         }
-        if (i + 1 == delta && cardinalities(i) == domains(i).size) {
+        if (i + 1 == delta && cardinalities(i) == dSizes(i)) {
           delta = i
         } else {
           seekSupports(g.sibling, i)

@@ -4,9 +4,9 @@ import scala.collection.mutable
 
 class DirectedGraph(val nbVertices: Int) {
   type Vertex = Int
-  val nodes = new ScalaBitSet(nbVertices)
-  val successors: Array[ScalaBitSet] = Array.fill(nbVertices)(new ScalaBitSet())
-  val predecessors: Array[ScalaBitSet] = Array.fill(nbVertices)(new ScalaBitSet())
+  val nodes = new mutable.BitSet(nbVertices)
+  val successors: Array[mutable.BitSet] = Array.fill(nbVertices)(new mutable.BitSet())
+  val predecessors: Array[mutable.BitSet] = Array.fill(nbVertices)(new mutable.BitSet())
 
   def clear(): Unit = {
     for (i <- 0 until nbVertices) {
@@ -188,10 +188,6 @@ class DirectedGraph(val nbVertices: Int) {
     idom
   }
 
-
-  def completeTree(tree: Array[Int], root: Int): Array[ScalaBitSet] = {
-    ???
-  }
 
   def addArc(from: Int, to: Int): Boolean = {
     assert(successors(from)(to) == predecessors(to)(from), "Graph is not coherent")

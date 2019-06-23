@@ -98,15 +98,15 @@ sealed trait Outcome {
     }
   }
 
-  def dueTo(cause: => (Constraint, Traversable[Variable])): Outcome
+  def dueTo(cause: => (Constraint, Iterable[Variable])): Outcome
 }
 
 object Contradiction {
   def apply(to: Variable): Contradiction = Contradiction(Seq(to))
 
-  def apply(to: Array[Variable]): Contradiction = Contradiction(immutable.ArraySeq.unsafeWrapArray(to))
-
   def apply(to: Seq[Variable]): Contradiction = Contradiction(None, Seq.empty, to)
+
+  def apply(to: Array[Variable]): Contradiction = Contradiction(immutable.ArraySeq.unsafeWrapArray(to))
 }
 
 case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq[Variable]) extends Outcome {
@@ -158,7 +158,7 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
 
   def isState = false
 
-  def dueTo(cause: => (Constraint, Traversable[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
+  def dueTo(cause: => (Constraint, Iterable[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
 
   override def tryAssign(variable: Variable, i: Int): Outcome = this
 
@@ -172,8 +172,9 @@ object ProblemState {
     new ProblemState(
       doms,
       Vector(),
-      EntailmentManager(problem.variables.toSeq))
-      .padConstraints(immutable.ArraySeq.unsafeWrapArray(problem.constraints), problem.maxCId)
+      EntailmentManager(problem.variables.toSeq)
+    )
+      .padConstraints(problem.constraints, problem.maxCId)
   }
 
   def isFree(doms: Array[Domain]): Boolean = {
@@ -239,7 +240,7 @@ case class ProblemState(
     }
   }
 
-  def padConstraints(constraints: Seq[Constraint], lastId: Int): Outcome = {
+  def padConstraints(constraints: Array[Constraint], lastId: Int): Outcome = {
     if (constraintStates.length > lastId) {
       require(lastId < 0 || constraintStates.isDefinedAt(lastId),
         s"$constraintStates($lastId) is not defined")
@@ -250,16 +251,10 @@ case class ProblemState(
 
       val newConstraints = constraints.view.filter(_.id >= constraintStates.size)
 
-      //println(newConstraints.toList)
-
       newConstraints.foldLeft(
         ProblemState(domains, padded, entailed.addConstraints(newConstraints), data): Outcome) {
         case (out, c) => out.andThen(c.init)
       }
-      //        .andThen { newState =>
-      //          ProblemState(newState.domains, newState.constraintStates, entailed)
-      //        }
-
     }
   }
 
@@ -366,11 +361,11 @@ case class ProblemState(
 
   def entailIfFree(c: Constraint): ProblemState = c.singleFree(this).map(entail(c, _)).getOrElse(this)
 
+  def entailIfFree(c: Constraint, doms: Array[Domain]): ProblemState = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
+
   def entail(c: Constraint, i: Int): ProblemState = {
     new ProblemState(domains, constraintStates, entailed.entail(c, i), data)
   }
-
-  def entailIfFree(c: Constraint, doms: Array[Domain]): ProblemState = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
 
   def entailIf(c: Constraint, f: ProblemState => Boolean): ProblemState = {
     if (f(this)) entail(c) else this

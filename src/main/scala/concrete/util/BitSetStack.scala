@@ -2,8 +2,10 @@ package concrete.util
 
 import org.eclipse.collections.impl.stack.mutable.primitive.IntArrayStack
 
+import scala.collection.mutable
+
 final class BitSetStack(size: Int) {
-  private val inStack = new ScalaBitSet(size)
+  private val inStack = new mutable.BitSet(size)
   private val queue = new IntArrayStack()
 
   def push(i: Int): Unit = {

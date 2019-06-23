@@ -58,9 +58,9 @@ class ACCSETest extends FlatSpec with Matchers with TryValues {
       ctr(sum(x, y, z) >= 11)
     }
 
-    println(problem)
+    problem.constraints should have size 6
+
     val solver = Solver(problem)
-    println(problem)
 
     solver.failure.exception shouldBe an[UNSATException]
   }

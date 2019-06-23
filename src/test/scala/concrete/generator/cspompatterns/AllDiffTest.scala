@@ -35,7 +35,9 @@ class AllDiffTest extends FlatSpec with Matchers {
     }
   }
 
+  it should "convert x - y != 0 constraint" in {
 
+  }
 
 
 }

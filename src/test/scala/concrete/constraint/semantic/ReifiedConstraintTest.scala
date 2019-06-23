@@ -114,6 +114,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       ctr(CSPOMConstraint(r)("sum")(Seq(1, -1), Seq(v0, v1), 1) withParam ("mode" -> "eq"))
     }
 
+
     val s = Solver(cspom).get
 
     val problem = s.concreteProblem
