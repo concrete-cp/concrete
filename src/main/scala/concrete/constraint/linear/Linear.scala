@@ -50,7 +50,7 @@ abstract class Linear(
                        val mode: SumMode) extends Constraint(scope) {
 
 
-  require(!factors.contains(0), this)
+  require(!factors.contains(0), s"$this contains an argument with factor 0")
   require(factors.lengthCompare(scope.length) == 0)
 
   // Control overflows

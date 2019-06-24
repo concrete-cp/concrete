@@ -19,7 +19,7 @@ object SumFactors extends ConstraintCompiler {
     val (fargs, fparams) = args.zip(coefs).filter(_._2 != 0).unzip
     assert(fparams.nonEmpty, c)
     val gcd = concrete.util.Math.toIntExact(concrete.util.Math.gcd(result +: fparams).abs)
-    if (gcd == 1) {
+    if (gcd == 1 && fargs.lengthCompare(args) == 0) {
       None
     } else {
       val rparams = fparams.map(_ / gcd)
