@@ -149,7 +149,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   override def size: Int = span.size
 
-  def disjoint(d: Domain): Boolean = last < d.head || head > d.last
+  def disjoint(d: Domain): Boolean = last < d.head || head > d.last || (d & span).isEmpty
 
   def &(lb: Int, ub: Int): Domain = {
     val nlb = math.max(span.lb, lb)

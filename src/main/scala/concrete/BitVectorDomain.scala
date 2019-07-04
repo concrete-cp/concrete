@@ -132,7 +132,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   }
 
   def disjoint(d: Domain): Boolean = d match {
-    case id: IntervalDomain => id.disjoint(this)
+    case id: IntervalDomain => (this & id.span).isEmpty
     case s: Singleton => s.disjoint(this)
     case bd: BitVectorDomain =>
       val newOffset = math.min(offset, bd.offset)

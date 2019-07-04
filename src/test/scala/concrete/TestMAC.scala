@@ -1,14 +1,24 @@
 package concrete
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import concrete.constraint.linear.Eq
-import concrete.constraint.semantic.AllDifferentBC
-import concrete.constraint.semantic.Neq
+import concrete.constraint.semantic.AllDifferentAC
 import concrete.heuristic.value.MedValue
 import cspom.StatisticsManager
+import org.scalatest.{FlatSpec, Matchers}
 
 class TestMAC extends FlatSpec with Matchers {
+
+  val sols: List[(Int, Int)] = List(
+    4 -> 2,
+    8 -> 92,
+    9 -> 352,
+    10 -> 724,
+    12 -> 14200
+    //13 -> 73712 //,
+    // 14 -> 365596)
+  )
+  val qs = 1100
+  private val pm = new ParameterManager().updated("heuristic.value", classOf[MedValue])
 
   def qp(size: Int): Problem = {
 
@@ -39,27 +49,12 @@ class TestMAC extends FlatSpec with Matchers {
   }
 
   def allDiff(p: Problem, q: Seq[Variable]): Unit = {
-    p.addConstraint(new AllDifferentBC(q.toArray))
-    for (Seq(x, y) <- q.combinations(2)) {
-      p.addConstraint(new Neq(x, y))
-    }
-    //    p.addConstraint(new AllDifferent2C(q: _*))
+    //    p.addConstraint(new AllDifferentBC(q.toArray))
+    //    for (Seq(x, y) <- q.combinations(2)) {
+    //      p.addConstraint(new Neq(x, y))
+    //    }
+    p.addConstraint(new AllDifferentAC(q: _*))
   }
-
-  def view(queens: Seq[Variable], solution: Map[String, Int]): String =
-    queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")
-
-  val sols: List[(Int, Int)] = List(
-    4 -> 2,
-    8 -> 92,
-    9 -> 352,
-    10 -> 724,
-    12 -> 14200
-    //13 -> 73712 //,
-    // 14 -> 365596)
-    )
-
-  private val pm = new ParameterManager().updated("heuristic.value", classOf[MedValue])
 
   behavior of "MAC"
 
@@ -74,6 +69,23 @@ class TestMAC extends FlatSpec with Matchers {
 
       solver.size shouldBe nb
     }
+  }
+
+  def view(queens: Seq[Variable], solution: Map[String, Int]): String =
+    queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")
+
+  it should s"solve queens-$qs quickly" in {
+    val problem = qp(qs)
+
+    val solver = MAC(problem, problem.variables, pm).get
+
+    val stats = new StatisticsManager
+    stats.register("mac", solver)
+
+
+    assert(solver.nonEmpty)
+    println(stats)
+
   }
 
 }

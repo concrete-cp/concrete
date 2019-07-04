@@ -47,4 +47,30 @@ class MemberTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
     }
 
   }
+
+  it should "filter the same as enumerator, test case" in {
+    val vx = new Variable("x", IntDomain.ofSeq(-10, -8, -7, -4, -3, 0, 1, 2, 3, 5, 6, 7, 9))
+    val vy = new Variable("y", IntDomain.ofSeq(7))
+    val vz = new Variable("z", IntDomain.ofSeq(0))
+    ConstraintComparator.compare(
+      Array(vx, vy, vz),
+      new Member(vx, Array(vy, vz)),
+      new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        def check(t: Array[Int]): Boolean = t.tail.contains(t(0))
+      })
+
+  }
+
+  it should "filter the same as enumerator, test case 2" in {
+    val vx = new Variable("x", IntDomain.ofSeq(-2, -1))
+    val vy = new Variable("y", IntDomain.ofSeq(-7, 6))
+    val vz = new Variable("z", IntDomain.ofSeq(-2, -1, 0))
+    ConstraintComparator.compare(
+      Array(vx, vy, vz),
+      new Member(vx, Array(vy, vz)),
+      new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        def check(t: Array[Int]): Boolean = t.tail.contains(t(0))
+      })
+
+  }
 }

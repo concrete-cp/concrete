@@ -1,5 +1,7 @@
 package concrete.util
 
+import concrete.constraint.semantic.FZSubcircuit
+import concrete.{IntDomain, Problem, Variable}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DirectedGraphTest extends FlatSpec with Matchers {
@@ -7,59 +9,79 @@ class DirectedGraphTest extends FlatSpec with Matchers {
   "DirectedGraph" should "buildDomTree" in {
     // Test case from Lengauer & Tarjan 1979
 
-    val graph = new DirectedGraph(13)
+    val graph = new DirectedGraph() //13)
 
     //R
-    graph.addArc(0, 1)
-    graph.addArc(0, 2)
-    graph.addArc(0, 3)
+    .addEdge(0, 1)
+    .addEdge(0, 2)
+    .addEdge(0, 3)
 
     //A
-    graph.addArc(1, 4)
+    .addEdge(1, 4)
 
     //B
-    graph.addArc(2, 1)
-    graph.addArc(2, 4)
-    graph.addArc(2, 5)
+    .addEdge(2, 1)
+    .addEdge(2, 4)
+    .addEdge(2, 5)
 
     //C
-    graph.addArc(3, 6)
-    graph.addArc(3, 7)
+    .addEdge(3, 6)
+    .addEdge(3, 7)
 
     //D
-    graph.addArc(4, 12)
+    .addEdge(4, 12)
 
     //E
-    graph.addArc(5, 8)
+    .addEdge(5, 8)
 
     //F
-    graph.addArc(6, 9)
+    .addEdge(6, 9)
 
     //G
-    graph.addArc(7, 9)
-    graph.addArc(7, 10)
+    .addEdge(7, 9)
+    .addEdge(7, 10)
 
     //H
-    graph.addArc(8, 5)
-    graph.addArc(8, 11)
+    .addEdge(8, 5)
+    .addEdge(8, 11)
 
     //I
-    graph.addArc(9, 11)
+    .addEdge(9, 11)
 
     //J
-    graph.addArc(10, 9)
+    .addEdge(10, 9)
 
     //K
-    graph.addArc(11, 0)
-    graph.addArc(11, 9)
+    .addEdge(11, 0)
+    .addEdge(11, 9)
 
     //L
-    graph.addArc(12, 8)
+    .addEdge(12, 8)
 
     val tree = graph.computeDominatorTree(0)
 
     tree shouldBe Seq(-1, 0, 0, 0, 0, 0, 3, 3, 0, 0, 7, 0, 4)
   }
 
+  it should "compute correct SCCs" in {
+    val variables = Array(
+      new Variable(s"x1", IntDomain.ofSeq(1, 2, 3)),
+      new Variable(s"x2", IntDomain.ofSeq(2, 3, 4, 5)),
+      new Variable(s"x3", IntDomain.ofSeq(3, 4)),
+      new Variable(s"x4", IntDomain.ofSeq(3, 5)),
+      new Variable(s"x5", IntDomain.ofSeq(4)),
+    )
+
+    val constraint = new FZSubcircuit(variables)
+
+    val prob = new Problem(variables)
+    prob.addConstraint(constraint)
+
+    val ps = prob.initState.toState
+
+    val scc = constraint.buildGraph(ps).findAllSCC()
+    scc shouldBe Seq(2, 1, 0, 0, 0)
+
+  }
 
 }

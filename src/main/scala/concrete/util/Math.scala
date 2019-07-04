@@ -9,13 +9,6 @@ object Math {
 
   private val LOG2 = math.log(2.0)
 
-  def toIntExact(bi: BigInt): Int = {
-    if (!bi.isValidInt) {
-      throw new ArithmeticException("integer overflow")
-    } else {
-      bi.intValue
-    }
-  }
 
   def floorDiv(var0: Long, var2: Long): Long = {
     var var4 = var0 / var2

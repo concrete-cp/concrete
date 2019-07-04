@@ -1,7 +1,6 @@
 package concrete.generator
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.semantic.energy.CumulativeEnergy2
 import concrete.constraint.semantic.{Cumulative, CumulativeEnergy}
 import concrete.generator.Generator.{cspom2concrete1D, cspom2concreteSeq}
 import cspom.CSPOMConstraint
@@ -25,16 +24,13 @@ final class CumulativeGenerator(pg: ProblemGenerator) extends Generator with Laz
 
     val profile = new Cumulative(svars, dVars, rVars, bVar)
 
-    val dConst = dConc.collect { case Const(i: Int) => i }.toArray
-    val rConst = rConc.collect { case Const(i: Int) => i }.toArray
-    val bConst = PartialFunction.condOpt(bConc) { case Const(i: Int) => i }
+//    val dConst = dConc.collect { case Const(i: Int) => i }.toArray
+//    val rConst = rConc.collect { case Const(i: Int) => i }.toArray
+//    val bConst = PartialFunction.condOpt(bConc) { case Const(i: Int) => i }
 
-    val energy = if (false && dConst.length == dConc.size && rConst.length == rConc.size && bConst.isDefined) {
-      logger.warn("Cumulative Energy enabled")
-      new CumulativeEnergy2(svars, rConst, dConst, bConst.get)
-    } else {
+    val energy =
       new CumulativeEnergy(svars, dVars, rVars, bVar)
-    }
+
 
     Seq(profile, energy)
 

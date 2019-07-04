@@ -1,13 +1,16 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, Functions}
+import cspom.compiler.ConstraintCompiler._
+import cspom.compiler.{ConstraintCompilerNoData, Delta, Functions}
 import cspom.extension.MDDRelation
 import cspom.util.{Infinitable, IntInterval, RangeSet}
 import cspom.variable.IntExpression
+import cspom.variable.IntExpression.implicits.iterable
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd.MDD
-import ConstraintCompiler._
+
+import scala.util.{Failure, Try}
 
 object Pow extends ConstraintCompilerNoData {
 
@@ -22,13 +25,15 @@ object Pow extends ConstraintCompilerNoData {
 
     val Seq(x, y, r) = args
 
-    import IntExpression.implicits.iterable
-
-    val mdd = try {
-      pow(x.toSeq, y.toSeq, r.r)
-    } catch {
-      case e: ArithmeticException => throw new IllegalStateException(s"Could not handle $r = $x ^ $y", e)
+    val mdd = Try {
+      pow(iterable(x).toSeq, iterable(y).toSeq, iterable(r).r)
     }
+      .recoverWith {
+        case e: ArithmeticException =>
+          Failure(new IllegalStateException(s"Could not handle $r = $x ^ $y", e))
+      }
+      .get
+      .reduce()
 
     //    println(constraint)
     //    println(mdd)
@@ -43,26 +48,21 @@ object Pow extends ConstraintCompilerNoData {
     replaceCtr(constraint, args in new MDDRelation(mdd), problem) ++ replace(r, reduceDomain(r, rDom), problem)
   }
 
-  def pow(xs: Seq[Int], ys: Seq[Int], rSpan: RangeSet[Infinitable]): MDD = {
+  private def pow(xs: Seq[Int], ys: Seq[Int], rSpan: RangeSet[Infinitable]): MDD = {
     val lb = rSpan.span.lb
     val ub = rSpan.span.ub
 
     val trie = xs.map { x =>
       val xb = BigInt(x)
 
-      val trie = ys.flatMap { y =>
-        val rb = xb.pow(y)
-        if (lb <= rb && ub >= rb) {
-          if (rb.isValidInt) {
-            Some(y -> MDD(Array(rb.intValue)))
-          } else {
-            throw new ArithmeticException(s"$rb: integer overflow")
-          }
-        } else {
-          None
-        }
+      val trie = for {
+        y <- ys
+        if y >= 0
+        rb = xb.pow(y)
+        if lb <= rb && ub >= rb
+      } yield {
+        y -> MDD(Array(cspom.util.Math.toIntExact(rb)))
       }
-
 
       x -> MDD.fromTrie(trie)
     }

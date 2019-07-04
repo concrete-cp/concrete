@@ -38,8 +38,6 @@ object Constraint {
 }
 
 trait StatefulConstraint[+State <: AnyRef] extends Constraint {
-  override def init(ps: ProblemState): Outcome
-
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
 
   def data(ps: ProblemState): State = ps(this)

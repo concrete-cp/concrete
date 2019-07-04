@@ -49,6 +49,8 @@ object Regular extends ConstraintCompilerNoData {
       f.map(any2Int).toSet,
       dfa).reduce()
 
+    logger.info(s"MDD $regular was generated for constraint ${constraint.toString(problem.displayName)}")
+
     if (regular.isEmpty) {
       logger.warn(s"MDD $regular is empty for constraint ${constraint.toString(problem.displayName)}")
     }

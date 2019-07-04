@@ -1,13 +1,29 @@
 package concrete.constraint
 
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
 import concrete._
+import org.scalatest.{Inspectors, Matchers}
 
 /**
   * @author vion
   */
 object ConstraintComparator extends Matchers with Inspectors {
+
+  def checkContradiction(c: Constraint): Unit = {
+    val problem = new Problem(c.scope)
+    problem.addConstraint(c)
+    val ac = new AdviseCount
+    c match {
+      case c: Advisable => c.register(ac)
+      case _ => ()
+    }
+
+    problem.initState.andThen { ps =>
+      c.eventAll(ps, Assignment)
+      c.revise(ps)
+    } shouldBe a [Contradiction]
+
+
+  }
 
   def compare(vars: Array[Variable], c1: Constraint, c2: Constraint): Unit = {
     val problem = new Problem(vars)

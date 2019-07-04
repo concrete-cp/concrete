@@ -11,7 +11,7 @@ import concrete.util.DirectedGraph
   * @param scope
   */
 final class FZSubcircuit(scope: Array[Variable]) extends Constraint(scope) {
-  private val diGraph = new DirectedGraph(arity)
+ //  private val diGraph = new DirectedGraph(arity)
   var card: Int = _
 
   override def revise(ps: ProblemState, modified: BitVector): Outcome = {
@@ -49,15 +49,15 @@ final class FZSubcircuit(scope: Array[Variable]) extends Constraint(scope) {
 
   def findMandatoryCycles(diGraph: DirectedGraph, scc: Array[Int]): Set[Int] = {
     Iterator.range(0, arity)
-      .filterNot(i => diGraph.successors(i).contains(i))
+      .filterNot(i => diGraph.succ(i).contains(i))
       .map(scc(_))
       .toSet
   }
 
   def buildGraph(ps: ProblemState): DirectedGraph = {
-    diGraph.clear()
+    var diGraph = new DirectedGraph() //.clear()
     for (p <- 0 until arity; v <- ps.dom(scope(p))) {
-      diGraph.addArc(p, v - 1)
+      diGraph = diGraph.addEdge(p, v - 1)
     }
     diGraph
   }

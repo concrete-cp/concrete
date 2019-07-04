@@ -44,27 +44,25 @@ class Member(variable: Variable, set: Array[Variable]) extends Constraint(variab
   /** residues(i) = j if scope(j) supports value i */
   private val residues = new IntIntMap(variable.initDomain.size)
 
-  /** watched(i) contains j if scope(i) supports value j */
-  // private val watched = new mutable.HashMap[Int, mutable.Set[Int]]() with mutable.MultiMap[Int, Int]
-
   def advise(problemState: ProblemState, event: Event, position: Int): Int = {
     arity
   }
 
   def check(tuple: Array[Int]): Boolean = {
-    tuple.tail.contains(tuple(0))
+    val h = tuple.head
+    tuple.view.tail.exists(_ == h)
   }
 
   def init(ps: ProblemState): Outcome = ps
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     def findNewSupport(i: Int) = {
-      (1 until arity).find(j => ps.dom(scope(j)).contains(i))
+      set.indices.find(j => ps.dom(set(j)).contains(i))
     }
 
     val r = ps.filterDom(variable) { i =>
       val validResidue = residues.get(i)
-        .exists(w => ps.dom(scope(w)).contains(i))
+        .exists(w => ps.dom(set(w)).contains(i))
 
       validResidue || {
         val s = findNewSupport(i)
@@ -79,22 +77,29 @@ class Member(variable: Variable, set: Array[Variable]) extends Constraint(variab
 
         // only one variable has an intersection with the result
         // => it is equal to the result.
-        val find = Iterator.range(1, arity).filterNot(i => ps.dom(scope(i)).disjoint(dom))
+        val find = set.iterator.filterNot(v => ps.dom(v).disjoint(dom))
+
         assert(find.hasNext)
         val first = find.next()
         if (find.hasNext) {
           ps
         } else {
-          ps.intersectDom(scope(first), dom)
+          ps.intersectDom(first, dom)
         }
 
       }
       .entailIf(this, { ps =>
-        val dom = ps.dom(variable)
-        dom.isAssigned && (1 until arity).exists { i =>
-          val d = ps.dom(scope(i))
-          d.isAssigned && dom.head == d.head
-        }
+        val sure = set.iterator.flatMap { v =>
+            val d = ps.dom(v)
+            if (d.isAssigned) {
+              Iterator(d.head)
+            } else {
+              Iterator.empty
+            }
+          }
+          .toSet
+
+        ps.dom(variable).subsetOf(sure)
       })
 
     r
