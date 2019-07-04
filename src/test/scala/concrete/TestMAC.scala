@@ -4,16 +4,16 @@ import concrete.constraint.linear.Eq
 import concrete.constraint.semantic.AllDifferentAC
 import concrete.heuristic.value.MedValue
 import cspom.StatisticsManager
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers, Tag}
 
 class TestMAC extends FlatSpec with Matchers {
 
-  val sols: List[(Int, Int)] = List(
-    4 -> 2,
-    8 -> 92,
-    9 -> 352,
-    10 -> 724,
-    12 -> 14200
+  val sols: List[(Int, Int, Option[Tag])] = List(
+    (4, 2, None),
+    (8, 92, None),
+    (9, 352, Some(SlowTest)),
+    (10, 724, Some(SlowTest)),
+    (12, 14200, Some(SlowTest)),
     //13 -> 73712 //,
     // 14 -> 365596)
   )
@@ -58,8 +58,8 @@ class TestMAC extends FlatSpec with Matchers {
 
   behavior of "MAC"
 
-  for ((size, nb) <- sols) {
-    it should s"solve queens-$size" taggedAs SlowTest in {
+  for ((size, nb, tag) <- sols) {
+    it should s"solve queens-$size" taggedAs tag.getOrElse(Tag("normal")) in {
       val problem = qp(size)
 
       val solver = MAC(problem, problem.variables, pm).get
@@ -74,7 +74,7 @@ class TestMAC extends FlatSpec with Matchers {
   def view(queens: Seq[Variable], solution: Map[String, Int]): String =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")
 
-  it should s"solve queens-$qs quickly" in {
+  it should s"solve queens-$qs quickly" taggedAs SlowTest in {
     val problem = qp(qs)
 
     val solver = MAC(problem, problem.variables, pm).get
