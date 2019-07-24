@@ -7,24 +7,24 @@ import Linear.minTimes
 import bitvectors.BitVector
 import concrete.util.Interval
 
+import scala.collection.immutable.IntMap
+
 object IncrementalBoundPropagation {
   sealed trait POutcome
   case object PContradiction extends POutcome
-  case class PFiltered(changed: BitVector, entailed: Boolean, f: Interval, vars: BitVector, max: Int) extends POutcome
+  case class PFiltered(updDomains: IntMap[Domain], entailed: Boolean, f: Interval, vars: BitVector, max: Int) extends POutcome
 }
 
-trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[Domain], Interval, BitVector, Int)] {
+trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(ProblemState, Interval, BitVector, Int)] {
   import IncrementalBoundPropagation._
 
   def is: Array[Int]
 
-  protected def updateF(ps: ProblemState, mod: Iterable[Int]): (Array[Domain], Interval, BitVector, Int) = {
+  protected def updateF(ps: ProblemState, mod: Iterable[Int]): (Interval, BitVector, Int) = {
     /*
      *  TODO: reinvestigate the detection of modified bounds (was disabled for reification but may still be interesting)
      */
-    val (doms, f, vars, maxI) = ps(this)
-
-    val newDoms = doms.clone
+    val (lastPS, f, vars, maxI) = ps(this)
 
     var newF = f
     var newVars = vars
@@ -32,21 +32,19 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
     for (p <- mod) {
       val nd = ps.dom(scope(p))
 
-      newDoms(p) = nd
-
-      val oldspan = doms(p).span
+      val oldspan = lastPS.span(scope(p))
       val newspan = nd.span
 
       val factor = factors(p)
 
       newF = newF.shrink(oldspan * factor) + (newspan * factor)
 
-      if (nd.size == 1) {
+      if (nd.isAssigned) {
         newVars -= p
       }
     }
 
-    (newDoms, newF, newVars, maxI)
+    (newF, newVars, maxI)
 
   }
 
@@ -58,44 +56,38 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
     //proceed(ps, doms, f, vars, maxI)
     // println(s"$mode, arity $arity, $f")
-    ps.updateState(this, (doms, f, vars, maxI))
+    ps.updateState(this, (ps, f, vars, maxI))
   }
 
-  protected def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int): Outcome
-
-  def realMax(i: Int, doms: Array[Domain], factors: Array[Int], vars: BitVector, max: Int): Int = {
-    if (i < 0) max else
-      math.max(max, is(i))
-  }
+  protected def proceed(ps: ProblemState, doms: IntMap[Domain], f: Interval, vars: BitVector, max: Int): Outcome
 
   @annotation.tailrec
   final def processUB(
     i: Int,
     vars: BitVector,
-    doms: Array[Domain],
+    doms: IntMap[Domain],
     f: Interval,
     factors: Array[Int],
     ps: ProblemState,
-    hasChanged: BitVector = BitVector.empty,
     max: Int = 0): POutcome = {
 
     if (f.ub <= 0) {
       /* Entailed */
       val rm = if (i < 0) max else math.max(max, is(i))
       //require(i < 0 || rm <= is(i))
-      PFiltered(hasChanged, entailed = true, f, vars, rm)
+      PFiltered(doms, entailed = true, f, vars, rm)
       //if (i < 0) max else math.max(max, is(i)))
     } else if (f.lb > 0) {
       PContradiction
     } else if (i < 0) {
-      PFiltered(hasChanged, entailed = false, f, vars, max)
+      PFiltered(doms, entailed = false, f, vars, max)
     } else if (is(i) <= -f.lb) {
       /* Short-circuit */
       val rm = math.max(max, is(i))
       //require(rm <= is(i), (max, rm, doms.toSeq, factors.toSeq, is.toSeq))
-      PFiltered(hasChanged, entailed = false, f, vars, rm)
+      PFiltered(doms, entailed = false, f, vars, rm)
     } else {
-      val dom = doms(i)
+      val dom = doms.getOrElse(i, ps.dom(scope(i)))
 
       val fact = factors(i)
 
@@ -103,7 +95,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
       if (size <= -f.lb) {
         processUB(vars.nextSetBit(i + 1), vars, doms, f,
-          factors, ps, hasChanged, math.max(max, size))
+          factors, ps, math.max(max, size))
       } else {
 
         val thisBounds = f.lb - minTimes(dom, fact)
@@ -113,13 +105,13 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
         val newMax = math.max(max, this.size(newDom, fact))
 
-        doms(i) = newDom //val newDoms = doms.updated(i, newDom)
+        val newDoms = doms.updated(i, newDom) //val newDoms = doms.updated(i, newDom)
         val newF = Interval(thisBounds, f.ub - maxTimes(dom, fact)) + newDom.span * fact
         if (newDom.isAssigned) {
           val newVars = vars - i
-          processUB(newVars.nextSetBit(i + 1), newVars, doms, newF, factors, ps, hasChanged + i, newMax)
+          processUB(newVars.nextSetBit(i + 1), newVars, newDoms, newF, factors, ps, newMax)
         } else {
-          processUB(vars.nextSetBit(i + 1), vars, doms, newF, factors, ps, hasChanged + i, newMax)
+          processUB(vars.nextSetBit(i + 1), vars, newDoms, newF, factors, ps, newMax)
         }
       }
 

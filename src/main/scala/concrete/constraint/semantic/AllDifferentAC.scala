@@ -49,7 +49,7 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
 
     val digraph = arcs.foldLeft(new DirectedGraph()) { case (dg, (i, j)) => dg.addEdge(i, j) }
 
-    updateState(ps, digraph)
+    ps.updateState(this, digraph)
   }
 
   override def simpleEvaluation: Int = 3
@@ -125,7 +125,7 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
       //        }
     }
 
-    updateState(ps, digraph).andThen { ps =>
+    ps.updateState(this, digraph).andThen { ps =>
       for (i <- 0 until n; mate <- matching(i)) {
         if (ps.dom(scope(i)).contains(revMap(mate))) {
           digraph = digraph.removeEdge(i, mate).addEdge(mate, i)

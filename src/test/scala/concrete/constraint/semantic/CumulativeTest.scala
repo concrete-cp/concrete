@@ -1,15 +1,11 @@
 package concrete.constraint.semantic
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import concrete.IntDomain
-import concrete.Variable
-import concrete.Singleton
+import concrete.constraint.{AdviseCount, Constraint, Residues, TupleEnumerator}
+import concrete.{IntDomain, Problem, Singleton, Variable}
+import org.scalatest.{FlatSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.util.Random
-import concrete.Problem
-import concrete.constraint.AdviseCount
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class CumulativeTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
   "cumulative" should "build profile" in {
@@ -75,9 +71,9 @@ class CumulativeTest extends FlatSpec with Matchers with ScalaCheckPropertyCheck
 
     val bound = new Variable("bound", Singleton(1))
 
-    // -> Cumulative(start = [[11], [13], [12], {2, 3, 4, 5, [12...], 19}, [11], [13], [20], {4, 5, 6, 7, [11...], 20}, [0], [20], [19], [13, 18], [0], [0], [0], [0], [12], [0], [0], [0], [0], [0], [0], [0], [0]], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f]], bound = true)
+    // -> Cumulative(start = 11, 13, 12, {2, 3, 4, 5, [12...], 19}, 11, 13, 20, {4, 5, 6, 7, [11...], 20}, 0, 20, 19, [13, 18], 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], bound = true)
     // was revised (
-    // -> Cumulative(start = [[11], [13], [12], {2, 3, 4, 5, [12...], 19}, [11], [13], [20], {4, 5, 6, 7, [11...], 20}, [0], [20], [19], [14, 18], [0], [0], [0], [0], [12], [0], [0], [0], [0], [0], [0], [0], [0]], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f]], bound = true))
+    // -> Cumulative(start = 11, 13, 12, {2, 3, 4, 5, [12...], 19}, 11, 13, 20, {4, 5, 6, 7, [11...], 20}, 0, 20, 19, [14, 18], 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], bound = true))
 
     val problem = new Problem(starts ++ dur ++ res :+ bound)
     val cumulative = new Cumulative(starts, dur, res, bound)
@@ -86,10 +82,10 @@ class CumulativeTest extends FlatSpec with Matchers with ScalaCheckPropertyCheck
     cumulative.register(new AdviseCount)
 
     val mod = problem.initState
-       .andThen { ps =>
-         cumulative.eventAll(ps)
-         cumulative.revise(ps) //.andThen(cumulative.revise)
-       }
+      .andThen { ps =>
+        cumulative.eventAll(ps)
+        cumulative.revise(ps) //.andThen(cumulative.revise)
+      }
 
     mod.dom(starts(4)).head shouldBe 14
     mod.dom(starts(4)).last shouldBe 18
@@ -114,9 +110,9 @@ class CumulativeTest extends FlatSpec with Matchers with ScalaCheckPropertyCheck
 
     val bound = new Variable("bound", IntDomain(888 to 991))
 
-    // -> Cumulative(start = [[11], [13], [12], {2, 3, 4, 5, [12...], 19}, [11], [13], [20], {4, 5, 6, 7, [11...], 20}, [0], [20], [19], [13, 18], [0], [0], [0], [0], [12], [0], [0], [0], [0], [0], [0], [0], [0]], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f]], bound = true)
+    // -> Cumulative(start = 11, 13, 12, {2, 3, 4, 5, [12...], 19}, 11, 13, 20, {4, 5, 6, 7, [11...], 20}, 0, 20, 19, [13, 18], 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], bound = true)
     // was revised (
-    // -> Cumulative(start = [[11], [13], [12], {2, 3, 4, 5, [12...], 19}, [11], [13], [20], {4, 5, 6, 7, [11...], 20}, [0], [20], [19], [14, 18], [0], [0], [0], [0], [12], [0], [0], [0], [0], [0], [0], [0], [0]], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f]], bound = true))
+    // -> Cumulative(start = 11, 13, 12, {2, 3, 4, 5, [12...], 19}, 11, 13, 20, {4, 5, 6, 7, [11...], 20}, 0, 20, 19, [14, 18], 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0], dur = [[t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t], [t]], res = [[f], [t], [f], [f], [t], [f], [f], [t], [f], [f], [t], [t], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], [f], bound = true))
 
     val problem = new Problem(starts ++ dur ++ res :+ bound)
     val cumulative = new Cumulative(starts, dur, res, bound)
@@ -129,6 +125,50 @@ class CumulativeTest extends FlatSpec with Matchers with ScalaCheckPropertyCheck
       cumulative.revise(ps)
     }
     mod.dom(bound).head shouldBe 975
+  }
+
+  it should "filter resource bound" in {
+    val starts = Array(0, 2591, 799, 686, 1104, 0, 1634, 1636, 1936)
+      .zipWithIndex
+      .map { case (d, i) => new Variable(s"s$i", Singleton(d)) }
+
+    val dur = Array(799, 90, 239, 58, 530, 60, 2, 300, 655)
+      .zipWithIndex
+      .map { case (d, i) => new Variable(s"d$i", Singleton(d)) }
+
+    val res = Array(1, 1, 1, Seq(0, 1), 1, Seq(0, 1), Seq(0, 1), 1, 1)
+      .map {
+        case i: Int => Singleton(i)
+        case r: Seq[Int] => IntDomain.ofSeq(r: _*)
+      }
+      .zipWithIndex
+      .map { case (d, i) => new Variable(s"r$i", d) }
+
+    val bound = new Variable(s"b", Singleton(1))
+
+    val problem = new Problem(starts ++ dur ++ res :+ bound)
+    val cumulative = new Cumulative(starts, dur, res, bound)
+
+//    val ref = new Constraint(starts ++ dur ++ res :+ bound) with Residues with TupleEnumerator with CumulativeChecker {
+//      override def nbTasks: Int = starts.length
+//    }
+
+    val test = cumulative
+
+    problem.addConstraint(test)
+    test.register(new AdviseCount)
+
+    val mod = problem.initState.andThen { ps =>
+      test.eventAll(ps)
+      test.revise(ps)
+    }
+      .andThen { mod =>
+        mod
+      }
+
+    mod.dom(res(3)) shouldBe Singleton(0)
+    mod.dom(res(5)) shouldBe Singleton(0)
+    mod.dom(res(6)) shouldBe res(6).initDomain
   }
 
 }

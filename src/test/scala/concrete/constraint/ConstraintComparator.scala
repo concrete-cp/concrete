@@ -47,7 +47,7 @@ object ConstraintComparator extends Matchers with Inspectors {
       (r1, r2) match {
         case (_: Contradiction, _: Contradiction) =>
         case (s1: ProblemState, s2: ProblemState) =>
-          forAll(s1.domains.zip(s2.domains)) { case (d1: Domain, d2: Domain) =>
+          forAll(s1.currentDomains.zip(s2.currentDomains).toSeq) { case (d1: Domain, d2: Domain) =>
             d1 should contain theSameElementsAs d2
           }
           assert(!s2.entailed.hasInactiveVar(c2) || s1.entailed.hasInactiveVar(c1))
@@ -80,7 +80,7 @@ object ConstraintComparator extends Matchers with Inspectors {
       (r1, r2) match {
         case (_, _: Contradiction) =>
         case (s1: ProblemState, s2: ProblemState) =>
-          forAll(s1.domains.zip(s2.domains)) { case (d1: Domain, d2: Domain) =>
+          forAll(s1.currentDomains.zip(s2.currentDomains).toSeq) { case (d1: Domain, d2: Domain) =>
             d1 should contain allElementsOf d2
           }
           assert(!s2.entailed.hasInactiveVar(c2) || s1.entailed.hasInactiveVar(c1))

@@ -15,7 +15,7 @@ abstract class ScoredVariableHeuristic extends VariableHeuristic with LazyLoggin
     var bs = Double.NegativeInfinity
     val candidates = new ArrayBuffer[Variable]()
 
-    for (current <- i if poolSet(current.id)) {
+    for (current <- i) if (poolSet(current.id)) {
       val s = score(current, state.dom(current), state)
       if (s >= bs) {
         if (s > bs) {

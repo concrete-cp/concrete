@@ -20,6 +20,8 @@
 package concrete
 package constraint
 
+import java.util
+
 import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.heuristic.Weighted
@@ -28,7 +30,6 @@ import concrete.priorityqueues.{DLNode, Identified, PTag}
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import java.util
 
 object Constraint {
   val UNARY = 1
@@ -41,8 +42,6 @@ trait StatefulConstraint[+State <: AnyRef] extends Constraint {
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
 
   def data(ps: ProblemState): State = ps(this)
-
-  def updateState[S >: State <: AnyRef](ps: ProblemState, value: S): ProblemState = ps.updateState(this, value)
 }
 
 abstract class Constraint(val scope: Array[Variable])
@@ -50,6 +49,15 @@ abstract class Constraint(val scope: Array[Variable])
 
   require(scope.nonEmpty)
 
+  private lazy val controlConstraint = {
+    val ctr = new Constraint(scope) with Residues with TupleEnumerator {
+      /**
+        * @return true iff the constraint is satisfied by the given tuple
+        */
+      override def check(tuple: Array[Int]): Boolean = Constraint.this.check(tuple)
+    }
+    ctr.register(advise)
+  }
   /**
     * @return a map containing the positions of variables in the scope of the constraint.
     */
@@ -64,17 +72,9 @@ abstract class Constraint(val scope: Array[Variable])
 
   }
   val positionInVariable: Array[Int] = Array.fill(arity)(-1)
-
   private var modified: util.BitSet = _
-
   private var timestamp = -1
-
   private var _id: Int = -1
-
-  override def register(ac: AdviseCount): this.type = {
-    modified = new util.BitSet(arity)
-    super.register(ac)
-  }
 
   def revise(problemState: ProblemState, modified: BitVector): Outcome
 
@@ -88,37 +88,6 @@ abstract class Constraint(val scope: Array[Variable])
       case c: Contradiction => c
     }
   }
-
-  final def revise(problemState: ProblemState): Outcome = {
-    val modResult = clearMod()
-    if (modResult.isEmpty) {
-      logger.info(s"${this.toString(problemState)}: asked revision but modified is empty")
-      problemState
-    } else {
-      revise(problemState, modResult).dueTo((this, modVars(modResult)))
-    }
-  }
-
-  def clearMod(): BitVector = {
-    val result = BitVector(modified)
-    modified.clear() //= BitVector.empty // Arrays.fill(removals, -1)
-    result
-  }
-
-  /**
-    * arity is the number of variables involved by the constraint
-    */
-  def arity: Int = scope.length
-
-  protected def modVars(modified: BitVector): Iterable[Variable] = modified.view.map(scope)
-
-  def toString(problemState: ProblemState) = s"${this.getClass.getSimpleName}${
-    scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
-  }"
-
-//  if (logger.underlying.isWarnEnabled && !scope.distinct.sameElements(scope)) {
-//    logger.warn(s"$this has duplicates in its scope")
-//  }
 
   def skip(modified: BitVector): Int = {
     val head = modified.nextSetBit(0)
@@ -142,9 +111,14 @@ abstract class Constraint(val scope: Array[Variable])
 
   def id: Int = _id
 
+  //  if (logger.underlying.isWarnEnabled && !scope.distinct.sameElements(scope)) {
+  //    logger.warn(s"$this has duplicates in its scope")
+  //  }
+
   override def hashCode: Int = id
 
-  @tailrec @inline
+  @tailrec
+  @inline
   final def ctp(doms: Array[Domain], tuple: Array[Int], i: Int = arity - 1): Boolean = {
     /* Need high optimization */
     i < 0 || (doms(i).contains(tuple(i)) && ctp(doms, tuple, i - 1))
@@ -179,6 +153,12 @@ abstract class Constraint(val scope: Array[Variable])
       modified.set(pos)
     }
     eval
+  }
+
+  def clearMod(): BitVector = {
+    val result = BitVector(modified)
+    modified.clear() //= BitVector.empty // Arrays.fill(removals, -1)
+    result
   }
 
   def init(ps: ProblemState): Outcome // = ps
@@ -279,6 +259,49 @@ abstract class Constraint(val scope: Array[Variable])
     }
   }
 
+  def controlAssignment(problemState: ProblemState): Boolean = {
+    !scope.forall(problemState.dom(_).isAssigned) || check(scope.map(problemState.dom(_).singleValue))
+  }
+
+  def controlRevisionDeep(ps: ProblemState): Boolean = {
+    logger.info(s"Controlling ${this.toString(ps)}")
+    val ctr = controlConstraint
+    val adv = ctr.eventAll(ps, alwaysMod = true)
+    ctr.revise(ps) match {
+      case Contradiction(cause, from, to) =>
+        logger.error(s"${toString(ps)} is not consistent, $cause ($from) lead to $to")
+        false
+      case finalState: ProblemState =>
+        if (!scope.forall(v => ps.dom(v) eq finalState.dom(v))) {
+          logger.error(s"${toString(ps)}} was revised (-> ${
+            diff(ps, finalState).map { case (v, (_, a)) => s"$v <- $a" }.mkString(", ")
+          })")
+          false
+        } else if (!(adv < 0 || ps.entailed.hasInactiveVar(this) == finalState.entailed.hasInactiveVar(this))) {
+          logger.error(s"${toString(ps)}: entailment detected")
+          false
+        } else {
+          true
+        }
+    }
+  }
+
+  final def revise(problemState: ProblemState): Outcome = {
+    val modResult = clearMod()
+    if (modResult.isEmpty) {
+      logger.info(s"${this.toString(problemState)}: asked revision but modified is empty")
+      problemState
+    } else {
+      revise(problemState, modResult).dueTo((this, modVars(modResult)))
+    }
+  }
+
+  protected def modVars(modified: BitVector): Iterable[Variable] = modified.view.map(scope)
+
+  def toString(problemState: ProblemState) = s"${this.getClass.getSimpleName}${
+    scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
+  }"
+
   final def eventAll(problemState: ProblemState, event: Event = Assignment, alwaysMod: Boolean = false): Int = {
     var max = Int.MinValue
     var i = arity - 1
@@ -289,19 +312,25 @@ abstract class Constraint(val scope: Array[Variable])
     max
   }
 
-  def controlAssignment(problemState: ProblemState): Boolean = {
-    !scope.forall(problemState.dom(_).isAssigned) || check(scope.map(problemState.dom(_).singleValue))
-  }
-
-  override def incrementWeight(): Unit = {
-    super.incrementWeight()
-    for (v <- scope) v.incrementWeight()
-  }
-
   def diff(ps1: ProblemState, ps2: ProblemState): Seq[(Variable, (Domain, Domain))] = {
     for (v <- scope.toSeq if ps1.dom(v) ne ps2.dom(v)) yield {
       v -> ((ps1.dom(v), ps2.dom(v)))
     }
+  }
+
+  override def register(ac: AdviseCount): this.type = {
+    modified = new util.BitSet(arity)
+    super.register(ac)
+  }
+
+  /**
+    * arity is the number of variables involved by the constraint
+    */
+  def arity: Int = scope.length
+
+  override def incrementWeight(): Unit = {
+    super.incrementWeight()
+    for (v <- scope) v.incrementWeight()
   }
 
   protected def advise(problemState: ProblemState, event: Event, pos: Int): Int

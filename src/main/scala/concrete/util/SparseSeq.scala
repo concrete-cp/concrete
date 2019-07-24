@@ -3,7 +3,9 @@ package concrete.util
 import scala.collection.mutable.ArrayBuffer
 
 object SparseSeq {
-  def apply[A](a: A*) = new SparseSeq(new ArrayBuffer[A]().addAll(a), a.length)
+  def apply[A](a: A*): SparseSeq[A] = SparseSeq(ArrayBuffer(a:_*))
+
+  def apply[A](a: ArrayBuffer[A]): SparseSeq[A] = new SparseSeq(a, a.length)
 }
 
 class SparseSeq[A](

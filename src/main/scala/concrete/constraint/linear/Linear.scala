@@ -1,10 +1,10 @@
 package concrete.constraint.linear
 
-import bitvectors.BitVector
 import concrete._
 import concrete.constraint.Constraint
 import concrete.constraint.linear.SumMode._
 
+import scala.collection.immutable.IntMap
 import scala.util.Try
 
 object Linear {
@@ -91,12 +91,10 @@ abstract class Linear(
     math.abs(factor) * (dom.last - dom.head)
   }
 
-  protected def filter(changed: BitVector, doms: Array[Domain], ps: ProblemState): Outcome = {
+  protected def filter(doms: IntMap[Domain], ps: ProblemState): Outcome = {
     var filtered = ps
-    var i = changed.nextSetBit(0)
-    while (i >= 0) {
-      filtered = filtered.updateDomNonEmpty(scope(i), doms(i))
-      i = changed.nextSetBit(i + 1)
+    for ((i, d) <- doms) {
+      filtered = filtered.updateDomNonEmpty(scope(i), d)
     }
     filtered
   }

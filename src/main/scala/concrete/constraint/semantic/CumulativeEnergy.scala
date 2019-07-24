@@ -88,4 +88,6 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
 
   def simpleEvaluation: Int = 3
 
+
+
 }

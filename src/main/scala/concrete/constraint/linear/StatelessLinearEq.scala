@@ -6,6 +6,8 @@ import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.util.Interval
 
+import scala.collection.immutable.IntMap
+
 object StatelessLinearEq {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable]): StatelessLinearEq = {
     val (sf, ss, si) = Linear.sortIntervals(factors, scope)
@@ -31,22 +33,22 @@ final class StatelessLinearEq(
   }
 
   @annotation.tailrec
-  def altRevise(ps: ProblemState, changed: BitVector, f: Interval, neg: Boolean, looping: Boolean, max: Int): Outcome = {
+  def altRevise(ps: ProblemState, doms: IntMap[Domain], f: Interval, neg: Boolean, looping: Boolean, max: Int): Outcome = {
     if (max <= -f.lb) {
       if (looping) {
-        filter(changed, doms, ps)
+        filter(doms, ps)
       } else {
-        altRevise(ps, changed, -f, !neg, looping = true, max)
+        altRevise(ps, doms, -f, !neg, looping = true, max)
       }
     } else {
-      processUB(0, f, if (neg) negFactors else factors, ps) match {
+      processUB(doms, 0, f, if (neg) negFactors else factors, ps) match {
         case PContradiction => Contradiction(scope)
-        case PFiltered(newChanged, _, newF) =>
-          require(newF != f || newChanged.isEmpty)
-          if (newChanged.isEmpty && looping) {
-            filter(changed, doms, ps)
+        case PFiltered(newDoms, _, newF) =>
+          require(newF != f || (newDoms eq doms), s"$newF, $f, ${ps.doms(scope).toSeq}, $doms, $newDoms")
+          if ((newDoms eq doms) && looping) {
+            filter(newDoms, ps)
           } else {
-            altRevise(ps, newChanged | changed, -newF, !neg, looping = true, max)
+            altRevise(ps, newDoms, -newF, !neg, looping = true, max)
           }
       }
     }
@@ -56,7 +58,7 @@ final class StatelessLinearEq(
   override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val (f, max) = updateF(ps)
 
-    altRevise(ps, BitVector.empty, f, neg = false, looping = false, max)
+    altRevise(ps, IntMap(), f, neg = false, looping = false, max)
   }
 
   override def toString: String = toString("=BC=")

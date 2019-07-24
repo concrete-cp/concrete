@@ -3,19 +3,26 @@ package concrete
 import bitvectors.BitVector
 import concrete.constraint.Constraint
 
+import scala.collection.immutable.IntMap
+
 object EntailmentManager {
-  def apply(variables: Seq[Variable]): EntailmentManager =
+  def apply(variables: Seq[Variable]): EntailmentManager = {
+    val activeConstraints = variables.indices
+      .map(i => i -> BitVector.filled(variables(i).constraints.length))
+      .to(IntMap)
+
     new EntailmentManager(
-      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*),
+      activeConstraints,
       Set(),
-      Vector.fill(variables.length)(0)
+      IntMap()
     )
+  }
 }
 
 final class EntailmentManager(
-                                    val activeConstraints: Vector[BitVector],
+                                    val activeConstraints: IntMap[BitVector],
                                     val entailedReified: Set[Int],
-                                    val wDegsMinus: Vector[Int]) {
+                                    val wDegsMinus: IntMap[Int]) {
 
   def addConstraints(constraints: Iterable[Constraint]): EntailmentManager = {
     var ac = activeConstraints
@@ -31,7 +38,7 @@ final class EntailmentManager(
     new EntailmentManager(ac, entailedReified, wDegsMinus)
   }
 
-  def wDeg(v: Variable): Int = v.weight - wDegsMinus(v.id)
+  def wDeg(v: Variable): Int = v.weight - wDegsMinus.getOrElse(v.id, 0)
 
   def entail(c: Constraint, ps: ProblemState): EntailmentManager = {
 
@@ -54,7 +61,7 @@ final class EntailmentManager(
           return new EntailmentManager(ac, entailedReified + c.id, wd)
         } else if (!ps.dom(v).isAssigned) {
           ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
-          wd = wd.updated(vid, wDegsMinus(vid) + c.weight)
+          wd = wd.updated(vid, wDegsMinus.getOrElse(vid, 0) + c.weight)
         }
 
       }
@@ -78,7 +85,7 @@ final class EntailmentManager(
         new EntailmentManager(
           activeConstraints.updated(vid, activeConstraints(vid) - c.positionInVariable(i)),
           entailedReified,
-          wDegsMinus.updated(vid, wDegsMinus(vid) + c.weight)
+          wDegsMinus.updated(vid, wDegsMinus.getOrElse(vid, 0) + c.weight)
         )
       }
 

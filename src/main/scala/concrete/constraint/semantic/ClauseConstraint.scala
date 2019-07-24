@@ -39,7 +39,7 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     seekEntailment(ps)
       .map { i =>
         assert {
-          watch1 = i;
+          watch1 = i
           watch1 >= 0
         }
         ps.entail(this)

@@ -16,6 +16,7 @@ case class Assign(variable: Variable, value: Int) extends Decision {
 }
 
 case class Remove(variable: Variable, value: Int) extends Decision {
+
   override def toString: String = s"$variable /= $value"
 
   def toString(ps: ProblemState): String = s"${variable.toString(ps)} /= $value"
@@ -23,6 +24,7 @@ case class Remove(variable: Variable, value: Int) extends Decision {
   def apply(ps: ProblemState): (Outcome, Seq[(Variable, Event)]) = {
     val domain = ps.dom(variable)
     val removed = domain - value
+    require(removed.nonEmpty, s"Decision $this emptied the variable")
     (ps.updateDom(variable, removed), Seq((variable, InsideRemoval(domain, removed))))
   }
 }

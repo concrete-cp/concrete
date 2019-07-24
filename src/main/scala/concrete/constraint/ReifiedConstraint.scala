@@ -25,7 +25,7 @@ final class ReifiedConstraint(
         constraint
           .init(ps)
           .andThen { initialized =>
-            assert(initialized.domains == ps.domains, "ReifiedConstraint cannot update domains during init")
+            assert(initialized.sameDomains(ps), "ReifiedConstraint cannot update domains during init")
             if (initialized.entailed.entailedReif(constraint)) {
               setControl(initialized, value = true).entail(this)
             } else {

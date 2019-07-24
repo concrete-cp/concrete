@@ -176,7 +176,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       bc.revise(state)
         .orElse(fail())
         .andThen { ns =>
-          ns.domains shouldBe state.domains
+          assert(ns.sameDomains(state))
           ns.assign(r, 1)
         }
         .andThen { ps =>
@@ -209,7 +209,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       bc.revise(state) match {
         case _: Contradiction => fail()
         case ns: ProblemState =>
-          ns.domains shouldBe state.domains
+          assert(ns.sameDomains(state))
           ns
       }
     }

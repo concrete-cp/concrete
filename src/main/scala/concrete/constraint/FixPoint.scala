@@ -12,7 +12,7 @@ trait FixPoint {
       case c: Contradiction =>
         c
       case ns: ProblemState =>
-        if (ns.domains eq ps.domains) {
+        if (ns.sameDomains(ps)) {
           ns
         } else {
           fixPoint(ns, shave)

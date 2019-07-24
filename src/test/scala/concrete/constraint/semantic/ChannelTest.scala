@@ -20,13 +20,17 @@ class ChannelTest extends FlatSpec with Matchers with Inspectors {
 
     val solv = Solver(prob).get
 
-    forAll(solv.toTraversable) { s: Map[Variable, Any] =>
+    var countSol = 0
+
+    forAll(solv.to(Iterable)) { s: Map[Variable, Any] =>
+      countSol += 1
       forAll(2 until 6) { p: Int =>
         val i = s(x(p - 2)).asInstanceOf[Int]
         s(x(i - 2)) shouldBe p
       }
     }
 
+    countSol shouldBe 10
 
   }
 

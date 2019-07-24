@@ -5,6 +5,8 @@ package linear
 import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.collection.immutable.IntMap
+
 object StatelessLinearLe {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager): StatelessLinearLe = {
     val actualConstant = if (strict) constant - 1 else constant
@@ -36,10 +38,10 @@ final class StatelessLinearLe(
     } else if (max <= -f.lb) {
       ps
     } else {
-      processUB(0, f, factors, ps) match {
+      processUB(IntMap(), 0, f, factors, ps) match {
         case PContradiction => Contradiction(scope)
-        case PFiltered(changed, entailed, newF) =>
-          val out = filter(changed, doms, ps)
+        case PFiltered(doms, entailed, newF) =>
+          val out = filter(doms, ps)
           if (entailed) {
             out.entail(this)
           } else {

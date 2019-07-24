@@ -8,7 +8,7 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.11"
+version := "3.12"
 
 scalaVersion := "2.13.0"
 
@@ -27,7 +27,7 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.8" % "test",
   "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
   "com.github.davidmoten" % "rtree" % "0.8.7",
-  "org.eclipse.collections" % "eclipse-collections" % "9.2.0"
+  "org.eclipse.collections" % "eclipse-collections" % "10.0.0",
 )
 
 scalacOptions ++= Seq(

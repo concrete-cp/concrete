@@ -80,9 +80,9 @@ object SQLWriter {
   }
 
   class Problem(tag: Tag)
-    extends Table[(Int, String, Option[Int], Option[Int], Option[String], Option[String])](
+    extends Table[(Int, String, Option[String], Option[Int], Option[Int], Option[String], Option[String])](
       tag, "Problem") {
-    def * = (problemId, name, nbVars, nbCons, display, nature)
+    def * = (problemId, name, data, nbVars, nbCons, display, nature)
 
     def problemId = column[Int]("problemId", O.PrimaryKey, O.AutoInc)
 
@@ -91,6 +91,8 @@ object SQLWriter {
     def nbCons = column[Option[Int]]("nbCons")
 
     def nature = column[Option[String]]("nature")
+
+    def data = column[Option[String]]("data")
 
     def d = column[Option[Double]]("d")
 
@@ -106,7 +108,7 @@ object SQLWriter {
 
     def bddVertices = column[Option[Double]]("bddVertices")
 
-    def idxName = index("idxName", name, unique = true)
+    def idxND = index("idxND", (name, data), unique = true)
 
     def name = column[String]("name")
 
@@ -122,9 +124,9 @@ object SQLWriter {
 
     def description = column[Option[String]]("description")
 
-    def config = column[String]("config")
-
     def idxMd5 = index("idxConfig", config, unique = true)
+
+    def config = column[String]("config")
   }
 
   //  implicit val localDateToDate: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
@@ -147,13 +149,13 @@ object SQLWriter {
 
     def status = column[String]("status", O.Default("started"))
 
-    def configId = column[Int]("configId")
-
     def version = column[String]("version")
 
     def problemId = column[Int]("problemId")
 
     def iteration = column[Int]("iteration")
+
+    def configId = column[Int]("configId")
 
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
 
@@ -179,18 +181,18 @@ object SQLWriter {
 
     def value = column[Option[String]]("value")
 
-    def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
-
-    def pk = primaryKey("pkS", (name, executionId))
-
     def executionId = column[Int]("executionId")
 
     def name = column[String]("name")
+
+    def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
+
+    def pk = primaryKey("pkS", (name, executionId))
   }
 
 }
 
-final class SQLWriter(params: ParameterManager, problem: String, val stats: StatisticsManager)
+final class SQLWriter(params: ParameterManager, problem: String, data: Option[String], val stats: StatisticsManager)
   extends ConcreteWriter with LazyLogging {
 
   private lazy val db = Database.forConfig("database")
@@ -242,7 +244,10 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
         throw e
     }
 
-  private val problemId: Future[Int] = db.run(problems.filter(_.name === problem).map(_.problemId).result.headOption)
+  private val problemId: Future[Int] = db.run(
+    problems
+      .filter(p => p.name === problem && p.data === data)
+      .map(_.problemId).result.headOption)
     .flatMap {
       case Some(c) => Future.successful(c)
       case None => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += problem)
@@ -337,7 +342,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
   private def config(options: ParameterManager): Future[Int] = {
     val cfg = options.parameters
       .iterator
-      .filter { case (k, _) => k != "iteration" && k != "sql" }
+      .filter { case (k, _) => k != "iteration" && k != "sql" && !k.startsWith("problem.")}
       .map {
         case (k, ()) => s"-$k"
         case (k, v) => s"-$k=$v"

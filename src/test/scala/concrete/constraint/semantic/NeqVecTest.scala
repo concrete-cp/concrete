@@ -61,7 +61,7 @@ final class NeqVecTest extends FlatSpec with Matchers with ScalaCheckPropertyChe
             forAtLeast(1, revised.dom(v).view)(_ != d.head)
           }
         } else {
-          revised.toState.domains shouldBe ps.toState.domains
+          revised.toState.currentDomains.toSeq shouldBe ps.toState.currentDomains.toSeq
         }
       }
 

@@ -17,7 +17,7 @@ class TestMAC extends FlatSpec with Matchers {
     //13 -> 73712 //,
     // 14 -> 365596)
   )
-  val qs = 1100
+  val qs = 200
   private val pm = new ParameterManager().updated("heuristic.value", classOf[MedValue])
 
   def qp(size: Int): Problem = {
@@ -84,7 +84,7 @@ class TestMAC extends FlatSpec with Matchers {
 
 
     assert(solver.nonEmpty)
-    println(stats)
+    // println(stats)
 
   }
 

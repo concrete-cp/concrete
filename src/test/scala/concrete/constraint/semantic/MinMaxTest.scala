@@ -1,10 +1,8 @@
 package concrete.constraint.semantic
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 import concrete._
 import concrete.constraint.AdviseCount
-import org.scalatest.Inspectors
+import org.scalatest.{FlatSpec, Inspectors, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 /**
@@ -188,7 +186,9 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with ScalaCheckP
     constraint.register(new AdviseCount)
     constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
+
     mod shouldBe state
+
 
   }
 

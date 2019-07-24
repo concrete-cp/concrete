@@ -8,6 +8,7 @@ import cspom.UNSATException
 
 import scala.annotation.tailrec
 import scala.collection.immutable
+import scala.collection.immutable.IntMap
 
 sealed trait Outcome {
   def tryAssign(variable: Variable, i: Int): Outcome
@@ -104,9 +105,9 @@ sealed trait Outcome {
 object Contradiction {
   def apply(to: Variable): Contradiction = Contradiction(Seq(to))
 
-  def apply(to: Seq[Variable]): Contradiction = Contradiction(None, Seq.empty, to)
-
   def apply(to: Array[Variable]): Contradiction = Contradiction(immutable.ArraySeq.unsafeWrapArray(to))
+
+  def apply(to: Seq[Variable]): Contradiction = Contradiction(None, Seq.empty, to)
 }
 
 case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq[Variable]) extends Outcome {
@@ -168,13 +169,13 @@ object ProblemState {
 
 
   def apply(problem: Problem, decisionVariables: Set[Variable]): Outcome = {
-    val doms = Vector.from(problem.variables.map(_.initDomain))
+    val doms = problem.variables.zipWithIndex.map { case (x, i) => i -> x.initDomain }
+      .to(IntMap)
     new ProblemState(
-      doms,
-      Vector(),
-      EntailmentManager(problem.variables.toSeq)
+      domains = doms,
+      entailed = EntailmentManager(problem.variables.toSeq)
     )
-      .padConstraints(problem.constraints, problem.maxCId)
+      .padConstraints(problem.constraints)
   }
 
   def isFree(doms: Array[Domain]): Boolean = {
@@ -208,15 +209,23 @@ object ProblemState {
 
 }
 
-case class ProblemState(
-                         domains: scala.collection.immutable.Vector[Domain],
-                         constraintStates: Vector[AnyRef],
-                         entailed: EntailmentManager,
-                         data: IdentityMap[AnyRef, Any]) extends Outcome
+class ProblemState(
+                    private val domains: IntMap[Domain],
+                    private val constraintStates: Map[Int, AnyRef] = Map(),
+                    private val initializedConstraints: Int = 0,
+                    val entailed: EntailmentManager,
+                    val recentUpdates: IntMap[Domain] = IntMap(),
+                    //                    private val pending: IntMap[Domain] = IntMap(),
+                    data: IdentityMap[AnyRef, Any] = new IdentityMap[AnyRef, Any]()) extends Outcome
   with LazyLogging {
 
-  def this(domains: Vector[Domain], constraintStates: Vector[AnyRef], entailed: EntailmentManager)
-  = this(domains, constraintStates, entailed, new IdentityMap[AnyRef, Any]())
+  //  def this(domains: Vector[Domain], constraintStates: Vector[AnyRef], entailed: EntailmentManager)
+  //  = this(domains, constraintStates, entailed, new IdentityMap[AnyRef, Any]())
+
+  def clearRecent: ProblemState = {
+
+    new ProblemState(domains, constraintStates, initializedConstraints, entailed, IntMap(), data)
+  }
 
   def wDeg(v: Variable): Int = entailed.wDeg(v)
 
@@ -233,30 +242,47 @@ case class ProblemState(
 
   def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): ProblemState = {
     val id = c.id
-    if (constraintStates(id) eq newState) {
+    if (constraintStates.get(id).exists(_ eq newState)) {
       this
     } else {
-      new ProblemState(domains, constraintStates.updated(id, newState), entailed, data)
+      new ProblemState(domains, constraintStates.updated(id, newState), initializedConstraints, entailed, recentUpdates, data)
     }
   }
 
-  def padConstraints(constraints: Array[Constraint], lastId: Int): Outcome = {
-    if (constraintStates.length > lastId) {
-      require(lastId < 0 || constraintStates.isDefinedAt(lastId),
-        s"$constraintStates($lastId) is not defined")
 
-      this
-    } else {
-      val padded = constraintStates.padTo(lastId + 1, null)
+  def padConstraints(constraints: Array[Constraint]): Outcome = {
+    val newConstraints = constraints.view.drop(initializedConstraints)
 
-      val newConstraints = constraints.view.filter(_.id >= constraintStates.size)
+    new ProblemState(domains, constraintStates, constraints.length,
+      entailed.addConstraints(newConstraints), recentUpdates, data)
+      .fold(newConstraints)((p, c) => c.init(p))
 
-      newConstraints.foldLeft(
-        ProblemState(domains, padded, entailed.addConstraints(newConstraints), data): Outcome) {
-        case (out, c) => out.andThen(c.init)
-      }
-    }
   }
+
+  //
+  //
+  //  def padConstraints(constraints: Array[Constraint]): Outcome = {
+  //    assert(constraints.sliding(2).forall (array => array(0).id < array(1).id ))
+  //
+  //    new ProblemState(domains, constraintStates, lastId, entailed.addConstraints(newConstraints), recentUpdates, data)
+  //
+  //    constraints.reverseIterator.takeWhile(_.id > initializedConstraints)
+  //
+  //
+  //    var i = constraints.length - 1
+  //    var ps: Outcome = this
+  //    while (constraints(i).id > initializedConstraints) {
+  //      new ProblemState(domains, constraintStates, lastId, entailed.addConstraints(newConstraints), recentUpdates, data)
+  //        .fold(newConstraints)((p, c) => if (!p.hasStateFor(c)) c.init(p))
+  //    }
+  //      //
+  //      //      newConstraints.foldLeft(
+  //      //        new ProblemState(domains, padded, entailed.addConstraints(newConstraints), pending, data): Outcome) {
+  //      //        case (out, c) => out.andThen(c.init)
+  //      //      }
+  //
+  //  }
+
 
   //def isEntailed(c: Constraint): Boolean = entailed(c)
 
@@ -301,6 +327,58 @@ case class ProblemState(
     }
   }
 
+  def updateDom(v: Variable, newDomain: Domain): Outcome = {
+    if (newDomain.isEmpty) {
+      Contradiction(v)
+    } else {
+      updateDomNonEmpty(v, newDomain)
+    }
+  }
+
+  def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState = {
+    assert(newDomain.nonEmpty)
+    val oldDomain = dom(variable)
+    assert(newDomain subsetOf oldDomain, s"replacing $oldDomain with $newDomain: not a subset!")
+    if (oldDomain.size == newDomain.size) {
+      assert(oldDomain.subsetOf(newDomain), s"replacing $oldDomain with $newDomain: same size but not equal")
+      this
+    } else {
+      assert(newDomain.size < oldDomain.size, s"replacing $oldDomain with $newDomain: domain size seems to have increased")
+      // assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain], s"replaced $oldDomain with $newDomain: type changed")
+      //assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain], s"replaced $oldDomain with $newDomain: type changed")
+      updateDomNonEmptyNoCheck(variable, newDomain)
+    }
+  }
+
+  def updateDomNonEmptyNoCheck(variable: Variable, newDomain: Domain): ProblemState = {
+    assert(newDomain.nonEmpty)
+    assert(dom(variable) ne newDomain)
+    val id = variable.id
+    assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")
+    assert(!newDomain.isInstanceOf[BitVectorDomain] || (newDomain.size <= newDomain.last - newDomain.head))
+
+
+    //    if (pending.size >= 64) {
+    //      var sendDomains = domains.updated(id, newDomain)
+    //      for ((id, d) <- pending) {
+    //        sendDomains = sendDomains.updated(id, d)
+    //      }
+    //      new ProblemState(sendDomains, constraintStates, initializedConstraints, entailed, IntMap(), data)
+    //    } else {
+    //      new ProblemState(domains, constraintStates, initializedConstraints, entailed, pending.updated(id, newDomain), data)
+    //    }
+
+    new ProblemState(domains.updated(id, newDomain),
+      constraintStates, initializedConstraints, entailed,
+      recentUpdates.updated(id, newDomain),
+      data)
+  }
+
+  def dom(v: Variable): Domain = {
+    val id = v.id
+    if (id < 0) v.initDomain else dom(id)
+  }
+
   def filterDom(v: Variable)(f: Int => Boolean): Outcome =
     updateDom(v, dom(v).filter(f))
 
@@ -322,41 +400,12 @@ case class ProblemState(
   override def removeAfter(v: Variable, lb: Int): Outcome =
     updateDom(v, dom(v).removeAfter(lb))
 
-  def updateDom(v: Variable, newDomain: Domain): Outcome = {
-    if (newDomain.isEmpty) {
-      Contradiction(v)
-    } else {
-      updateDomNonEmpty(v, newDomain)
-    }
+  def currentDomains: Iterator[Domain] = {
+    Iterator.range(0, domains.size).map(i => dom(i))
   }
 
-  def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState = {
-    assert(newDomain.nonEmpty)
-    val oldDomain = dom(variable)
-    assert(newDomain subsetOf oldDomain, s"replacing $oldDomain with $newDomain: not a subset!")
-    if (oldDomain.size == newDomain.size) {
-      assert(oldDomain.subsetOf(newDomain), s"replacing $oldDomain with $newDomain: same size but not equal")
-      this
-    } else {
-      assert(newDomain.size < oldDomain.size, s"replacing $oldDomain with $newDomain: domain size seems to have increased")
-      assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain], s"replaced $oldDomain with $newDomain: type changed")
-      //assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain], s"replaced $oldDomain with $newDomain: type changed")
-      updateDomNonEmptyNoCheck(variable, newDomain)
-    }
-  }
-
-  def updateDomNonEmptyNoCheck(variable: Variable, newDomain: Domain): ProblemState = {
-    assert(newDomain.nonEmpty)
-    assert(dom(variable) ne newDomain)
-    val id = variable.id
-    assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")
-    assert(!newDomain.isInstanceOf[BitVectorDomain] || (newDomain.size <= newDomain.last - newDomain.head))
-    new ProblemState(domains.updated(id, newDomain), constraintStates, entailed, data)
-  }
-
-  def dom(v: Variable): Domain = {
-    val id = v.id
-    if (id < 0) v.initDomain else domains(id)
+  def dom(i: Int): Domain = {
+    domains(i) //.getOrElse(i, domains(i))
   }
 
   def entailIfFree(c: Constraint): ProblemState = c.singleFree(this).map(entail(c, _)).getOrElse(this)
@@ -364,7 +413,7 @@ case class ProblemState(
   def entailIfFree(c: Constraint, doms: Array[Domain]): ProblemState = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
 
   def entail(c: Constraint, i: Int): ProblemState = {
-    new ProblemState(domains, constraintStates, entailed.entail(c, i), data)
+    new ProblemState(domains, constraintStates, initializedConstraints, entailed.entail(c, i), recentUpdates, data)
   }
 
   def entailIf(c: Constraint, f: ProblemState => Boolean): ProblemState = {
@@ -372,7 +421,7 @@ case class ProblemState(
   }
 
   def entail(c: Constraint): ProblemState = {
-    new ProblemState(domains, constraintStates, entailed.entail(c, this), data)
+    new ProblemState(domains, constraintStates, initializedConstraints, entailed.entail(c, this), recentUpdates, data)
     //else this
   }
 
@@ -381,8 +430,11 @@ case class ProblemState(
   def dueTo(cause: => (Constraint, Iterable[Variable])): ProblemState = this
 
   def updateData(key: AnyRef, value: Any) =
-    new ProblemState(domains, constraintStates, entailed, data.updated(key, value))
+    new ProblemState(domains, constraintStates, initializedConstraints, entailed, recentUpdates, data.updated(key, value))
 
   def getData[A](key: AnyRef): A = data(key).asInstanceOf[A]
 
+  def sameDomains(ps: ProblemState): Boolean = domains eq ps.domains
+
+  override def toString = s"ProblemState($domains, $constraintStates, $entailed)"
 }

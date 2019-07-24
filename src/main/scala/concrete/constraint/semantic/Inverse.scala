@@ -1,8 +1,8 @@
 package concrete.constraint.semantic
 
 import bitvectors.BitVector
-import concrete.{Event, Outcome, ProblemState, Variable}
 import concrete.constraint.{Constraint, StatefulConstraint}
+import concrete.{Event, Outcome, ProblemState, Variable}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -49,7 +49,13 @@ final class Inverse(x: Array[Variable], y: Array[Variable], xOffset: Int, yOffse
     problemState
       .fold(frees) { (ps, xPos) =>
         // First filter X variables
+        //println(s"Filtering $xPos")
+        //println(ps.currentDomains.toSeq)
         val res = ps.filterDom(x(xPos))(v => ps.dom(y(v - yOffset)).contains(xPos + xOffset))
+          .andThen { r =>
+            //println(r.currentDomains.toSeq)
+            r
+          }
         if (res ne ps) {
           xMod += xPos
         }

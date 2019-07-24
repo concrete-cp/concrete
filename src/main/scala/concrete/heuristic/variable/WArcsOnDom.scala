@@ -75,7 +75,7 @@ class WArcsOnDom(val pool: Seq[Variable])
     val id = variable.id
     var score = 0
     for (i <- neighbors(id)) {
-      if (!state.domains(i).isAssigned) {
+      if (!state.dom(i).isAssigned) {
         score += arcs(i, id)
       }
     }

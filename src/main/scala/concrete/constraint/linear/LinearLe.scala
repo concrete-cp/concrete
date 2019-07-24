@@ -6,6 +6,8 @@ import concrete._
 import concrete.util.Interval
 import cspom.Statistic
 
+import scala.collection.immutable.IntMap
+
 object LinearLe {
   @Statistic
   var shaves: Long = 0L
@@ -30,10 +32,10 @@ final class LinearLe(
   import IncrementalBoundPropagation._
 
   override def consistent(ps: ProblemState, mod: Iterable[Int]): Outcome = {
-    val (doms, f, vars, max) = updateF(ps, mod)
+    val (f, vars, max) = updateF(ps, mod)
     clearMod()
     if (f.lb <= 0) {
-      ps.updateState(this, (doms, f, vars, max))
+      ps.updateState(this, (ps, f, vars, max))
     } else {
       Contradiction(scope)
     }
@@ -41,14 +43,14 @@ final class LinearLe(
 
   override def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
-    val (doms, f, vars, max) = updateF(ps, mod)
+    val (f, vars, max) = updateF(ps, mod)
     //if (bc) {
-    val s = proceed(ps, doms, f, vars, max)
+    val s = proceed(ps, IntMap(), f, vars, max)
 
     assert {
       s.andThen { s =>
         assert(f.ub > 0 || scope.forall(s.dom(_).isAssigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this), s"entailment was not correctly marked for ${toString(s)}")
-        assert(scope.forall(s.dom(_).isAssigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this) || (0 until arity).forall(i => s.dom(scope(i)) == s(this)._1(i)),
+        assert(scope.forall(s.dom(_).isAssigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this) || (0 until arity).forall(i => s.dom(scope(i)) == s(this)._1.dom(scope(i))),
           s"doms were not updated correctly: ${toString(ps)} -> ${toString(s)} with $mod")
         s
       }
@@ -62,20 +64,20 @@ final class LinearLe(
 
   }
 
-  protected def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int): Outcome = {
+  protected def proceed(ps: ProblemState, doms: IntMap[Domain], f: Interval, vars: BitVector, max: Int): Outcome = {
     if (f.ub <= 0) {
       ps.entail(this)
     } else if (max <= -f.lb) {
-      ps.updateState(this, (doms, f, vars, max))
+      ps.updateState(this, (ps, f, vars, max))
     } else {
       processUB(vars.nextSetBit(0), vars, doms, f, factors, ps) match {
         case PContradiction => Contradiction(scope)
-        case PFiltered(changed, entailed, newF, newVars, newMax) =>
-          val out = filter(changed, doms, ps)
+        case PFiltered(newDoms, entailed, newF, newVars, newMax) =>
+          val out = filter(newDoms, ps)
           if (entailed) {
             out.entail(this)
           } else {
-            out.updateState(this, (doms, newF, newVars, newMax))
+            out.updateState(this, (out, newF, newVars, newMax))
           }
       }
 
@@ -83,8 +85,8 @@ final class LinearLe(
   }
 
   override def toString(ps: ProblemState): String = {
-    val (dom, f, vars, maxI) = ps(this)
-    toString(ps, "<=BC") + " with " + ((dom.toSeq, f, vars, maxI))
+    val (lastPS, f, vars, maxI) = ps(this)
+    toString(ps, "<=BC") + " with " + ((f, vars, maxI))
   }
 
   override def toString: String = toString("<=BC")

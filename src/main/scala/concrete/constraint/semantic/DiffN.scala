@@ -71,8 +71,8 @@ trait DiffNChecker {
   def check(tuple: Array[Int]): Boolean = {
     val Seq(x, y, dx, dy) = tuple.grouped(nbRectangles).toSeq
 
-    (0 until nbRectangles).forall { i =>
-      (0 until i).forall { j =>
+    Iterator.range(0, nbRectangles).forall { i =>
+      Iterator.range(0, i).forall { j =>
         x(i) + dx(i) <= x(j) || y(i) + dy(i) <= y(j) ||
           x(j) + dx(j) <= x(i) || y(j) + dy(j) <= y(i)
       }
@@ -88,8 +88,6 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
   assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
 
   def advise(ps: ProblemState, event: Event, pos: Int): Int = if (event <= BoundRemoval) nbRectangles else -1
-
-  def nbRectangles: Int = xs.length
 
   def init(ps: ProblemState): Outcome = ps
 
@@ -129,6 +127,8 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
 
   }
 
+  def nbRectangles: Int = xs.length
+
   def simpleEvaluation: Int = 2
 
 }
@@ -138,8 +138,6 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
   assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
 
   def advise(problemState: ProblemState, pos: Int): Int = nbRectangles
-
-  def nbRectangles: Int = xs.length
 
   def init(ps: ProblemState): concrete.Outcome = {
     val map: Vector[Option[(Int, IntRectangle)]] = Vector.tabulate(xs.length)(i => mandatory(ps, i).map((i, _)))
@@ -153,23 +151,6 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
     }
 
     ps.updateState(this, (tree, map))
-
-  }
-
-  private def mandatory(ps: ProblemState, i: Int): Option[IntRectangle] =
-    mandatory(ps.dom(xs(i)), ps.dom(ys(i)), ps.dom(dxs(i)).head, ps.dom(dys(i)).head)
-
-  private def mandatory(x: Domain, y: Domain, dx: Int, dy: Int): Option[IntRectangle] = {
-    for (xc <- mandatory(x, dx); yc <- mandatory(y, dy)) yield {
-      new IntRectangle(xc._1, yc._1, xc._2, yc._2)
-    }
-  }
-
-  private def mandatory(x: Domain, dx: Int) = {
-    val left = x.last
-    val right = x.head + dx
-    if (left <= right) Some((left, right))
-    else None
 
   }
 
@@ -256,6 +237,25 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
 
   }
 
+  def nbRectangles: Int = xs.length
+
+  private def mandatory(ps: ProblemState, i: Int): Option[IntRectangle] =
+    mandatory(ps.dom(xs(i)), ps.dom(ys(i)), ps.dom(dxs(i)).head, ps.dom(dys(i)).head)
+
+  private def mandatory(x: Domain, y: Domain, dx: Int, dy: Int): Option[IntRectangle] = {
+    for (xc <- mandatory(x, dx); yc <- mandatory(y, dy)) yield {
+      new IntRectangle(xc._1, yc._1, xc._2, yc._2)
+    }
+  }
+
+  private def mandatory(x: Domain, dx: Int) = {
+    val left = x.last
+    val right = x.head + dx
+    if (left <= right) Some((left, right))
+    else None
+
+  }
+
   //private val leftResidue = new HashMap[Int, Int]()
   private def filterXLeft(id: Int, domX: Domain, domY: Domain, dx: Int, dy: Int, tree: RTree[Int, IntRectangle]): Option[Int] = {
     var n = domX.head
@@ -292,21 +292,6 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
   //    }
   //  }
 
-  private def filterXRight(id: Int, domX: Domain, domY: Domain, dx: Int, dy: Int, tree: RTree[Int, IntRectangle]): Option[Int] = {
-    var n = domX.last
-    while (true) {
-      findInColumn(n, id, dx, dy, domY, tree) match {
-        case None => return Some(n)
-        case Some((_, m)) =>
-          domX.prevOption(m - dx + 1) match {
-            case Some(m) => n = m
-            case None => return None
-          }
-      }
-    }
-    throw new AssertionError
-  }
-
   /**
     * Renvoie :
     *  - Some((min, max)) s'il n'y a pas de place, avec la plus petite limite droite et la plus grande limite gauche
@@ -341,6 +326,21 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
       }
     }
     Some((minX, maxX))
+  }
+
+  private def filterXRight(id: Int, domX: Domain, domY: Domain, dx: Int, dy: Int, tree: RTree[Int, IntRectangle]): Option[Int] = {
+    var n = domX.last
+    while (true) {
+      findInColumn(n, id, dx, dy, domY, tree) match {
+        case None => return Some(n)
+        case Some((_, m)) =>
+          domX.prevOption(m - dx + 1) match {
+            case Some(m) => n = m
+            case None => return None
+          }
+      }
+    }
+    throw new AssertionError
   }
 
   private def filterYDown(id: Int, domX: Domain, domY: Domain, dx: Int, dy: Int, tree: RTree[Int, IntRectangle]): Option[Int] = {

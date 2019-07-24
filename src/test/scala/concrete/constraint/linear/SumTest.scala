@@ -268,7 +268,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
       }
     }.toState
 
-    mod.domains shouldBe Vector(x, y, z).map(_.initDomain)
+    mod.currentDomains.toSeq shouldBe Seq(x, y, z).map(_.initDomain)
 
   }
 

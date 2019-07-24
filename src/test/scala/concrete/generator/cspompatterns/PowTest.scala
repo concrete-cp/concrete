@@ -42,9 +42,9 @@ class PowTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks with 
       case Success((problem, variables)) =>
 
         val Array(c) = problem.constraints
-
-        println(cspom)
-        println(problem)
+//
+//        println(cspom)
+//        println(problem)
 
         val vx = asVariable("x", cspom, variables)
         val vy = asVariable("y", cspom, variables)

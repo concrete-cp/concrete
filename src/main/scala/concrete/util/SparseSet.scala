@@ -16,6 +16,10 @@ class SparseSet(
     a < members && dense(a) == k
   }
 
+  def inclAll(vals: Iterable[Int]): SparseSet = {
+    vals.foldLeft(this)(_ incl _)
+  }
+
   def incl(k: Int): SparseSet = {
     val a = sparse(k)
     val b = members

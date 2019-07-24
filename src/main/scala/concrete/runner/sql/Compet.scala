@@ -26,9 +26,11 @@ object Compet extends App {
 
   // val ignoreNaN = true
 
-  implicit val getExecutionResult: GetResult[Execution] = GetResult(r => Execution(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
+  implicit val getExecutionResult: GetResult[Execution] =
+    GetResult(r => Execution(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
-  implicit val getConfigResult: GetResult[Config] = GetResult(r => Config(r.<<, r.<<, r.<<))
+  implicit val getConfigResult: GetResult[Config] =
+    GetResult(r => Config(r.<<, r.<<, r.<<))
 
   val problemQuery = {
     sql"""
@@ -41,12 +43,12 @@ object Compet extends App {
 
   val executionQuery = {
     sql"""
-    SELECT "problemId", "configId", iteration, status, solution, totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3
-    FROM "Execution" where iteration=0 and "configId" != -3
+    SELECT "problemId", "configId", iteration, version, status, solution, totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3
+    FROM "Execution" where iteration=0 -- and "configId" != -3
     """.as[Execution]
   }
 
-  val configQuery = sql"""SELECT "configId", config, description FROM "Config" WHERE "configId" != -3 --IN (#${nature.mkString(", ")})"""
+  val configQuery = sql"""SELECT "configId", config, description FROM "Config" -- WHERE "configId" != -3 --IN (#${nature.mkString(", ")})"""
     .as[Config]
 
 
@@ -76,7 +78,7 @@ object Compet extends App {
         .sortBy { case ((prob, iter), _) => (prob.problem, iter) }
     }
 
-  val order =  Seq(2, -1, -2, -4, -5, -6, -7)
+  val order =  Seq(2, -1, -2, -3, -4, -5, -6, -7)
 
   val fut = for (
     pe <- groupedExecutions; cfgsSeq <- DB.run(configQuery);
@@ -176,6 +178,7 @@ object Compet extends App {
                         problemId: Int,
                         configId: Int,
                         iteration: Int,
+                        version: String,
                         status: String,
                         solution: Option[String],
                         statistic: Option[Double])

@@ -1,17 +1,14 @@
 package concrete.heuristic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import concrete.EntailmentManager
-import concrete.IntDomain
-import concrete.ProblemState
-import concrete.Variable
-import concrete.Domain
+import concrete.{EntailmentManager, IntDomain, ProblemState, Variable}
 import concrete.heuristic.branch.IntervalBranch
+import org.scalatest.{FlatSpec, Matchers}
+
+import scala.collection.immutable.IntMap
 
 /**
- * @author vion
- */
+  * @author vion
+  */
 class IntervalBranchTest extends FlatSpec with Matchers {
   "Interval heuristic" should "select two intervals" in {
     val i = IntDomain.ofInterval(0, 1)
@@ -20,7 +17,9 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManager(Seq(v)))
+    val ps = new ProblemState(
+      domains = IntMap(0 -> d),
+      entailed = EntailmentManager(Seq(v)))
 
     val h = new IntervalBranch()
 
@@ -36,7 +35,9 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManager(Seq(v)))
+    val ps = new ProblemState(
+      domains = IntMap(0 -> d),
+      entailed = EntailmentManager(Seq(v)))
 
     val h = new IntervalBranch()
 

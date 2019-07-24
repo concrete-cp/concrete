@@ -1,7 +1,5 @@
 package concrete.filter
 
-;
-
 import com.typesafe.scalalogging.LazyLogging
 import concrete._
 import concrete.constraint.{AdviseCount, Constraint, StatefulConstraint}
@@ -15,6 +13,7 @@ object ACC extends LazyLogging {
     logger.info("Control !")
 
     problem.constraints.find(c => !c.controlRevision(state))
+    // problem.constraints.find(c => c.cardSize(state) > 1 && !c.controlRevisionDeep(state))
   }
 
 }
@@ -151,7 +150,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
       revisions += 1
 
-      constraint.revise(s) match {
+      constraint.revise(s.clearRecent) match {
         case c: Contradiction =>
 
           logger.debug(s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> Contradiction")
@@ -165,8 +164,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           contradictionListeners.foldLeft(nc: Outcome) { case (p, l) => l.event(ContradictionEvent, p) }
 
         case newState: ProblemState =>
-
-          if (newState.domains ne s.domains) {
+          // logger.debug(s"$s -> $newState")
+          if (newState.recentUpdates.nonEmpty) {
             logger.debug(
               s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> ${
                 constraint.diff(s, newState).map { case (v, (_, a)) => s"$v <- $a" }.mkString(", ")
@@ -182,20 +181,11 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
             // to reach a fixpoint beforehand
             //assert(constraint.controlRevision(newState), s"Revision control failed for ${constraint.toString(s)}")
 
-            var p = constraint.arity - 1
-            val scope = constraint.scope
-            while (p >= 0) {
-              val v = scope(p)
-
-              val before = s.dom(v)
-              val after = newState.dom(v)
-
-              if (before ne after) {
-                val e = InsideRemoval(before, after)
-                updateQueue(v, e, constraint, newState)
-              }
-
-              p -= 1
+            for ((i, after) <- newState.recentUpdates) {
+              val before = s.dom(i)
+              assert(after.size < before.size)
+              val e = InsideRemoval(before, after)
+              updateQueue(problem.variables(i), e, constraint, newState)
             }
 
           } else if (newState ne s) {

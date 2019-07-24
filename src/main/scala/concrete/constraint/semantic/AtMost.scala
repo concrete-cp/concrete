@@ -11,10 +11,11 @@ class AtMost(val result: Variable, val value: Variable,
 
   override def init(ps: ProblemState): ProblemState = {
     val initMap = ps.dom(value).view.map(i => i -> BitVector.empty).toMap
-    ps.updateState(this, updateState(ps, initMap, BitVector.filled(arity), ps.dom(value)))
+
+    ps.updateState(this, recomputeState(ps, initMap, BitVector.filled(arity), ps.dom(value)))
   }
 
-  private def updateState(ps: ProblemState, affect: Map[Int, BitVector], mod: BitVector, currentValues: Domain): Map[Int, BitVector] = {
+  private def recomputeState(ps: ProblemState, affect: Map[Int, BitVector], mod: BitVector, currentValues: Domain): Map[Int, BitVector] = {
     var affected = affect
     var sm = mod.nextSetBit(2)
     while (sm >= 0) {
@@ -57,7 +58,7 @@ class AtMost(val result: Variable, val value: Variable,
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val currentValues = ps.dom(value)
 
-    val affected = updateState(ps, ps(this), mod, currentValues)
+    val affected = recomputeState(ps, ps(this), mod, currentValues)
 
     filterResult(ps, currentValues, affected)
       .andThen(filterValue(_, affected))

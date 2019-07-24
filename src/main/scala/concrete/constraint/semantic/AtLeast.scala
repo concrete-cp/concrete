@@ -31,16 +31,15 @@ class AtLeast(val result: Variable, val value: Variable,
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val currentValues = ps.dom(value)
 
-    val canBeAffectedSet = updateState(ps, mod, currentValues)
+    val canBeAffectedSet = recomputeState(ps, mod, currentValues)
 
     filterResult(ps, currentValues, canBeAffectedSet)
       .andThen(filterValue(_, canBeAffectedSet))
       .andThen(filterVars(_, canBeAffectedSet))
   }
 
-  private def updateState(ps: ProblemState, mod: BitVector, currentValues: Domain): Map[Int, BitVector] = {
+  private def recomputeState(ps: ProblemState, mod: BitVector, currentValues: Domain): Map[Int, BitVector] = {
     var canBeAffectedSet = ps(this)
-
     var sm = mod.nextSetBit(2)
     while (sm >= 0) {
       val m = sm - 2

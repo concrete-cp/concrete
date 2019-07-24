@@ -10,9 +10,9 @@ case class Stack(current: Outcome, leftStack: List[ProblemState], rightStack: Li
   def last: Stack = Stack(leftStack.lastOption.getOrElse(current))
 
   def padConstraints(problem: Problem): Stack = copy(
-    current = current.andThen(_.padConstraints(problem.constraints, problem.maxCId).toState),
+    current = current.andThen(_.padConstraints(problem.constraints).toState),
     leftStack = leftStack.map { s: ProblemState =>
-      s.padConstraints(problem.constraints, problem.maxCId).toState
+      s.padConstraints(problem.constraints).toState
     })
 
   def backtrackAndApplyRightDecision: (Stack, Seq[(Variable, Event)]) = {

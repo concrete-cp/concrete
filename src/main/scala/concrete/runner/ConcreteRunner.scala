@@ -46,7 +46,8 @@ trait ConcreteRunner extends LazyLogging {
 
     val writer: ConcreteWriter =
       if (pm.contains("sql")) {
-        new SQLWriter(pm, description(remaining), statistics)
+        new SQLWriter(pm, pm.getOrElse("problem.name", description(remaining)),
+          pm.get[String]("problem.data"), statistics)
       } else {
         defaultWriter(pm, description(remaining), statistics)
       }

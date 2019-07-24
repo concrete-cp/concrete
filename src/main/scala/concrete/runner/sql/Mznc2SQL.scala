@@ -35,17 +35,16 @@ object Mznc2SQL extends App {
   }
   // .flatMap(_ => DB.run(sqlu"""DELETE FROM "Execution" WHERE "configId" < 0"""))
 
-  val processF = Source.fromFile("/home/vion/expes/mznc-2018").getLines.grouped(1 + configs.size).flatMap {
+  val processF = Source.fromFile("/home/vion/expes/mznc-2018").getLines.toList.grouped(1 + configs.size).flatMap {
     case problemLine :: results =>
 
-      val pd = problemLine.split("\t").map(_.trim)
+      val Array(name, data) = problemLine.split("\t").map(_.trim)
 
-      val problem = s"(-|^)${pd(1)}.fzn.xz$$"
-
-      val problemInfo = DB.run(sql"""SELECT "problemId", nature FROM "Problem" WHERE display ~ $problem""".as[(Int, String)])
+      val problemInfo = DB.run(sql"""SELECT "problemId", nature FROM "Problem" WHERE name ~ $name
+        AND data ~ ${data + ".dzn"}""".as[(Int, String)])
         .map {
           case Seq(p) => p
-          case e => throw new IllegalArgumentException("Error with problem " + problem + " : " + e)
+          case e => throw new IllegalArgumentException(s"Error with problem $name, $data: $e")
         }
 
       Seq.tabulate(3) { i => (problemInfo, i, results) }

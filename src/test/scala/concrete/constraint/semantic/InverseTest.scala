@@ -26,13 +26,17 @@ class InverseTest extends FlatSpec with Matchers with Inspectors {
       .assign(x(1), 3)
       .toState
 
+//    println(state)
+
     val acc = new ACC(prob, new ParameterManager)
 
     val s2 = acc.reduceAfter(Seq((x(1), Assignment)), Seq(), state).toState
 
+//    println(s2)
+
     s2.dom(x(1)) should contain theSameElementsAs Seq(3)
     s2.dom(y(3)) should contain theSameElementsAs Seq(1)
-    forAll(List(0, 2, 3)) (i => s2.dom(x(i)).view should contain theSameElementsAs (0 to 2) )
-    forAll(0 to 2) { i: Int => s2.dom(y(i)).view should contain theSameElementsAs Seq(0, 2, 3) }
+    forAll(List(0, 2, 3)) (i => s2.dom(x(i)) should contain theSameElementsAs (0 to 2) )
+    forAll(0 to 2) { i: Int => s2.dom(y(i)) should contain theSameElementsAs Seq(0, 2, 3) }
   }
 }

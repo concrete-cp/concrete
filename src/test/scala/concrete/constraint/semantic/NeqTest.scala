@@ -21,7 +21,7 @@ final class NeqTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks
         c.eventAll(ps)
         c.revise(ps)
       }
-      revised.toState.domains shouldBe ps.toState.domains
+      revised.toState.currentDomains.toSeq shouldBe ps.toState.currentDomains.toSeq
 
       whenever(k > 0 || k < -4) {
         assert(revised.toState.entailed.hasInactiveVar(c))

@@ -6,11 +6,11 @@ import bitvectors.BitVector
 import concrete.util.Interval
 
 abstract class MinMax(protected val result: Variable, protected val vars: Array[Variable]) extends Constraint(result +: vars) with BC
-  with StatefulConstraint[Seq[Variable]] with FixPoint {
+  with StatefulConstraint[List[Variable]] with FixPoint {
 
   override def init(ps: ProblemState): Outcome = {
     val resultDom = ps.dom(result)
-    val list = vars.filter(v => isAlive(ps.dom(v), resultDom)).toSeq
+    val list = vars.toList.filter(v => isAlive(ps.dom(v), resultDom))
     if (list.isEmpty) {
       Contradiction(Seq())
     } else {
@@ -31,7 +31,7 @@ abstract class MinMax(protected val result: Variable, protected val vars: Array[
 
   def shaveDomain(ps: Outcome, v: Variable, r: Domain): Domain
 
-  def revise(ps: ProblemState, mod: BitVector): Outcome = fixPoint(ps, shave(_))
+  def revise(ps: ProblemState, mod: BitVector): Outcome = fixPoint(ps, shave)
 
   def shave(ps: ProblemState): Outcome = {
 
@@ -39,7 +39,7 @@ abstract class MinMax(protected val result: Variable, protected val vars: Array[
      * list contains vars that may be lower than minimum variable
      * (i.e., var.head <= result.last)
      */
-    val readList: Seq[Variable] = ps(this)
+    val readList: List[Variable] = ps(this)
 
 
     /*

@@ -9,7 +9,7 @@ final class AdviseCount {
 }
 
 trait AdviseCounts extends Advisable {
-  private var advise: AdviseCount = _
+  protected var advise: AdviseCount = _
 
   def register(ac: AdviseCount): this.type = {
     advise = ac
