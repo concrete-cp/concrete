@@ -3,7 +3,7 @@ scala:
   - 2.13.0
 
 jdk:
-  - oraclejdk11
+  - openjdk8
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION "testOnly concrete.* -- -l concrete.SlowTest -oDF"
