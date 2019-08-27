@@ -44,8 +44,9 @@ class ACCSETest extends FlatSpec with Matchers with TryValues {
         nbDiffs + // diff definitions
         1 // alldiff (constraints are posted on both sides)
 
-    cspom.constraints.toSeq should have size nbConstraints
-
+    withClue(cspom.toString) {
+      cspom.constraints.toSeq should have size nbConstraints
+    }
   }
 
   it should "allow CSPOM to detect contradiction" in {

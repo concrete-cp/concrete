@@ -107,27 +107,12 @@ object AllDiff extends ProblemCompiler with LazyLogging {
   }
 
   private def isSubsumed(c: CSPOMConstraint[_], by: Set[CSPOMExpression[_]]): Boolean = {
-    ALLDIFF_CONSTRAINT(c).exists { a =>
-      (a.size < by.size) && a.forall(by.contains)
-    }
+    ALLDIFF_CONSTRAINT(c).exists(a =>
+      a.forall(by.contains)
+    )
   }
 
   //private val neighborsCache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
-
-  def ALLDIFF_FUNCTIONS: Seq[String] = Seq("alldifferent", "eq", "ne", "sum")
-
-  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
-    ALLDIFF_CONSTRAINT(constraint).orElse {
-      if (constraint.function == "sum" && constraint.nonReified) {
-        val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
-
-        PartialFunction.condOpt(mode) {
-          case SumMode.LT | SumMode.GT
-            if constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2) =>
-            vars
-        }
-      } else None
-    }
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = {
     if (constraint.function == "alldifferent" && constraint.nonReified && constraint.getSeqParam("except").isEmpty) {
@@ -146,6 +131,21 @@ object AllDiff extends ProblemCompiler with LazyLogging {
       }
     } else None
   }
+
+  def ALLDIFF_FUNCTIONS: Seq[String] = Seq("alldifferent", "eq", "ne", "sum")
+
+  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
+    ALLDIFF_CONSTRAINT(constraint).orElse {
+      if (constraint.function == "sum" && constraint.nonReified) {
+        val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
+
+        PartialFunction.condOpt(mode) {
+          case SumMode.LT | SumMode.GT
+            if constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2) =>
+            vars
+        }
+      } else None
+    }
 
   private def BronKerbosch2(neighbors: IndexedSeq[Set[Int]]): Seq[Set[Int]] = {
 
