@@ -1,11 +1,10 @@
 package concrete.generator.cspompatterns
 
-import cspom.CSPOM.SeqOperations
 import cspom.compiler.ConstraintCompiler._
 import cspom.compiler.{ConstraintCompilerNoData, Delta, Functions}
 import cspom.extension.MDDRelation
 import cspom.util.{Infinitable, IntInterval, RangeSet}
-import cspom.variable.IntExpression
+import cspom.variable.{IntExpression, SimpleExpression}
 import cspom.variable.IntExpression.implicits.iterable
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd.MDD
@@ -14,19 +13,24 @@ import scala.util.{Failure, Try}
 
 object Pow extends ConstraintCompilerNoData {
 
-  def functions = Functions("int_pow")
+  def functions = Functions("pow")
 
-  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = {
-    constraint.result.isTrue
-  }
+  override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean =
+    true
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
     val args = constraint.arguments.map { case IntExpression(e) => e }
 
-    val Seq(x, y, r) = args
+    val IntExpression(r) = constraint.result
+
+    val Seq(x, y) = args
+
 
     val mdd = Try {
-      pow(iterable(x).toSeq, iterable(y).toSeq, iterable(r).r)
+      pow(
+        iterable(x).toSeq.map(cspom.util.Math.toIntExact),
+        iterable(y).toSeq.map(cspom.util.Math.toIntExact),
+        iterable(r).r)
     }
       .recoverWith {
         case e: ArithmeticException =>
@@ -40,12 +44,10 @@ object Pow extends ConstraintCompilerNoData {
 
     val rDom = RangeSet(mdd.projectOne(2).map { i => IntInterval.singleton(i) })
 
-    //    println(constraint)
-    //    mdd.foreach(println)
-    //    println(rDom)
 
+    val newArgs = CSPOM.IntSeqOperations(Seq(x, y, r))
 
-    replaceCtr(constraint, args in new MDDRelation(mdd), problem) ++ replace(r, reduceDomain(r, rDom), problem)
+    replaceCtr(constraint, newArgs in new MDDRelation(mdd), problem) ++ replace(r, reduceDomain(r, rDom), problem)
   }
 
   private def pow(xs: Seq[Int], ys: Seq[Int], rSpan: RangeSet[Infinitable]): MDD = {

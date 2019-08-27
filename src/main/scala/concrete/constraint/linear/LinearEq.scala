@@ -74,7 +74,7 @@ final class LinearEq(
   override def toString: String = toString("=BC=")
 
   override def toString(ps: ProblemState): String = {
-    toString(ps, "=BC=") + " " + Option(ps(this)).getOrElse("uninitialized")
+    toString(ps, "=BC=") + " " + Option(ps(this)).map(s => ("previousState", s._2, s._3, s._4)).getOrElse("uninitialized")
   }
 
   def advise(ps: ProblemState, event: Event, pos: Int): Int = arity * 3

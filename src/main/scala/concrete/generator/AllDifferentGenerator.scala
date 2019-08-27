@@ -29,7 +29,7 @@ final class AllDifferentGenerator(val pg: ProblemGenerator) extends Generator {
 
           val allValues = v.flatMap(_.initDomain).distinct
 
-          val hc = if (allValues.size.toDouble / v.size < 1.2) {
+          val hc = if (allValues.size <= 1.5 * v.size) {
             new AllDifferentAC(v.toArray)
           } else {
             new AllDifferentBC(v.toArray)

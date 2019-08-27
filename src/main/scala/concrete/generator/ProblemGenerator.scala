@@ -7,10 +7,9 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.SumMode._
 import cspom._
-import cspom.util.Finite
 import cspom.variable._
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -22,7 +21,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   var genTime: Double = _
 
   def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
-    val (result, time) = StatisticsManager.measure{
+    val (result, time) = StatisticsManager.measure {
 
       val variables = generateVariables(cspom)
 
@@ -58,7 +57,16 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
         require(v.fullyDefined, s"$dn has no bounds. Involved by ${cspom.deepConstraints(v).map(_.toString(cspom.displayName)).mkString(", ")}")
         require(v.searchSpace > 0, s"$dn has empty domain. Involved by ${cspom.deepConstraints(v)}")
         if (!cspom.isReferenced(v)) logger.warn(s"$dn ($v) is not referenced by constraints")
-        v -> new Variable(dn, generateDomain(v))
+        val gn = Try(generateDomain(v))
+          .recoverWith {
+            case e =>
+              Failure(
+                new CSPParseException(
+                  s"Failed to generate $dn, involved by ${cspom.deepConstraints(v)}",
+                  e))
+          }
+          .get
+        v -> new Variable(dn, gn)
     }.toMap
   }
 
@@ -69,8 +77,8 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
 
       case v: IntVariable =>
         if (v.isConvex) {
-          val Finite(l) = v.domain.lowerBound
-          val Finite(u) = v.domain.upperBound
+          val l = cspom.util.Math.toIntExact(v.domain.lowerBound.finite)
+          val u = cspom.util.Math.toIntExact(v.domain.upperBound.finite)
 
           (l, u) match {
             case (0, 0) => concrete.BooleanDomain(false)

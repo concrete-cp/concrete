@@ -11,7 +11,7 @@ import scala.collection.immutable.TreeSet
 object IntDomain {
   val DISPLAYED_VALUES = 5
 
-  private val TREE_SET_THRESHOLD = 0.01
+  private val TREE_SET_THRESHOLD = 100
 
   def ofInterval(i: Interval): IntDomain = i.size match {
     case 0 => EmptyIntDomain
@@ -20,23 +20,25 @@ object IntDomain {
   }
 
   def apply(d: RangeSet[Infinitable]): IntDomain = {
-    val cspom.util.Interval(Finite(offset), Finite(ub)) = d.span
+    val hull = d.span
 
     if (d.isConvex) {
-      ofInterval(offset, ub)
+      ofInterval(Math.toIntExact(hull.lb.finite), Math.toIntExact(hull.ub.finite))
     } else {
       val asSet = new ContiguousIntRangeSet(d)
-      val size = asSet.size
-      if (size.toDouble / (ub - offset + 1) < TREE_SET_THRESHOLD) {
+      val size = asSet.totalSize
+      val hullSize = hull.itvSize.finite
+      if ((asSet.totalSize * Finite(TREE_SET_THRESHOLD)) < hullSize) {
         val builder = TreeSet.newBuilder[Int]
-        builder ++= asSet
+        builder ++= asSet.iterator.map(Math.toIntExact)
         new TreeSetDomain(builder.result())
       } else {
-        val bvb = new java.util.BitSet(ub - offset + 1)
+        val bvb = new java.util.BitSet(Math.toIntExact(hullSize))
+        val offset = hull.lb.finite
         for (FiniteIntInterval(l, u) <- d.contents) {
-          bvb.set(l - offset, u - offset + 1)
+          bvb.set(Math.toIntExact(l - offset), Math.toIntExact(u - offset + 1))
         }
-        new BitVectorDomain(offset, BitVector(bvb), size)
+        new BitVectorDomain(Math.toIntExact(offset), BitVector(bvb), Math.toIntExact(size.finite))
       }
     }
   }
@@ -95,7 +97,7 @@ object IntDomain {
         val span = ub - lb + 1
         if (span == s) {
           new IntervalDomain(lb, ub)
-        } else if (s.toDouble / span < TREE_SET_THRESHOLD) {
+        } else if (s * TREE_SET_THRESHOLD < span) {
           new TreeSetDomain(set)
         } else {
           val bvb = new java.util.BitSet(span)

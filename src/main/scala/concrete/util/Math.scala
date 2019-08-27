@@ -83,6 +83,7 @@ object Math {
   def any2Int(v: Any): Int = {
     v match {
       case v: Int => v
+      case v: BigInt if v.isValidInt => v.intValue
       case v: Long if v.isValidInt => v.toInt
       case true => 1
       case false => 0

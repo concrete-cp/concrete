@@ -36,9 +36,6 @@ object AllDiff extends ProblemCompiler with LazyLogging {
     val cliques = c.filter(_.size > 2).sortBy(-_.size)
 
 
-    //    println("Cliques:")
-    //    cliques.foreach(println)
-
     cliques.foldLeft(Delta.empty) { (d, c) =>
       d ++ newAllDiff(c.map(expressions), cspom)
     }
@@ -87,12 +84,12 @@ object AllDiff extends ProblemCompiler with LazyLogging {
   private def newAllDiff(scope: Set[CSPOMExpression[_]], problem: CSPOM): Delta = {
 
     val subsumed = scope.flatMap(problem.deepConstraints).filter(c => isSubsumed(c, scope))
+    val allDiff = CSPOMConstraint("alldifferent")(scope.toSeq: _*)
+    logger.info("New alldiff: " + allDiff.toString(problem.displayName))
+
+    var delta = addCtr(allDiff, problem)
 
     if (subsumed.nonEmpty) {
-      val allDiff = CSPOMConstraint("alldifferent")(scope.toSeq: _*)
-      logger.info("New alldiff: " + allDiff.toString(problem.displayName))
-      var delta = addCtr(allDiff, problem)
-
       var removed = 0
       /* Remove newly subsumed neq/alldiff constraints. */
 
@@ -102,17 +99,16 @@ object AllDiff extends ProblemCompiler with LazyLogging {
         delta ++= removeCtr(c, problem)
       }
       logger.info(s"removed $removed constraints, ${problem.constraints.size} left")
-      delta
     } else {
       logger.info(s"alldiff(${scope.map(_.toString(problem.displayName)).mkString(", ")}) does not replace any constraint")
-      Delta()
     }
+    delta
 
   }
 
   private def isSubsumed(c: CSPOMConstraint[_], by: Set[CSPOMExpression[_]]): Boolean = {
-    (c.flattenedScope.size < by.size) && ALLDIFF_CONSTRAINT(c).exists { a =>
-      a.forall(by.contains)
+    ALLDIFF_CONSTRAINT(c).exists { a =>
+      (a.size < by.size) && a.forall(by.contains)
     }
   }
 

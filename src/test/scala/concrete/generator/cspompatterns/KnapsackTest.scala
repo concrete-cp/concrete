@@ -52,12 +52,12 @@ class KnapsackTest extends FlatSpec with Matchers with Inspectors {
     //println(mdd2)
     //mdd2.foreach(println)
 
-    val mdd11 = mdd1.insertDim(weights.size, new ContiguousIntRangeSet(P).toSeq)
+    val mdd11 = mdd1.insertDim(weights.size, new ContiguousIntRangeSet(P).toSeq.map(cspom.util.Math.toIntExact))
 
     //println(mdd11)
     //mdd11.foreach(println)
 
-    val mdd22 = mdd2.insertDim(weights.size + 1, new ContiguousIntRangeSet(W).toSeq)
+    val mdd22 = mdd2.insertDim(weights.size + 1, new ContiguousIntRangeSet(W).toSeq.map(cspom.util.Math.toIntExact))
 
     //println(mdd22)
     //mdd22.foreach(println)

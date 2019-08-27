@@ -56,8 +56,8 @@ object Knapsack extends ConstraintCompilerNoData {
     //  logger.info(pMDD.toString)
 
     //  logger.info("Computing intersection")
-    val wpMDD1 = wMDD.insertDim(0, P.toSeq)
-    val wpMDD2 = pMDD.insertDim(1, W.toSeq)
+    val wpMDD1 = wMDD.insertDim(0, P.toSeq.map(cspom.util.Math.toIntExact))
+    val wpMDD2 = pMDD.insertDim(1, W.toSeq.map(cspom.util.Math.toIntExact))
 
     logger.info(s"Intersection of $wpMDD1 and $wpMDD2...")
     if (wpMDD1.vertices().toDouble * wpMDD2.vertices() < 2e10) {
@@ -82,7 +82,9 @@ object Knapsack extends ConstraintCompilerNoData {
     val nodes = new mutable.HashMap[(Int, concrete.util.Interval), MDD]()
     val doms = x.map(new ContiguousIntRangeSet(_).toSeq)
     val spans = x.map(_.span).map {
-      case FiniteIntInterval(l, u) => concrete.util.Interval(l, u)
+      case FiniteIntInterval(l, u) => concrete.util.Interval(
+        cspom.util.Math.toIntExact(l),
+        cspom.util.Math.toIntExact(u))
     }
       .zip(factors)
       .map { case (x, f) => x * f }
@@ -103,7 +105,7 @@ object Knapsack extends ConstraintCompilerNoData {
         MDD.fromTrie(
           doms(i)
             .map { v =>
-              v -> mdd(i + 1, rt + v * f)
+              cspom.util.Math.toIntExact(v) -> mdd(i + 1, rt + cspom.util.Math.toIntExact(v * f))
             }
             .filter(_._2.nonEmpty))
       })

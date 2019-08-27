@@ -9,6 +9,7 @@ import cspom.{CSPOM, CSPOMConstraint}
 import mdd.{MDD, MDD0, MDDLeaf}
 import CSPOM._
 
+import scala.collection.immutable.NumericRange
 import scala.collection.mutable
 
 /**
@@ -34,19 +35,22 @@ object GCC extends ConstraintCompilerNoData {
             .map(concrete.util.Math.any2Int)
             .toList)
 
-        val vals = values.map(concrete.util.Math.any2Int)
+        val vals: Seq[Int] = values.map(concrete.util.Math.any2Int)
 
-        val bounds = (vals lazyZip occ).map {
-          case (v, o) =>
+
+
+        val bounds: Map[Int, Range] = (vals lazyZip occ).map {
+          case (v: Int, o: SimpleExpression[Int]) =>
             val FiniteIntInterval(lb, ub) = IntExpression.span(o)
-            v -> (lb to ub)
+            v -> (cspom.util.Math.toIntExact(lb) to cspom.util.Math.toIntExact(ub))
         }
           .toMap
 
         val constraints = if (gccAsMDD) {
           Seq(
             CSPOMConstraint("extension")(vars ++ occ: _*)
-              .withParam("init" -> false, "relation" -> new MDDRelation(mdd(domains, vals.toIndexedSeq, bounds)))
+              .withParam("init" -> false, "relation" ->
+                new MDDRelation(mdd(domains, vals.toIndexedSeq, bounds)))
           )
         } else {
           for ((v, o) <- vals zip occ) yield {

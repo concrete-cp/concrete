@@ -14,7 +14,7 @@ import scala.collection.mutable
   * Removes constants from alldifferent constraints
   */
 object AllDiffConstant extends ConstraintCompiler {
-  type A = (Seq[Int], Seq[SimpleExpression[Int]])
+  type A = (Seq[BigInt], Seq[SimpleExpression[Int]])
 
   def functions = Functions("alldifferent")
 
@@ -33,7 +33,7 @@ object AllDiffConstant extends ConstraintCompiler {
     }
   }
 
-  def pickAndRemoveConstants(args: Seq[SimpleExpression[Int]], dom: SimpleExpression[Int] => RangeSet[Infinitable]): (Seq[Int], Seq[SimpleExpression[Int]]) = {
+  def pickAndRemoveConstants(args: Seq[SimpleExpression[Int]], dom: SimpleExpression[Int] => RangeSet[Infinitable]): (Seq[BigInt], Seq[SimpleExpression[Int]]) = {
     val (constants, variables) = args.partition { v =>
       dom(v).span.itvSize == Finite(1)
     }
@@ -45,14 +45,14 @@ object AllDiffConstant extends ConstraintCompiler {
   }
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, constants: A): Delta = {
-    val except = constraint.getSeqParam[Int]("except").toSet
+    val except = constraint.getSeqParam[Int]("except").map(BigInt(_)).toSet
 
     val map = mutable.Map[SimpleExpression[Int], RangeSet[Infinitable]]() ++ constraint.arguments.map {
       case v: SimpleExpression[Int] @unchecked => v -> ranges(v)
       case e => throw new IllegalArgumentException(s"$e not supported")
     }
 
-    def filter(constants: Seq[Int], variables: Seq[SimpleExpression[Int]]): Seq[SimpleExpression[Int]] = {
+    def filter(constants: Seq[BigInt], variables: Seq[SimpleExpression[Int]]): Seq[SimpleExpression[Int]] = {
       if (constants.isEmpty) {
         variables
       } else {

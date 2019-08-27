@@ -28,7 +28,9 @@ object SlidingSum extends ConstraintCompilerNoData {
 
     ConstraintCompiler.replaceCtr(constraint,
       CSPOM.IntSeqOperations(vars) in
-        new MDDRelation(mdd(low, up, seq, vars.map(iterable(_).toSeq)).reduce()),
+        new MDDRelation(
+          mdd(low, up, seq, vars.map(iterable(_).toSeq.map(cspom.util.Math.toIntExact))).reduce()
+        ),
       problem)
   }
 

@@ -33,24 +33,24 @@ object SumDomains extends VariableCompiler("sum") with LazyLogging {
           case NE => IntInterval.all
         }
 
-        val coefspan = (iargs lazyZip coef).map((a, c) => IntExpression.span(a) * Finite(c)).toIndexedSeq
+        val coefspan = (iargs lazyZip coef).map((a, c) => IntExpression.span(a) * Finite(c))
 
         val filt = for {
           (i, c) <- iargs.indices zip coef
           others <- Try(
-            iargs.indices
+            (iargs.indices
               .filter(_ != i)
               .map(coefspan)
-              .foldLeft(initBound)(_ - _)
+              .foldLeft(initBound)(_ - _) / c)
           )
             .recoverWith {
               case e: Exception =>
-                logger.warn(s"$e when computing bounds of $c")
+                logger.error(s"$e when computing bounds of ${iargs zip coef}", e)
                 Failure(e)
             }
             .toOption
         } yield {
-          iargs(i) -> reduceDomain(iargs(i), others / c)
+          iargs(i) -> reduceDomain(iargs(i), others)
         }
 
         val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1

@@ -33,7 +33,7 @@ class PowTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks with 
       val vy = IntVariable(dy: _*) as "y"
       val vz = IntVariable(dz: _*) as "z"
 
-      ctr(CSPOMConstraint("int_pow")(vx, vy, vz))
+      ctr(CSPOMConstraint(vz)("pow")(vx, vy))
     }
 
     CSPOMCompiler.compile(cspom, Seq(Pow))

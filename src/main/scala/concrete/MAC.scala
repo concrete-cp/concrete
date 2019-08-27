@@ -328,7 +328,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   def nextSolution(): SolverResult = try {
 
     logger.info(heuristic.toString)
-    logger.info(s"nextSolution with restart = $restart, firstRun = $firstRun, goal = ${problem.goal}, currentStack = $currentStack")
+    logger.info(s"nextSolution with restart = $restart, firstRun = $firstRun, goal = ${problem.goal}, currentStack depth = ${currentStack.size}")
 
     val sol = if (restart) {
       logger.info("RESTART")

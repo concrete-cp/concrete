@@ -582,7 +582,11 @@ object FZPatterns {
       val lengths = (dx lazyZip dy).map { (x, y) => CSPOMSeq(x, y) }
 
       CSPOMConstraint("diffn")(origins, lengths) withParams (p + ("zeroIgnored" -> false))
-    }
+    },
+
+    "int_pow" -> { case Ctr(_, Seq(x, y, z), p) =>
+      CSPOMConstraint(z)("pow")(x, y) withParams p
+    },
   )
     .map {
       case (symbol, function) =>
