@@ -2,4 +2,4 @@ resolvers += "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releas
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.0")
 
-addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "2.112")
+addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "3.0.1")
