@@ -21,7 +21,7 @@ resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
   "com.github.concrete-cp" %% "cspom" % "3.1.1",
-  "org.postgresql" % "postgresql" % "42.2.6",
+  "org.postgresql" % "postgresql" % "42.2.7",
   "com.typesafe.slick" %% "slick" % "3.3.2",
   "com.typesafe" % "config" % "1.3.4",
   "org.scalatest" %% "scalatest" % "3.0.8" % "test",
