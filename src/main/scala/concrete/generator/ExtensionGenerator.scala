@@ -39,6 +39,8 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
       val domains = scope.map(_.initDomain).toList
       val density = domains.foldLeft(mdd.lambda().toDouble)(_ / _.span.size)
 
+      logger.info(s"Generating extension constraint on ${solverVariables}, density = ${density}")
+
       val constraint = scope.length match {
         case 1 =>
           // Unary constraint

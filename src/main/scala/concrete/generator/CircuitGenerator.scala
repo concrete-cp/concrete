@@ -2,24 +2,23 @@ package concrete.generator
 
 ;
 
+import concrete.constraint.semantic.{AllDifferent2C, AllDifferentBC, FZSubcircuit, NeqC}
+import concrete.generator.Generator._
 import cspom.CSPOMConstraint
-import Generator._
-import concrete.constraint.semantic.XCSPCircuit
 import cspom.variable.{CSPOMConstant, CSPOMExpression, CSPOMSeq}
-import concrete.constraint.semantic.AllDifferent2C
-import concrete.constraint.semantic.AllDifferentBC
 
 final class CircuitGenerator(adg: AllDifferentGenerator) extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val Seq(list: CSPOMSeq[_], CSPOMConstant(start: Int), size: CSPOMExpression[_]) = constraint.arguments
+    val Seq(list: CSPOMSeq[_], CSPOMConstant(offset: Int)) = constraint.arguments
 
     val vars = cspom2concreteSeq(list).map(_.asVariable(adg.pg)).toArray
 
-    val s = cspom2concrete(size).asVariable(adg.pg)
+    // val s = cspom2concrete(size).asVariable(adg.pg)
 
-    val c = new XCSPCircuit(vars, start, s)
+    //val c = new XCSPCircuit(vars, start, s)
+    val c = Seq(new FZSubcircuit(vars, offset))
 
-    Seq(c, new AllDifferent2C(vars), new AllDifferentBC(vars))
+    c ++: Seq(new AllDifferent2C(vars), new AllDifferentBC(vars))
 
   }
 

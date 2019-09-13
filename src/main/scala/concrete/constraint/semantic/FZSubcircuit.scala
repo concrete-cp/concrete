@@ -10,8 +10,8 @@ import concrete.util.DirectedGraph
   *
   * @param scope
   */
-final class FZSubcircuit(scope: Array[Variable]) extends Constraint(scope) {
- //  private val diGraph = new DirectedGraph(arity)
+final class FZSubcircuit(scope: Array[Variable], offset: Int = 1) extends Constraint(scope) {
+  //  private val diGraph = new DirectedGraph(arity)
   var card: Int = _
 
   override def revise(ps: ProblemState, modified: BitVector): Outcome = {
@@ -39,7 +39,7 @@ final class FZSubcircuit(scope: Array[Variable]) extends Constraint(scope) {
         if (scc(p) == mc) {
           state
         } else {
-          state.tryAssign(scope(p), p + 1)
+          state.tryAssign(scope(p), p + offset)
         }
       }
     } else {
@@ -57,13 +57,13 @@ final class FZSubcircuit(scope: Array[Variable]) extends Constraint(scope) {
   def buildGraph(ps: ProblemState): DirectedGraph = {
     var diGraph = new DirectedGraph() //.clear()
     for (p <- 0 until arity; v <- ps.dom(scope(p))) {
-      diGraph = diGraph.addEdge(p, v - 1)
+      diGraph = diGraph.addEdge(p, v - offset)
     }
     diGraph
   }
 
   override def init(ps: ProblemState): Outcome = {
-    ps.fold(0 until arity)((p, i) => p.shaveDom(scope(i), 1, arity))
+    ps.fold(0 until arity)((p, i) => p.shaveDom(scope(i), offset, arity - 1 + offset))
       .andThen { ps =>
         card = scope.map(ps.card).sum
         ps
@@ -74,21 +74,21 @@ final class FZSubcircuit(scope: Array[Variable]) extends Constraint(scope) {
     * @return true iff the constraint is satisfied by the given tuple
     */
   override def check(tuple: Array[Int]): Boolean = {
-    tuple.forall(i => 1 <= i && i <= arity) && {
-      val cycle = Array.fill(arity + 1)(false)
+    tuple.forall(i => offset <= i && i < arity + offset) && {
+      val cycle = Array.fill(arity + offset)(false)
 
       var cycleFound = false
 
       def loop(start: Int): Boolean = {
         cycle(start) || {
           cycle(start) = true
-          loop(tuple(start - 1))
+          loop(tuple(start - offset))
         }
       }
 
 
-      (1 to arity).forall { i =>
-        tuple(i - 1) == i || {
+      (offset until arity + offset).forall { i =>
+        tuple(i - offset) == i || {
           if (cycleFound) {
             cycle(i)
           } else {
