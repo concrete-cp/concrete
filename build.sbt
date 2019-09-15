@@ -17,11 +17,11 @@ javaOptions in ThisBuild += "-Xss16M"
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${(target in Test).value / "test-reports"}")
 
 resolvers += Resolver.sonatypeRepo("snapshots")
-resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
+// resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
   "com.github.concrete-cp" %% "cspom" % "3.1.2",
-  "org.postgresql" % "postgresql" % "42.2.7",
+  "org.postgresql" % "postgresql" % "42.2.8",
   "com.typesafe.slick" %% "slick" % "3.3.2",
   "com.typesafe" % "config" % "1.3.4",
   "org.scalatest" %% "scalatest" % "3.0.8" % "test",

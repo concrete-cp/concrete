@@ -17,4 +17,4 @@ project/plugins/project/
 /.cache
 /bin
 
-/.idea
+.idea/
