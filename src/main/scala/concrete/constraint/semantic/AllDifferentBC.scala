@@ -1,5 +1,8 @@
 package concrete.constraint.semantic
 
+import java.util
+import java.util.Comparator
+
 import bitvectors.BitVector
 import concrete._
 import concrete.constraint.{BC, Constraint, FixPoint}
@@ -44,63 +47,9 @@ final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) wit
 
   def advise(ps: ProblemState, p: Int): Int = eval
 
-  private def swap(array: Array[HInterval], i: Int, j: Int): Unit = {
-    val tmp = array(i)
-    array(i) = array(j)
-    array(j) = tmp
-  }
-
-  private def qSortMax(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int): Unit = {
-    if (from < to) {
-      val pivotIndex = (from + to) / 2
-      val pivot = array(pivotIndex).ub(doms)
-      var left = from
-      var right = to
-      while (left <= right) {
-        while (array(left).ub(doms) < pivot) {
-          left += 1
-        }
-        while (array(right).ub(doms) > pivot) {
-          right -= 1
-        }
-        if (left <= right) {
-          swap(array, left, right)
-          left += 1
-          right -= 1
-        }
-      }
-      qSortMax(doms, array, from, right)
-      qSortMax(doms, array, left, to)
-    }
-  }
-
-  private def qSortMin(doms: Array[Domain], array: Array[HInterval], from: Int, to: Int): Unit = {
-    if (from < to) {
-      val pivotIndex = (from + to) / 2
-      val pivot = array(pivotIndex).lb(doms)
-      var left = from
-      var right = to
-      while (left <= right) {
-        while (array(left).lb(doms) < pivot) {
-          left += 1
-        }
-        while (array(right).lb(doms) > pivot) {
-          right -= 1
-        }
-        if (left <= right) {
-          swap(array, left, right)
-          left += 1
-          right -= 1
-        }
-      }
-      qSortMin(doms, array, from, right)
-      qSortMin(doms, array, left, to)
-    }
-  }
-
   private def sortIt(doms: Array[Domain]): Unit = {
-    qSortMin(doms, minsorted, 0, minsorted.length - 1)
-    qSortMax(doms, maxsorted, 0, maxsorted.length - 1)
+    minsorted.sortInPlaceBy(_.lb(doms))
+    maxsorted.sortInPlaceBy(_.ub(doms))
 
     val min = minsorted(0).lb(doms)
     var last = min - 2
@@ -266,7 +215,7 @@ final class AllDifferentBC(scope: Array[Variable]) extends Constraint(scope) wit
     var minrank: Int = 0
     var maxrank: Int = 0
 
-    def variable = scope(p)
+    def variable: Variable = scope(p)
 
     def lb(doms: Array[Domain]): Int = doms(p).head
 

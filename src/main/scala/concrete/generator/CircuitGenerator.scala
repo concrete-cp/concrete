@@ -2,7 +2,7 @@ package concrete.generator
 
 ;
 
-import concrete.constraint.semantic.{AllDifferent2C, AllDifferentBC, FZSubcircuit, NeqC}
+import concrete.constraint.semantic.{AllDifferent2C, AllDifferentAC, AllDifferentBC, FZSubcircuit, NeqC}
 import concrete.generator.Generator._
 import cspom.CSPOMConstraint
 import cspom.variable.{CSPOMConstant, CSPOMExpression, CSPOMSeq}
@@ -18,7 +18,7 @@ final class CircuitGenerator(adg: AllDifferentGenerator) extends Generator {
     //val c = new XCSPCircuit(vars, start, s)
     val c = Seq(new FZSubcircuit(vars, offset))
 
-    c ++: Seq(new AllDifferent2C(vars), new AllDifferentBC(vars))
+    c ++: Seq(new AllDifferentAC(vars), new AllDifferent2C(vars))
 
   }
 

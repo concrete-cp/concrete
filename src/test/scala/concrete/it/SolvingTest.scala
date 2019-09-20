@@ -109,7 +109,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   )
 
   private val lecoutrePB = Seq[(String, (AnyVal, Double))](
-    //"graph162.xml" -> ((1, 1.0)),
+    "graph162.xml" -> ((true, 1.0)),
 
     "RadarSurveillance-8-24-3-2-01.xml.xz" -> ((0, 1.0)),
     "qwh-10-57-0_X2.xml.xz" -> ((37, 1.0)),

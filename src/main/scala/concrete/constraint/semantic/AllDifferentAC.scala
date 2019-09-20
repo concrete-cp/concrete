@@ -22,24 +22,30 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
   }
 
   private val revMap = map.iterator.map(_.swap).to(IntIntMap)
-  //  {
-  //    _.addOne(_)
-  //  }
 
 
   private val n2 = n + map.size
-  private val free = new mutable.BitSet(n2)
   private val father = new Array[Int](n2)
   private val full = (0 until n2).to(immutable.BitSet)
   private val matching = Array.fill[Option[Int]](n)(None)
-  private var digraph = new DirectedGraph() //n2 + 1)
-  // var i = 0
 
   def this(vars: Variable*) = this(vars.toArray)
 
   override def revise(problemState: ProblemState, modified: BitVector): Outcome = {
-    findMaximumMatching(problemState, modified)
-      .andThen(filter)
+    val digraph = updatedGraph(problemState, modified)
+    val (ps, free, matedGraph) = findMaximumMatching(problemState, modified, digraph)
+    ps.andThen(filter(_, free, matedGraph))
+      .andThen { mod =>
+        var updGraph = digraph
+        for (m <- 0 until arity) {
+          val x = scope(m)
+          val dom = mod.dom(x)
+          if (dom.size < ps.dom(x).size) {
+            updGraph = updGraph.filterSucc(m, i => dom.contains(revMap(i)))
+          }
+        }
+        mod.updateState(this, updGraph)
+      }
   }
 
   override def init(ps: ProblemState): Outcome = {
@@ -59,17 +65,18 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
   override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int =
     arity * arity
 
-  private def filter(initState: ProblemState): Outcome = {
+  private def filter(initState: ProblemState, free: mutable.BitSet, digraph: DirectedGraph): Outcome = {
 
     for (i <- 0 until n) {
       matching(i) = digraph.pred(i).headOption
     }
 
-    val nodeSCC = buildSCC()
+    val nodeSCC = buildSCC(digraph, free)
 
-    (0 until n).foldLeft(initState) { (ps, i) =>
-      val v = scope(i)
-      val dom = ps.dom(v)
+
+    Iterator.range(0, n).foldLeft(initState) { (ps, i) =>
+      val x = scope(i)
+      val dom = ps.dom(x)
       val newDom =
         dom.find { k =>
           val j = map(k); nodeSCC(i) != nodeSCC(j) && matching(i).contains(j)
@@ -78,77 +85,88 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
             assert(dom.contains(k))
             dom.assign(k)
           case None =>
-            dom.filter { k =>
-              val j = map(k)
-              val b = nodeSCC(i) == nodeSCC(j)
-              // if (!b) digraph = digraph.removeArc(i, j)
-              b
-            }
+            dom.filter(k => nodeSCC(i) == nodeSCC(map(k)))
         }
 
-      ps.updateDomNonEmpty(v, newDom)
+      ps.updateDomNonEmpty(x, newDom)
     }
 
   }
 
-  private def buildSCC(): Array[Int] = {
+  private def buildSCC(digraph: DirectedGraph, free: mutable.BitSet): Array[Int] = {
+    var updatedGraph = digraph
     if (n2 > n * 2) {
       // digraph = digraph.removeNode(n2)
       // digraph.addNode(n2)
       for (i <- n until n2) {
-        digraph = if (free.contains(i)) digraph.addEdge(i, n2) else digraph.addEdge(n2, i)
+        updatedGraph = if (free.contains(i)) updatedGraph.addEdge(i, n2) else updatedGraph.addEdge(n2, i)
       }
     }
-    val scc = digraph.findAllSCC()
-    digraph = digraph.removeNode(n2)
-    scc
+    updatedGraph.findAllSCC()
   }
 
-  private def findMaximumMatching(ps: ProblemState, mod: BitVector): Outcome = {
-    digraph = ps(this)
-    free |= full //set(0, n2)
+  private def updatedGraph(ps: ProblemState, modified: BitVector) = {
+    modified.foldLeft(ps(this)) { (graph, m) =>
+      val dom = ps.dom(scope(m))
+      graph.filterSucc(m, i => dom.contains(revMap(i)))
+    }
+  }
 
-    for (i <- mod) {
-      val dom = ps.dom(scope(i))
-      digraph = digraph.filterSucc(i, j => dom.contains(revMap(j)))
 
-      // val mate = matching(i)
-      //        for (k <- ps.dom(scope(i))) {
-      //          val j = map(k)
-      //          //        if (mate == j) {
-      //          //          assert(free(i) && free(j))
-      //          //          digraph = digraph.addArc(j, i)
-      //          //          free -= i
-      //          //          free -= j
-      //          //        } else {
-      //          digraph = digraph.addArc(i, j)
-      //          //        }
-      //        }
+  private def findMaximumMatching(
+                                   ps: ProblemState,
+                                   mod: BitVector,
+                                   digraph: DirectedGraph): (Outcome, mutable.BitSet, DirectedGraph) = {
+    val free = new mutable.BitSet() |= full //set(0, n2)
+
+    // val mate = matching(i)
+    //        for (k <- ps.dom(scope(i))) {
+    //          val j = map(k)
+    //          //        if (mate == j) {
+    //          //          assert(free(i) && free(j))
+    //          //          digraph = digraph.addArc(j, i)
+    //          //          free -= i
+    //          //          free -= j
+    //          //        } else {
+    //          digraph = digraph.addArc(i, j)
+    //          //        }
+    //        }
+
+    var matched = digraph
+    for (i <- 0 until n; mate <- matching(i)) {
+      if (ps.dom(scope(i)).contains(revMap(mate))) {
+        matched = matched.removeEdge(i, mate).addEdge(mate, i)
+        free -= i
+        free -= mate
+      }
     }
 
-    ps.updateState(this, digraph).andThen { ps =>
-      for (i <- 0 until n; mate <- matching(i)) {
-        if (ps.dom(scope(i)).contains(revMap(mate))) {
-          digraph = digraph.removeEdge(i, mate).addEdge(mate, i)
-          free -= i
-          free -= mate
+    val mod = ps.fold(0 until n) { (s, i) =>
+      if (free.contains(i)) {
+        tryToMatch(i, s, free, matched) match {
+          case Some(mtch) =>
+            matched = mtch
+            s
+          case None => Contradiction(scope)
         }
-      }
-
-      ps.fold(0 until n) {
-        (s, i) => if (free.contains(i) && !tryToMatch(i, s)) Contradiction(scope) else s
+      } else {
+        s
       }
     }
 
+    (mod, free, matched)
+
   }
 
-  private def tryToMatch(i: Int, ps: ProblemState): Boolean = {
-    val mate = augmentPathBFS(i, digraph.succ(i).iterator)
-    mate >= 0 && {
+  private def tryToMatch(i: Int, ps: ProblemState,
+                         free: mutable.BitSet, digraph: DirectedGraph): Option[DirectedGraph] = {
+    val mate = augmentPathBFS(i, digraph.succ(i).iterator, free, digraph)
+    if (mate >= 0) {
       free -= mate
       free -= i
-      digraph = removePath(mate, i, digraph, father)
-      true
+      Some(removePath(mate, i, digraph, father))
+    } else {
+      None
     }
   }
 
@@ -171,29 +189,32 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
   }
 
   @scala.annotation.tailrec
-  private def augmentPathBFS(x: Int,
-                             vertices: Iterator[Int],
-                             fifo: Queue[Int] = Queue(),
-                             in: mutable.BitSet = new mutable.BitSet(n2)): Int = {
+  private def augmentPathBFS(
+                              x: Int,
+                              vertices: Iterator[Int],
+                              free: mutable.BitSet,
+                              digraph: DirectedGraph,
+                              fifo: Queue[Int] = Queue(),
+                              in: mutable.BitSet = new mutable.BitSet(n2)): Int = {
 
     if (vertices.hasNext) {
       val y = vertices.next()
       if (in.contains(y)) {
-        augmentPathBFS(x, vertices, fifo, in)
+        augmentPathBFS(x, vertices, free, digraph, fifo, in)
       } else {
         father(y) = x
         in += y
         if (free(y)) {
           y
         } else {
-          augmentPathBFS(x, vertices, fifo.enqueue(y), in)
+          augmentPathBFS(x, vertices, free, digraph, fifo.enqueue(y), in)
         }
       }
     } else if (fifo.isEmpty) {
       -1
     } else {
       val (next, dq) = fifo.dequeue
-      augmentPathBFS(next, digraph.succ(next).iterator, dq, in)
+      augmentPathBFS(next, digraph.succ(next).iterator, free, digraph, dq, in)
     }
 
   }

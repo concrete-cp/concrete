@@ -12,7 +12,7 @@ import concrete.util.DirectedGraph
   */
 final class FZSubcircuit(scope: Array[Variable], offset: Int = 1)
   extends Constraint(scope)
-  with StatefulConstraint[DirectedGraph] {
+    with StatefulConstraint[DirectedGraph] {
   //  private val diGraph = new DirectedGraph(arity)
   var eval: Int = _
 
@@ -21,14 +21,14 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1)
   override def revise(ps: ProblemState, modified: BitVector): Outcome = {
     val directedGraph = updatedGraph(ps, modified)
 
-    filterSCC(directedGraph, ps).updateState(this, directedGraph)
+    filterSCC(directedGraph, ps)
   }
 
   private def updatedGraph(ps: ProblemState, modified: BitVector) = {
     var graph = ps(this)
     for (m <- modified) {
       val dom = ps.dom(scope(m))
-      graph = graph.filterSucc(m, i => dom.contains(i - offset))
+      graph = graph.filterSucc(m, i => dom.contains(i + offset))
     }
     graph
   }
@@ -50,6 +50,7 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1)
       ps
     } else if (mandatoryCycles.size == 1) {
       val mc = mandatoryCycles.head
+
       ps.fold(0 until arity) { (state, p) =>
         if (scc(p) == mc) {
           state
@@ -57,8 +58,22 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1)
           state.tryAssign(scope(p), p + offset)
         }
       }
+        .andThen { ps =>
+          val updatedGraph = Iterator.range(0, arity)
+            .filter(p => scc(p) != mc)
+            .foldLeft(directedGraph)((graph, p) =>
+              graph.setSucc(p,  Set(p))
+            )
+          ps.updateState(this, updatedGraph)
+        }
     } else {
-      Contradiction((0 until arity).filter(i => mandatoryCycles.contains(scc(i))).map(scope(_)))
+      val culprit = for {
+        i <- Iterator.range(0, arity)
+        if mandatoryCycles.contains(scc(i))
+      } yield {
+        scope(i)
+      }
+      Contradiction(culprit.toSeq)
     }
   }
 
@@ -69,14 +84,6 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1)
       .toSet
   }
 
-  def buildGraph(ps: ProblemState): DirectedGraph = {
-    var diGraph = new DirectedGraph() //.clear()
-    for (p <- 0 until arity; v <- ps.dom(scope(p))) {
-      diGraph = diGraph.addEdge(p, v - offset)
-    }
-    diGraph
-  }
-
   override def init(ps: ProblemState): Outcome = {
     ps.fold(0 until arity)((p, i) => p.shaveDom(scope(i), offset, arity - 1 + offset))
       .andThen { ps =>
@@ -84,6 +91,14 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1)
         val digraph = buildGraph(ps)
         ps.updateState(this, digraph)
       }
+  }
+
+  def buildGraph(ps: ProblemState): DirectedGraph = {
+    var diGraph = new DirectedGraph() //.clear()
+    for (p <- 0 until arity; v <- ps.dom(scope(p))) {
+      diGraph = diGraph.addEdge(p, v - offset)
+    }
+    diGraph
   }
 
   /**

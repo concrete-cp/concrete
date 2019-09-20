@@ -113,17 +113,22 @@ final class DirectedGraph(
 
   def hasEdge(i: Int, j: Int): Boolean = succ(i).contains(j)
 
-  def filterSucc(from: Int, f: Int => Boolean): DirectedGraph = {
-    var newSucc = succ(from)
-    var newPred = predecessors
-    for (r <- successors(from)) {
-      if (!f(r)) {
-        newSucc -= r
+  def setSucc(from: Int, newSucc: Set[Int]): DirectedGraph = {
+    if (succ(from).size == newSucc.size) {
+      this
+    } else {
+      assume(newSucc.subsetOf(succ(from)))
+      var newPred = predecessors
+      for (r <- succ(from) if !newSucc(r)) {
         newPred = newPred.updated(r, newPred(r) - from)
       }
+      new DirectedGraph(successors.updated(from, newSucc), newPred)
     }
+  }
 
-    new DirectedGraph(successors.updated(from, newSucc), newPred)
+  def filterSucc(from: Int, f: Int => Boolean): DirectedGraph = {
+    val newSucc = succ(from).filter(f)
+    setSucc(from, newSucc)
   }
 
   // def hasNode(x: Int): Boolean = nodes.contains(x)
