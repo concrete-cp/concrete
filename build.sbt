@@ -8,9 +8,9 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.12.2"
+version := "3.12.3"
 
-scalaVersion := "2.13.0"
+scalaVersion := "2.13.1"
 
 javaOptions in ThisBuild += "-Xss16M"
 
@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions ++= Seq(
-  // "-Xdisable-assertions",
+  "-Xdisable-assertions",
   "-deprecation",
   //	"-unchecked", 
   "-Xlint",
@@ -51,13 +51,7 @@ logBuffered in Test := false
 fork in Test := true
 fork := true
 
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
+publishTo := sonatypePublishToBundle.value
 
 publishArtifact in Test := false
 

@@ -36,8 +36,6 @@ object EmptyIntDomain extends IntDomain {
 
   override def filter(f: Int => Boolean): IntDomain = this
 
-  def filterBounds(f: Int => Boolean): IntDomain = this
-
   override def toString = "[]"
 
   def convex = throw new IllegalStateException
@@ -75,4 +73,6 @@ object EmptyIntDomain extends IntDomain {
   def iterator: Iterator[Int] = Iterator.empty
 
   def iteratorFrom(start: Int): Iterator[Int] = Iterator.empty
+
+  def reverseIterator: Iterator[Int] = Iterator.empty
 }

@@ -295,8 +295,6 @@ sealed trait BooleanDomain extends Domain {
     case other => as01 | other
   }
 
-  def filterBounds(f: Int => Boolean): Domain = filter(f)
-
   def removeItv(from: Int, to: Int): Domain = {
     val r0 = if (from <= 0 && 0 <= to) this - 0 else this
     if (from <= 1 && 1 <= to) r0 - 1 else r0
@@ -309,6 +307,8 @@ sealed trait BooleanDomain extends Domain {
   def iterator: Iterator[Int] = as01.iterator
 
   def iteratorFrom(start: Int): Iterator[Int] = as01.iteratorFrom(start)
+
+  def reverseIterator: Iterator[Int] = as01.reverseIterator
 
   def span: Interval = as01.span
 

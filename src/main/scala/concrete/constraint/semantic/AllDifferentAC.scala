@@ -56,7 +56,8 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
 
   override def except: Set[Int] = Set()
 
-  override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int = arity * arity
+  override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int =
+    arity * arity
 
   private def filter(initState: ProblemState): Outcome = {
 
@@ -158,6 +159,7 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
     * @param paths
     * @return true
     */
+  @scala.annotation.tailrec
   private def removePath(from: Int, to: Int, digraph: DirectedGraph, paths: Array[Int]): DirectedGraph = {
     if (from == to) {
       digraph
@@ -168,6 +170,7 @@ class AllDifferentAC(scope: Array[Variable]) extends Constraint(scope) with AllD
     }
   }
 
+  @scala.annotation.tailrec
   private def augmentPathBFS(x: Int,
                              vertices: Iterator[Int],
                              fifo: Queue[Int] = Queue(),

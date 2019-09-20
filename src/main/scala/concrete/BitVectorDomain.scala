@@ -19,13 +19,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   assert(iterator.size == size, s"${iterator.size} != $size for $offset, $bitVector, ${bitVector.lastSetBit} (${iterator.mkString(", ")})")
 
-  def singleValue = throw new IllegalStateException(s"Tried to obtain single value of $this")
-
-  override def prev(i: Int): Int = {
-    val b = math.max(0, i - offset)
-    val n = bitVector.prevSetBit(b)
-    if (n < 0) throw new NoSuchElementException else offset + n
-  }
+  def singleValue = throw new IllegalStateException(s"Tried to obtain single value of $this ")
 
   def isAssigned = false
 
@@ -44,16 +38,6 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     } else {
       this
     }
-  }
-
-  /**
-    * @param value to test
-    * @return true iff value is present
-    */
-  def contains(value: Int): Boolean = {
-    Domain.checks += 1
-    val bit = value - offset
-    bit >= 0 && bitVector.contains(bit)
   }
 
   def removeAfter(lb: Int): IntDomain = removeFrom(lb + 1)
@@ -131,6 +115,25 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
+  private def intersectBVD(bd: BitVectorDomain): IntDomain = {
+    val newOffset = math.min(offset, bd.offset)
+
+    val thisBV = toBitVector(newOffset)
+    val bdBV = bd.toBitVector(newOffset)
+
+    val newBV = thisBV & bdBV
+
+    val newCard = newBV.cardinality
+
+    if (newCard == size) {
+      this
+    } else if (newCard == bd.size) {
+      bd
+    } else {
+      IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)
+    }
+  }
+
   def disjoint(d: Domain): Boolean = d match {
     case id: IntervalDomain => (this & id.span).isEmpty
     case s: Singleton => s.disjoint(this)
@@ -142,17 +145,6 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     case b: BooleanDomain => b.disjoint(this)
     case _ => head > d.last || last < d.head || !exists(d)
 
-  }
-
-  def toBitVector(offset: Int): BitVector = {
-    if (offset == this.offset) {
-      bitVector
-    } else {
-      bvOffset(offset, {
-        logger.trace(s"generating BV from offset ${this.offset} to $offset by ${Thread.currentThread().getStackTrace.toSeq}")
-        bitVector.shift(this.offset - offset)
-      })
-    }
   }
 
   override def |(d: Domain): Domain = {
@@ -181,12 +173,33 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
+  /**
+    * @param value to test
+    * @return true iff value is present
+    */
+  def contains(value: Int): Boolean = {
+    Domain.checks += 1
+    val bit = value - offset
+    bit >= 0 && bitVector.contains(bit)
+  }
+
   def |(span: Interval): IntDomain = {
     val lb = span.lb
     val offset = math.min(lb, this.offset)
     val bv = toBitVector(offset)
     val union = bv.set(lb - offset, span.ub - offset + 1)
     IntDomain.ofBitVector(offset, union, union.cardinality)
+  }
+
+  def toBitVector(offset: Int): BitVector = {
+    if (offset == this.offset) {
+      bitVector
+    } else {
+      bvOffset(offset, {
+        logger.trace(s"generating BV from offset ${this.offset} to $offset by ${Thread.currentThread().getStackTrace.toSeq}")
+        bitVector.shift(this.offset - offset)
+      })
+    }
   }
 
   def subsetOf(d: Domain): Boolean = {
@@ -196,25 +209,6 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
       case id: IntervalDomain => (this & id.span).size == size
       case bd: BitVectorDomain => this.intersectBVD(bd).size == size
       case t: TreeSetDomain => last <= t.last && forall(t)
-    }
-  }
-
-  private def intersectBVD(bd: BitVectorDomain): IntDomain = {
-    val newOffset = math.min(offset, bd.offset)
-
-    val thisBV = toBitVector(newOffset)
-    val bdBV = bd.toBitVector(newOffset)
-
-    val newBV = thisBV & bdBV
-
-    val newCard = newBV.cardinality
-
-    if (newCard == size) {
-      this
-    } else if (newCard == bd.size) {
-      bd
-    } else {
-      IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)
     }
   }
 
@@ -240,7 +234,26 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     if (n < 0) throw new NoSuchElementException(s"${bitVector.getClass}$bitVector.next($i) with last = ${bitVector.lastSetBit}") else offset + n
   }
 
+  def reverseIterator: Iterator[Int] = new Iterator[Int] {
+    private var current = last
+    var hasNext = true
 
+    def next(): Int = {
+      val c = current
+      if (c == BitVectorDomain.this.head) {
+        hasNext = false
+      } else {
+        current = BitVectorDomain.this.prev(current)
+      }
+      c
+    }
+  }
+
+  override def prev(i: Int): Int = {
+    val b = math.max(0, i - offset)
+    val n = bitVector.prevSetBit(b)
+    if (n < 0) throw new NoSuchElementException else offset + n
+  }
 
   final private class BVDIterator(private var current: Int) extends Iterator[Int] {
     // Assumes domain is not empty

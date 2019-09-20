@@ -162,7 +162,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
       // val seqParsed = SeqHeuristic(parsed)
 
-      if (pm0.contains("f")) {
+      val freed = if (pm0.contains("f")) {
         //        if (pm0.contains("fKeepSeq")) {
         //          useDefault(pm0, seqParsed, rand)
         //        } else {
@@ -176,12 +176,14 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
             pm0.updated("heuristic.variable.tieBreaker", SeqVariableHeuristic(variableHeuristics))
           }
         }
-        Heuristic.default(pm1, decision, rand).get
+        Seq(Heuristic.default(pm1, decision, rand).get)
         //        }
       } else {
-        // Use default heuristic as fallback if parsed heuristic do not cover enough variables
-        SeqHeuristic(parsed :+ Heuristic.default(pm0, variables.values.toSeq, rand).get)
+        parsed
       }
+      // Use default heuristic as fallback if parsed heuristic do not cover enough variables
+      SeqHeuristic(freed :+ Heuristic.default(pm0, variables.values.toSeq, rand).get)
+
     }
 
     //val heuristic = SeqHeuristic(heuristics)

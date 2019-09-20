@@ -2,7 +2,7 @@ package concrete.constraint.semantic
 
 import bitvectors.BitVector
 import concrete._
-import concrete.constraint.Constraint
+import concrete.constraint.{Constraint, StatefulConstraint}
 import concrete.util.DirectedGraph
 
 /**
@@ -10,14 +10,27 @@ import concrete.util.DirectedGraph
   *
   * @param scope
   */
-final class FZSubcircuit(scope: Array[Variable], offset: Int = 1) extends Constraint(scope) {
+final class FZSubcircuit(scope: Array[Variable], offset: Int = 1)
+  extends Constraint(scope)
+  with StatefulConstraint[DirectedGraph] {
   //  private val diGraph = new DirectedGraph(arity)
-  var card: Int = _
+  var eval: Int = _
+
+  override def toString(ps: ProblemState) = super.toString(ps) + s", offset=${offset}"
 
   override def revise(ps: ProblemState, modified: BitVector): Outcome = {
-    val directedGraph = buildGraph(ps)
+    val directedGraph = updatedGraph(ps, modified)
 
-    filterSCC(directedGraph, ps)
+    filterSCC(directedGraph, ps).updateState(this, directedGraph)
+  }
+
+  private def updatedGraph(ps: ProblemState, modified: BitVector) = {
+    var graph = ps(this)
+    for (m <- modified) {
+      val dom = ps.dom(scope(m))
+      graph = graph.filterSucc(m, i => dom.contains(i - offset))
+    }
+    graph
   }
 
   /**
@@ -30,7 +43,9 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1) extends Constr
     */
   private def filterSCC(directedGraph: DirectedGraph, ps: ProblemState): Outcome = {
     val scc = directedGraph.findAllSCC()
+    //logger.info(s"SCC: ${scc.toSeq}")
     val mandatoryCycles = findMandatoryCycles(directedGraph, scc)
+    //logger.info(s"Mandatory cycles: $mandatoryCycles")
     if (mandatoryCycles.isEmpty) {
       ps
     } else if (mandatoryCycles.size == 1) {
@@ -65,8 +80,9 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1) extends Constr
   override def init(ps: ProblemState): Outcome = {
     ps.fold(0 until arity)((p, i) => p.shaveDom(scope(i), offset, arity - 1 + offset))
       .andThen { ps =>
-        card = scope.map(ps.card).sum
-        ps
+        eval = scope.map(ps.card).fold(arity)(Math.addExact)
+        val digraph = buildGraph(ps)
+        ps.updateState(this, digraph)
       }
   }
 
@@ -102,5 +118,6 @@ final class FZSubcircuit(scope: Array[Variable], offset: Int = 1) extends Constr
 
   override def simpleEvaluation: Int = 3
 
-  override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int = card * card
+  override protected def advise(problemState: ProblemState, event: Event, pos: Int): Int =
+    eval
 }

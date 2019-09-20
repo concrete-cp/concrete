@@ -94,7 +94,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     }
   }
 
-  def filterBounds(f: Int => Boolean): IntDomain = filter(f)
+  override def filterBounds(f: Int => Boolean): IntDomain = filter(f)
 
   override def filter(f: Int => Boolean): IntDomain =
     if (f(singleValue)) {
@@ -162,6 +162,8 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
   }
 
   def iterator: Iterator[Int] = Iterator.single(singleValue)
+
+  def reverseIterator: Iterator[Int] = iterator
 
   override def foreach[U](f: Int => U): Unit = f(singleValue)
 

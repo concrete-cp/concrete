@@ -128,11 +128,13 @@ final class DirectedGraph(
 
   // def hasNode(x: Int): Boolean = nodes.contains(x)
   //
-  override def toString: String = successors.zipWithIndex.filter(_._1.nonEmpty)
-    .map {
-      case (succ, n) => s"$n: $succ"
-    }
-    .mkString("\n")
+  override def toString: String = s"Directed graph with ${successors.size} vertices and ${successors.map(_.size).sum} edges"
+
+//    successors.zipWithIndex.filter(_._1.nonEmpty)
+//    .map {
+//      case (succ, n) => s"$n: $succ"
+//    }
+//    .mkString("\n")
 
   def findAllSCCRecursive(): Array[Int] = {
 

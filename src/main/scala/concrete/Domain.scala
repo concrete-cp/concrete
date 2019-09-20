@@ -135,7 +135,19 @@ abstract class Domain extends immutable.SortedSet[Int]
 
   override def equals(o: Any): Boolean = this eq o.asInstanceOf[AnyRef]
 
-  def filterBounds(f: Int => Boolean): Domain
+
+  def filterBounds(f: Int => Boolean): Domain = {
+    val filt = for (
+      lb <- find(f);
+      ub <- reverseIterator.find(v => v == lb || f(v))
+    ) yield {
+      removeUntil(lb).removeAfter(ub)
+    }
+
+    filt.getOrElse(EmptyIntDomain)
+  }
+
+  def reverseIterator: Iterator[Int]
 
   def shift(o: Int): Domain
 

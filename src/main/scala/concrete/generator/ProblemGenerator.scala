@@ -4,12 +4,12 @@ package generator
 import java.security.InvalidParameterException
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.SumMode._
+import concrete.constraint.{Constraint, ReifiedConstraint}
 import cspom._
 import cspom.variable._
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -21,59 +21,68 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   var genTime: Double = _
 
   def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
-    val (result, time) = StatisticsManager.measure {
+    val (result, time) = StatisticsManager.measureTry {
 
-      val variables = generateVariables(cspom)
+      for {
+        variables <- generateVariables(cspom)
+        constraints <- generateConstraints(variables, cspom)
+      } yield {
+        val problem = new Problem(variables.values.toArray.sortBy(_.name), goal(cspom.goal, variables))
+          .addConstraints(constraints)
+        logger.info(problem.toString(problem.initState.toState).split("\n").map(l => s"% $l").mkString("\n"))
 
-      val problem = new Problem(variables.values.toArray.sortBy(_.name), goal(cspom.goal, variables))
+        logger.info(problem.constraints
+          .groupBy {
+            case c: ReifiedConstraint => (classOf[ReifiedConstraint], c.constraint.getClass)
+            case c => c.getClass
+          }
+          .map { case (k, v) => s"$k: ${v.size}" }.mkString("\n"))
 
-      val constraints = cspom.constraints.flatMap {
-        c => gm.generate(c, variables, cspom).get
+        (problem, variables)
       }
-
-      problem.addConstraints(constraints.toSeq)
-
-      logger.info(problem.toString(problem.initState.toState).split("\n").map(l => s"% $l").mkString("\n"))
-
-      logger.info(problem.constraints
-        .groupBy {
-          case c: ReifiedConstraint => (classOf[ReifiedConstraint], c.constraint.getClass)
-          case c => c.getClass
-        }
-        .map { case (k, v) => s"$k: ${v.size}" }.mkString("\n"))
-
-      (problem, variables)
     }
 
     genTime = time
     result
   }
 
-  def generateVariables(cspom: CSPOM): Map[CSPOMVariable[_], Variable] = {
+  def generateConstraints(variables: Map[CSPOMVariable[_], Variable], cspom: CSPOM): Try[Seq[Constraint]] = {
+    val (failures, successes) =
+      cspom.constraints.map(c => gm.generate(c, variables, cspom)).toSeq
+        .partitionMap(_.toEither)
 
-    cspom.referencedExpressions.flatMap(_.flatten).collect {
+    failures.headOption.map(Failure(_)).getOrElse(Success(successes.flatten))
+
+  }
+
+  def generateVariables(cspom: CSPOM): Try[Map[CSPOMVariable[_], Variable]] = {
+
+    val (failures, successes) = cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] =>
-        val dn = cspom.displayName(v)
+        lazy val dn = cspom.displayName(v)
         require(v.fullyDefined, s"$dn has no bounds. Involved by ${cspom.deepConstraints(v).map(_.toString(cspom.displayName)).mkString(", ")}")
         require(v.searchSpace > 0, s"$dn has empty domain. Involved by ${cspom.deepConstraints(v)}")
         if (!cspom.isReferenced(v)) logger.warn(s"$dn ($v) is not referenced by constraints")
-        val gn = Try(generateDomain(v))
+        generateDomain(v)
           .recoverWith {
             case e =>
-              Failure(
-                new CSPParseException(
-                  s"Failed to generate $dn, involved by ${cspom.deepConstraints(v)}",
-                  e))
+              Failure(new CSPParseException(
+                s"Failed to generate $dn, involved by ${cspom.deepConstraints(v)}",
+                e))
           }
-          .get
-        v -> new Variable(dn, gn)
-    }.toMap
+          .map(gn => v -> new Variable(dn, gn))
+    }
+      .partitionMap(_.toEither)
+
+    failures.headOption.map(Failure(_)).getOrElse(Success(successes.toMap))
+
   }
 
-  def generateDomain[T](cspomVar: CSPOMVariable[_]): Domain = {
+  def generateDomain[T](cspomVar: CSPOMVariable[_]): Try[Domain] = {
 
     val dom = cspomVar match {
-      case _: BoolVariable => concrete.BooleanDomain()
+      case _: BoolVariable =>
+        Success(concrete.BooleanDomain())
 
       case v: IntVariable =>
         if (v.isConvex) {
@@ -81,19 +90,25 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
           val u = cspom.util.Math.toIntExact(v.domain.upperBound.finite)
 
           (l, u) match {
-            case (0, 0) => concrete.BooleanDomain(false)
-            case (1, 1) => concrete.BooleanDomain(true)
-            case (0, 1) => concrete.BooleanDomain()
-            case (lb, ub) => IntDomain.ofInterval(lb, ub)
+            case (0, 0) =>
+              Success(concrete.BooleanDomain(false))
+            case (1, 1) =>
+              Success(concrete.BooleanDomain(true))
+            case (0, 1) =>
+              Success(concrete.BooleanDomain())
+            case (lb, ub) =>
+              Success(IntDomain.ofInterval(lb, ub))
           }
         } else {
-          IntDomain(v.domain)
+          Success(IntDomain(v.domain))
         }
 
-      case _ => throw new IllegalArgumentException("Unhandled variable type")
+      case _ => Failure(new IllegalArgumentException("Unhandled variable type"))
     }
 
-    require(cspomVar.searchSpace == dom.size, s"$cspomVar -> $dom")
+    for (d <- dom) {
+      require(cspomVar.searchSpace == d.size, s"$cspomVar -> $dom")
+    }
 
     dom
   }
@@ -123,7 +138,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
     //    }
 
     constraint.nonReified && (constraint.function == "pseudoboolean" || constraint.function == "sum" && {
-      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
+      val (vars, _, _, mode) = SumGenerator.readCSPOM(constraint)
       (mode == LE || mode == EQ) &&
         vars.forall {
           case BoolExpression(_) => true

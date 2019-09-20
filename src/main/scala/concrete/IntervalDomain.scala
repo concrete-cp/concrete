@@ -64,16 +64,14 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
   def removeTo(ub: Int): IntDomain =
     if (ub < span.lb) {
       this
-    }
-    else {
+    } else {
       IntDomain.ofInterval(ub + 1, span.ub)
     }
 
   def removeUntil(ub: Int): IntDomain =
     if (ub <= span.lb) {
       this
-    }
-    else {
+    } else {
       IntDomain.ofInterval(ub, span.ub)
     }
 
@@ -86,20 +84,9 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
-  def filterBounds(f: Int => Boolean): IntDomain = {
-    var lb = head
-    var ub = last
-    while (lb <= ub && !f(lb)) {
-      lb += 1
-    }
-    while (ub > lb && !f(ub)) {
-      ub -= 1
-    }
-    if (lb == head && ub == last) {
-      this
-    } else {
-      IntDomain.ofInterval(lb, ub)
-    }
+
+  def reverseIterator: Iterator[Int] = {
+    span.allValues.reverseIterator
   }
 
   override def toString: String = s"[$head, $last]"
@@ -108,6 +95,10 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     case d: BitVectorDomain => (head to last).forall(d)
     case d: IntervalDomain => head >= d.head && last <= d.last
   }
+
+  override def last: Int = span.ub
+
+  override def head: Int = span.lb
 
   def toBitVector(offset: Int): BitVector = {
     if (offset == head) {
@@ -210,17 +201,13 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
-  override def head: Int = span.lb
-
-  override def last: Int = span.ub
-
   def convex = true
 
   override def isEmpty = false
 
   def iterator: Iterator[Int] = span.allValues.iterator
 
-  def iteratorFrom(start: Int): Iterator[Int] = (start to last).iterator
+  def iteratorFrom(start: Int): Iterator[Int] = Iterator.range(start, last)
 
   override def foreach[U](f: Int => U): Unit = {
     span.allValues.foreach(f)

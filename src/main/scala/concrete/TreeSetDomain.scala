@@ -39,15 +39,7 @@ final class TreeSetDomain(val set: TreeSet[Int])
     }
   }
 
-  override def filterBounds(f: Int => Boolean): IntDomain = {
-    val filtLeft = set.dropWhile(v => !f(v))
-
-    val it = filtLeft.toSeq.reverseIterator
-    var count = 0
-    while (it.hasNext && !f(it.next)) count += 1
-
-    IntDomain.ofTreeSet(filtLeft.dropRight(count))
-  }
+  def reverseIterator: Iterator[Int] = set.toSeq.reverseIterator
 
   def excl(index: Int): IntDomain = {
     val newSet = set - index

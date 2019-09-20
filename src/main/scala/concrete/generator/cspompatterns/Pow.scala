@@ -4,12 +4,10 @@ import cspom.compiler.ConstraintCompiler._
 import cspom.compiler.{ConstraintCompilerNoData, Delta, Functions}
 import cspom.extension.MDDRelation
 import cspom.util.{Infinitable, IntInterval, RangeSet}
-import cspom.variable.{IntExpression, SimpleExpression}
+import cspom.variable.IntExpression
 import cspom.variable.IntExpression.implicits.iterable
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd.MDD
-
-import scala.util.{Failure, Try}
 
 object Pow extends ConstraintCompilerNoData {
 
@@ -26,18 +24,16 @@ object Pow extends ConstraintCompilerNoData {
     val Seq(x, y) = args
 
 
-    val mdd = Try {
+    val mdd = try {
       pow(
         iterable(x).toSeq.map(cspom.util.Math.toIntExact),
         iterable(y).toSeq.map(cspom.util.Math.toIntExact),
         iterable(r).r)
+        .reduce()
+    } catch {
+      case e: ArithmeticException =>
+        throw new IllegalStateException(s"Could not handle $r = $x ^ $y", e)
     }
-      .recoverWith {
-        case e: ArithmeticException =>
-          Failure(new IllegalStateException(s"Could not handle $r = $x ^ $y", e))
-      }
-      .get
-      .reduce()
 
     //    println(constraint)
     //    println(mdd)

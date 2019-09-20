@@ -15,3 +15,12 @@ object TryWith {
     }
   }
 }
+//
+//object TryFlatten {
+//  def apply[T](xs: Seq[Try[T]]): Try[Seq[T]] = {
+//    val (failures, successes) = xs.partitionMap(_.toEither)
+//    failures.headOption
+//      .map(Failure(_))
+//      .getOrElse(Success(successes))
+//  }
+//}
