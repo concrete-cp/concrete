@@ -2,15 +2,15 @@ package concrete.constraint.extension
 
 ;
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import concrete.IntDomain
 import concrete.Problem
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import mdd.MDD
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
+final class ExtensionConstraintTrieTest extends AnyFlatSpec with Matchers {
 
   val mdd = MDD(Array(0, 0), Array(1, 1), Array(2, 2))
 

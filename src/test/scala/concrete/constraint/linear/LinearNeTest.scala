@@ -2,9 +2,10 @@ package concrete.constraint.linear
 
 import concrete.constraint.AdviseCount
 import concrete.{Assignment, BooleanDomain, Problem, Variable}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class LinearNeTest extends FlatSpec with Matchers {
+class LinearNeTest extends AnyFlatSpec with Matchers {
   "LinearNe" should "not filter" in {
 
     val x_2095 = new Variable("X2095", BooleanDomain.UNKNOWNBoolean)

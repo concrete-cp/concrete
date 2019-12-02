@@ -3,9 +3,10 @@ package concrete.constraint.semantic
 import concrete.constraint.AdviseCount
 import concrete.heuristic.Assign
 import concrete._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class NoGoodsTest extends FlatSpec with Matchers {
+class NoGoodsTest extends AnyFlatSpec with Matchers {
 
   "nogoods" should "find watched" in {
     val v1 = new Variable("v1", IntDomain.ofSeq(1, 2, 3))

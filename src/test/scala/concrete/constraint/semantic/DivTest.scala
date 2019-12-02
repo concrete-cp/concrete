@@ -4,13 +4,15 @@ import concrete._
 import concrete.constraint._
 import concrete.util.Interval
 import org.scalacheck.Gen
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * @author vion
   */
-class DivTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+class DivTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks {
   "DivAC" should "comply with MiniZinc specifications" in {
 
     Inspectors.forAll(Seq((7, 4, 1), (-7, 4, -1), (7, -4, -1), (-7, -4, 1))) {

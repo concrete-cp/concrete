@@ -4,9 +4,11 @@ import concrete.constraint.linear.Eq
 import concrete.constraint.semantic.AllDifferentAC
 import concrete.heuristic.value.MedValue
 import cspom.StatisticsManager
-import org.scalatest.{FlatSpec, Matchers, Tag}
+import org.scalatest.Tag
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestMAC extends FlatSpec with Matchers {
+class TestMAC extends AnyFlatSpec with Matchers {
 
   val sols: List[(Int, Int, Option[Tag])] = List(
     (4, 2, None),
