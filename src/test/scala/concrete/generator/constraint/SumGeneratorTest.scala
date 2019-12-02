@@ -8,9 +8,10 @@ import cspom.CSPOM.{constantSeq, ctr, seq2CSPOMSeq}
 import cspom.compiler.{CSPOMCompiler, MergeEq}
 import cspom.variable.{CSPOMConstant, IntVariable}
 import cspom.{CSPOM, CSPOMConstraint}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class SumGeneratorTest extends FlatSpec with Matchers {
+class SumGeneratorTest extends AnyFlatSpec with Matchers {
 
   "SumDomains" should "filter" in {
     val cspom = CSPOM { implicit problem =>

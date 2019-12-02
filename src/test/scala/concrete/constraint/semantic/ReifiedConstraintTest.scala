@@ -6,9 +6,10 @@ import concrete.constraint.linear.{EqACFast, EqBC, LinearNe, StatelessLinearEq}
 import cspom.CSPOM._
 import cspom.variable.{BoolVariable, IntVariable}
 import cspom.{CSPOM, CSPOMConstraint}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ReifiedConstraintTest extends FlatSpec with Matchers {
+class ReifiedConstraintTest extends AnyFlatSpec with Matchers {
 
   "Reified neq" should "be revised after advise" in {
     val v0 = new Variable("v0", IntDomain.ofSeq(0, 1))

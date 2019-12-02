@@ -2,12 +2,14 @@ package concrete
 package constraint
 package semantic
 
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * Created by vion on 29/05/17.
   */
-class ChannelTest extends FlatSpec with Matchers with Inspectors {
+class ChannelTest extends AnyFlatSpec with Matchers with Inspectors {
 
   "Channel" should "be correct" in {
     val x = Array.tabulate(4)(p => new Variable(s"x[${p + 2}]", IntDomain(0 to 20)))

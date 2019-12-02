@@ -5,9 +5,11 @@ import java.io.FileNotFoundException
 import cspom.CSPOM
 import cspom.compiler._
 import org.scalatest.concurrent.TimeLimits
-import org.scalatest.{FlatSpec, Matchers, TryValues}
+import org.scalatest.TryValues
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MergeSameTest extends FlatSpec with Matchers with TimeLimits with TryValues {
+class MergeSameTest extends AnyFlatSpec with Matchers with TimeLimits with TryValues {
 
 //  "MergeSame" should "not take too long to compile" in {
 //    val url = getClass.getResource("tsp-20-1_ext.xml")

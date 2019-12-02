@@ -1,9 +1,9 @@
 package concrete
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class BooleanDomainTest extends FlatSpec with Matchers {
+final class BooleanDomainTest extends AnyFlatSpec with Matchers {
 
   private val domain = BooleanDomain()
 

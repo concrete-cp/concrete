@@ -1,9 +1,10 @@
 package concrete.util
 
-import org.scalatest.{FlatSpec, Matchers}
 import Math.partialOrderingVector
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MathTest extends FlatSpec with Matchers {
+class MathTest extends AnyFlatSpec with Matchers {
 
   "ParetoMax algorithm" should "correctly extract maximum vectors" in {
     val v = Seq(

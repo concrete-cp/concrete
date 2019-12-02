@@ -1,14 +1,14 @@
 package concrete.constraint.semantic
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 import concrete.BooleanDomain
 import concrete.Variable
 import concrete.Problem
 import concrete.Assignment
 import concrete.constraint.AdviseCount
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class XorTest extends FlatSpec with Matchers {
+class XorTest extends AnyFlatSpec with Matchers {
   "Xor constraint" should "assign even variables" in {
     val b1 = new Variable("b1", BooleanDomain())
     val b2 = new Variable("b2", BooleanDomain())

@@ -1,15 +1,15 @@
 package concrete.constraint.linear
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 import concrete.IntDomain
 import concrete.Variable
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.constraint.AdviseCount
 import concrete.Assignment
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class LinearTest extends FlatSpec with Matchers {
+class LinearTest extends AnyFlatSpec with Matchers {
   "LinearLe" should "correctly update domain cache" in {
     val pm = new ParameterManager
     val ranges = Seq(
