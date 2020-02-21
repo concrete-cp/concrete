@@ -2,10 +2,11 @@ package concrete.constraint.semantic
 
 import concrete.{IntDomain, Problem, Singleton, Variable}
 import concrete.constraint.AdviseCount
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class NeqTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+final class NeqTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "Neq" should "not filter" in {
     val v0 = new Variable("v0", IntDomain.ofSeq(1, 2, 3))

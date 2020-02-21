@@ -2,9 +2,10 @@ package concrete.constraint.semantic
 
 import concrete.constraint.AdviseCount
 import concrete.{IntDomain, Problem, Variable}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AllDifferentACTest extends FlatSpec with Matchers {
+class AllDifferentACTest extends AnyFlatSpec with Matchers {
 
   "AllDifferentAC" should "detect contradiction" in {
     val v1 = new Variable("1", IntDomain.ofSeq(7))

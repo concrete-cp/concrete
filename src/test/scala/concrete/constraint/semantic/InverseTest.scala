@@ -3,10 +3,12 @@ package concrete.constraint.semantic
 import concrete._
 import concrete.constraint.AdviseCount
 import concrete.filter.ACC
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class InverseTest extends FlatSpec with Matchers with Inspectors {
+class InverseTest extends AnyFlatSpec with Matchers with Inspectors {
   "Inverse" should "filter" in {
     val x = Array.tabulate(4)(i => new Variable(s"x[$i]", IntDomain(0 to 3)))
     val y = Array.tabulate(4)(i => new Variable(s"y[$i]", IntDomain(0 to 3)))

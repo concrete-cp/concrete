@@ -7,9 +7,10 @@ import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.runner.XCSP3Concrete
 import cspom.compiler.CSPOMCompiler
-import org.scalatest.{FlatSpec, TryValues}
+import org.scalatest.TryValues
+import org.scalatest.flatspec.AnyFlatSpec
 
-final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValues {
+final class ProblemGeneratorTest extends AnyFlatSpec with LazyLogging with TryValues {
 
   "ProblemGenerator" should "generate zebra" in {
     generateTest("Zebra.xml.xz");

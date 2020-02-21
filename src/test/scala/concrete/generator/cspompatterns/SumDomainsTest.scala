@@ -6,9 +6,11 @@ import cspom.CSPOM.ctr
 import cspom.compiler.{CSPOMCompiler, MergeEq}
 import cspom.util.{IntInterval, RangeSet}
 import cspom.variable.{IntExpression, IntVariable}
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import org.scalatest.OptionValues
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class SumDomainsTest extends FlatSpec with Matchers with OptionValues {
+class SumDomainsTest extends AnyFlatSpec with Matchers with OptionValues {
 
   "SumDomains" should "filter >" in {
     val cspom = CSPOM { implicit p =>
