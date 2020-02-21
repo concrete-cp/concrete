@@ -1,11 +1,11 @@
 package concrete.util
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class SparseSetBufferTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+class SparseSetBufferTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "SparseSetBuffer" should "detect containment" in {
 

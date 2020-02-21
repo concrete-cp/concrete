@@ -8,12 +8,14 @@ import cspom.compiler.CSPOMCompiler
 import cspom.variable.{CSPOMConstant, CSPOMVariable, IntVariable}
 import cspom.{CSPOM, CSPOMConstraint, UNSATException}
 import org.scalacheck.Gen
-import org.scalatest.{FlatSpec, Matchers, TryValues}
+import org.scalatest.TryValues
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.util.{Failure, Success}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class PowTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks with TryValues {
+class PowTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks with TryValues {
   "Pow generator" should "generate correct constraint" in {
     val dom = Gen.nonEmptyListOf(Gen.choose(-100, 100))
 

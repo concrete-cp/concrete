@@ -1,15 +1,15 @@
 package concrete.generator.cspompatterns
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import concrete.CSPOMDriver._
 import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.variable.IntVariable
 import cspom.compiler.CSPOMCompiler
 import concrete.ParameterManager
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AddToEqTest extends FlatSpec with Matchers {
+class AddToEqTest extends AnyFlatSpec with Matchers {
 
   "AddToEq" should "simplify adjacency constraints correctly" in {
     val problem = CSPOM { implicit problem =>

@@ -1,14 +1,14 @@
 package concrete
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 
 import concrete.constraint.semantic.ClauseConstraint
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  * @author vion
  */
-class ProblemStateTest extends FlatSpec with Matchers {
+class ProblemStateTest extends AnyFlatSpec with Matchers {
   "entailment manager" should "compute entailed constraint" in {
     val v1 = new Variable("v1", BooleanDomain())
     val v2 = new Variable("v2", BooleanDomain())

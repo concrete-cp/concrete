@@ -1,15 +1,15 @@
 package concrete.generator.cspompatterns
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import concrete.CSPOMDriver.CSPOMIntExpressionOperations
 import concrete.CSPOMDriver.abs
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.IntVariable
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AbsDiffCompilerTest extends FlatSpec with Matchers {
+class AbsDiffCompilerTest extends AnyFlatSpec with Matchers {
 
   "AbsDiff compiler" should "compile CSPOM DSL" in {
 

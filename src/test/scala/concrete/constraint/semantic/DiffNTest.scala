@@ -5,11 +5,13 @@ import concrete._
 import concrete.constraint.AdviseCount
 import cspom._
 import cspom.variable.IntVariable
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import org.scalatest.OptionValues
 
 import scala.util.Random
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class DiffNTest extends FlatSpec with Matchers with OptionValues with LazyLogging {
+class DiffNTest extends AnyFlatSpec with Matchers with OptionValues with LazyLogging {
   "diffN" should "filter" in {
     val xs = Array(Singleton(1), Singleton(2), IntDomain(0 until 15)).zipWithIndex.map {
       case (d, i) => new Variable(s"x$i", d)
