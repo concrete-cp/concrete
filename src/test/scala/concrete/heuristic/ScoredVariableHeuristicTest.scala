@@ -1,16 +1,16 @@
 package concrete.heuristic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import concrete.Variable
 import concrete.IntDomain
 import concrete.Problem
 import concrete.heuristic.variable.Dom
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  * @author vion
  */
-class ScoredVariableHeuristicTest extends FlatSpec with Matchers {
+class ScoredVariableHeuristicTest extends AnyFlatSpec with Matchers {
   "Scored Variable Heuristic" should "select smallest variable with random tie breaking" in {
     val variables = Array.tabulate(10)(n => new Variable(n.toString, IntDomain(0 to 10)))
 

@@ -7,9 +7,11 @@ import cspom.CSPOMGoal.Minimize
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.{BoolVariable, CSPOMSeq, IntVariable}
 import cspom.{CSPOM, UNSATException}
-import org.scalatest.{FlatSpec, Matchers, TryValues}
+import org.scalatest.TryValues
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ACCSETest extends FlatSpec with Matchers with TryValues {
+class ACCSETest extends AnyFlatSpec with Matchers with TryValues {
 
   "ACCSE" should "greatly improve bad GR model" in {
     val ticks = 3

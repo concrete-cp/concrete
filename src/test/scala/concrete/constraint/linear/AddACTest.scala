@@ -3,10 +3,11 @@ package constraint
 package linear
 
 import org.scalacheck.Gen
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class AddACTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+final class AddACTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "AddAC" should "filter X" in {
     val x = new Variable("x", IntDomain(-100 to 100))

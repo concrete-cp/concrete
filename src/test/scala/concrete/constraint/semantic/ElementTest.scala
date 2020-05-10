@@ -2,12 +2,13 @@ package concrete.constraint.semantic
 
 import concrete._
 import concrete.constraint.AdviseCount
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * @author vion
   */
-class ElementTest extends FlatSpec with Matchers {
+class ElementTest extends AnyFlatSpec with Matchers {
 
   "Element constraint" should "filter correctly test case" in {
     val r = new Variable("r", IntDomain.ofSeq(47, 59, 65))

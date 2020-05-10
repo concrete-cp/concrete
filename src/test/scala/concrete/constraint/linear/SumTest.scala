@@ -7,9 +7,11 @@ package linear
 import cspom.CSPOM._
 import cspom.variable.{BoolVariable, IntVariable}
 import cspom.{CSPOM, CSPOMConstraint}
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class SumTest extends FlatSpec with Matchers with Inspectors {
+final class SumTest extends AnyFlatSpec with Matchers with Inspectors {
 
   val pm = new ParameterManager()
   // pm("linear.stateless") = true

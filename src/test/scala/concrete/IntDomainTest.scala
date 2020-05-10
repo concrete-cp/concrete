@@ -1,11 +1,11 @@
 package concrete
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class IntDomainTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+final class IntDomainTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks {
 
   "IntDomain" should "find next/prev" in {
     val b = IntDomain.ofSeq(1, 2, 7, 8)
