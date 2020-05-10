@@ -1,10 +1,10 @@
 package concrete
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 import bitvectors.BitVector
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class BitVectorDomainTest extends FlatSpec with Matchers {
+class BitVectorDomainTest extends AnyFlatSpec with Matchers {
 
   "BitVectorDomains" should "shift automatically" in {
     val bv = IntDomain.ofBitVector(0, BitVector((100 until 150) ++ (200 until 250)), 100).asInstanceOf[BitVectorDomain]

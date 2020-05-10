@@ -1,7 +1,8 @@
 package concrete.constraint
 
 import concrete._
-import org.scalatest.{Inspectors, Matchers}
+import org.scalatest.Inspectors
+import org.scalatest.matchers.should.Matchers
 
 /**
   * @author vion

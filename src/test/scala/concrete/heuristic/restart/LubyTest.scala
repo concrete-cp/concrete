@@ -1,9 +1,11 @@
 package concrete.heuristic.restart
 
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import org.scalatest.OptionValues
 import concrete.ParameterManager
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class LubyTest extends FlatSpec with Matchers with OptionValues {
+class LubyTest extends AnyFlatSpec with Matchers with OptionValues {
   "Luby" should "generate test sequence" in {
     val pm = new ParameterManager().updated("luby.base", 1)
     

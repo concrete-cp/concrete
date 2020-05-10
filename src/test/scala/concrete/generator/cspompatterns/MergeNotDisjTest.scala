@@ -2,12 +2,13 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.variable.IntVariable
-import org.scalatest.{FlatSpec, Matchers}
 import CSPOM._
 import concrete.CSPOMDriver._
 import concrete.Solver
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MergeNotDisjTest extends FlatSpec with Matchers {
+class MergeNotDisjTest extends AnyFlatSpec with Matchers {
   "MergeNotDisj" should "work with non-clause constraints" in {
     val prob = CSPOM { implicit problem =>
       val a = IntVariable(1 to 10) as "a"

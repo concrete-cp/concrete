@@ -6,9 +6,11 @@ import concrete.filter.ACC
 import cspom.CSPOM
 import cspom.CSPOM.{constant, ctr}
 import cspom.variable.IntVariable
-import org.scalatest.{FlatSpec, Inspectors, Matchers, TryValues}
+import org.scalatest.{Inspectors, TryValues}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AtLeastTest extends FlatSpec with Matchers with Inspectors with TryValues {
+class AtLeastTest extends AnyFlatSpec with Matchers with Inspectors with TryValues {
 
   "AtLeast" should "filter" in {
     val v1 = new Variable("1", IntDomain.ofSeq(7))
