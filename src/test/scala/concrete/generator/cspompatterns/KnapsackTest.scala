@@ -3,9 +3,11 @@ package concrete.generator.cspompatterns
 import cspom.extension.Relation
 import cspom.util.{ContiguousIntRangeSet, IntInterval, RangeSet}
 import cspom.variable.IntVariable
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class KnapsackTest extends FlatSpec with Matchers with Inspectors {
+class KnapsackTest extends AnyFlatSpec with Matchers with Inspectors {
 
   "knapsack generator" should "generate correct mdd" in {
     val profits = IndexedSeq(5, 10)

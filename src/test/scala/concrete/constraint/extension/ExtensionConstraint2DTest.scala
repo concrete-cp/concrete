@@ -1,6 +1,5 @@
 package concrete.constraint.extension;
 
-import org.scalatest.FlatSpec
 import concrete._
 import concrete.constraint.AdviseCount
 import org.scalatest.Inspectors
@@ -9,8 +8,9 @@ import cspom.CSPOM
 import cspom.variable.IntVariable
 
 import CSPOM._
+import org.scalatest.flatspec.AnyFlatSpec
 
-final class ExtensionConstraint2DTest extends FlatSpec with Inspectors {
+final class ExtensionConstraint2DTest extends AnyFlatSpec with Inspectors {
 
   val var1 = new Variable("V1", IntDomain(1 to 3))
   val var2 = new Variable("V2", IntDomain(1 to 4))

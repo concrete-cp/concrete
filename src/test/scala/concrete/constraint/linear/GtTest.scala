@@ -4,9 +4,10 @@ package concrete.constraint.linear
 
 import concrete.{IntDomain, Problem, Variable}
 import concrete.constraint.AdviseCount
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class GtTest extends FlatSpec with Matchers {
+final class GtTest extends AnyFlatSpec with Matchers {
 
   val v1: Variable = new Variable("v1", IntDomain(1 to 4));
   val v2: Variable = new Variable("v2", IntDomain(3 to 5));
