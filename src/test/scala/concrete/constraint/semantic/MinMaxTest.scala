@@ -2,13 +2,15 @@ package concrete.constraint.semantic
 
 import concrete._
 import concrete.constraint.AdviseCount
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * @author vion
   */
-class MinMaxTest extends FlatSpec with Matchers with Inspectors with ScalaCheckPropertyChecks {
+class MinMaxTest extends AnyFlatSpec with Matchers with Inspectors with ScalaCheckPropertyChecks {
   "Min" should "filter unique candidate" in {
     val r = new Variable("r", IntDomain.ofSeq(121))
     val a = Array(

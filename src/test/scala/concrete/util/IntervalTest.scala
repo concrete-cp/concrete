@@ -1,8 +1,10 @@
 package concrete.util
 
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import org.scalatest.OptionValues
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class IntervalTest extends FlatSpec with Matchers with OptionValues {
+class IntervalTest extends AnyFlatSpec with Matchers with OptionValues {
 
   "Intervals" should "divide" in {
     (Interval(1, 19) / 20) shouldBe empty

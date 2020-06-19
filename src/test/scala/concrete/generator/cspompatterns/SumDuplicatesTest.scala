@@ -5,9 +5,10 @@ import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.compiler.{CSPOMCompiler, MergeEq}
 import cspom.variable.{CSPOMConstant, CSPOMSeq, IntExpression, IntVariable}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class SumDuplicatesTest extends FlatSpec with Matchers {
+class SumDuplicatesTest extends AnyFlatSpec with Matchers {
   "SumDuplicates" should "merge" in {
     val problem: CSPOM = CSPOM { implicit p =>
       val Seq(x, y) = Seq.fill(2) {
