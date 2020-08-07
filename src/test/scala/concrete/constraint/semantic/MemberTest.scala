@@ -3,10 +3,11 @@ package constraint
 package semantic
 
 import org.scalacheck.Gen
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MemberTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+class MemberTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks {
   "Member constraint" should "filter" in {
     val x = new Variable("x", IntDomain(0 to 1))
     val y = new Variable("y", IntDomain(1 to 10))

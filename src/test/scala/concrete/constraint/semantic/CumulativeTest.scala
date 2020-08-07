@@ -2,12 +2,13 @@ package concrete.constraint.semantic
 
 import concrete.constraint.{AdviseCount, Constraint, Residues, TupleEnumerator}
 import concrete.{IntDomain, Problem, Singleton, Variable}
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.util.Random
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class CumulativeTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks {
+class CumulativeTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks {
   "cumulative" should "build profile" in {
     val r = new Random(0)
     val starts = Array.tabulate(5)(s => new Variable(s"s$s", IntDomain(0 until 25)))

@@ -1,8 +1,10 @@
 package concrete.priorityqueues
 
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
 import org.scalatest.concurrent.TimeLimits
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 object IntNode {
   var id: Int = 0
@@ -13,7 +15,7 @@ case class IntNode(v: Int) extends Identified with PTag {
   IntNode.id += 1
 }
 
-final class PriorityQueueTest extends FlatSpec with Matchers with TimeLimits with ScalaCheckPropertyChecks {
+final class PriorityQueueTest extends AnyFlatSpec with Matchers with TimeLimits with ScalaCheckPropertyChecks {
 
   //  private val RANDOM = new Random(0);
   //

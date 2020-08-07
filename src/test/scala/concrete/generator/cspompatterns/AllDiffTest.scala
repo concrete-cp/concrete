@@ -1,15 +1,15 @@
 package concrete.generator.cspompatterns
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.compiler.CSPOMCompiler
 import cspom.compiler.MergeEq
 import cspom.variable.IntVariable
 import concrete.CSPOMDriver._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AllDiffTest extends FlatSpec with Matchers {
+class AllDiffTest extends AnyFlatSpec with Matchers {
 
   "AllDiff" should "compile" in {
     val cspom = CSPOM { implicit problem =>
