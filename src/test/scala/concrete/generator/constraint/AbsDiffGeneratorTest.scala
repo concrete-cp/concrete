@@ -7,11 +7,11 @@ import cspom.CSPOM._
 import cspom.variable.IntVariable
 import concrete.constraint.semantic.AbsDiffAC
 import concrete.constraint.semantic.AbsDiffBC
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 import org.scalatest.TryValues
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class AbsDiffGeneratorTest extends FlatSpec with Matchers with TryValues {
+final class AbsDiffGeneratorTest extends AnyFlatSpec with Matchers with TryValues {
 
   "AbsDiffGenerator" should "generate constraints" in {
 

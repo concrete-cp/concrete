@@ -1,7 +1,9 @@
 package concrete.generator.cspompatterns
 
-import org.scalatest.{FlatSpec, Matchers, TryValues}
+import org.scalatest.TryValues
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MergeSameCommutativeTest extends FlatSpec with Matchers with TryValues {
+class MergeSameCommutativeTest extends AnyFlatSpec with Matchers with TryValues {
 
 }
