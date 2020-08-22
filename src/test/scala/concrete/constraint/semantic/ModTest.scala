@@ -4,14 +4,16 @@ package semantic
 
 import concrete.util.Interval
 import org.scalacheck.Gen
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * @author vion
   */
-class ModTest extends FlatSpec with Matchers with Inspectors {
+class ModTest extends AnyFlatSpec with Matchers with Inspectors {
   "ModAC" should "comply with MiniZinc specifications" in {
 
     forAll(Seq((7, 4, 3), (-7, 4, -3), (7, -4, 3), (-7, -4, -3))) {

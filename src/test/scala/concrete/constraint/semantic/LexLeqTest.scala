@@ -1,16 +1,16 @@
 package concrete.constraint.semantic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 
 import concrete.Problem
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import concrete.BooleanDomain
 import concrete.Assignment
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class LexLeqTest extends FlatSpec with Matchers {
+class LexLeqTest extends AnyFlatSpec with Matchers {
   "lexleq" should "update alpha" in {
     val x = Array(
       new Variable("x0", BooleanDomain()),

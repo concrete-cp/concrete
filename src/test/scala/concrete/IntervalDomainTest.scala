@@ -1,9 +1,9 @@
 package concrete
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class IntervalDomainTest extends FlatSpec with Matchers {
+class IntervalDomainTest extends AnyFlatSpec with Matchers {
 
   "IntervalDomain" should "test" in {
     val dom = IntDomain(10 to 20)

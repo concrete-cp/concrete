@@ -19,9 +19,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 import scala.util.{Random, Success, Try}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class SolvingTest extends FunSpec with SolvingBehaviors {
+class SolvingTest extends AnyFunSpec with SolvingBehaviors {
 
 
   private val xcsp18COPtest = Seq[(String, (AnyVal, Double))](
