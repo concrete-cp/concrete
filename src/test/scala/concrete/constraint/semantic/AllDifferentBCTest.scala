@@ -1,13 +1,13 @@
 package concrete.constraint.semantic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import concrete.IntDomain
 import concrete.Variable
 import concrete.Problem
 import concrete.constraint.AdviseCount
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AllDifferentBCTest extends FlatSpec with Matchers {
+class AllDifferentBCTest extends AnyFlatSpec with Matchers {
 
   "AllDifferentBC" should "detect contradiction" in {
     val v1 = new Variable("1", IntDomain.ofSeq(7))

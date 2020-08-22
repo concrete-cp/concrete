@@ -1,7 +1,6 @@
 package concrete
 package it
 
-import org.scalatest.FlatSpec
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.runner.FZConcrete
@@ -9,8 +8,9 @@ import cspom.compiler.CSPOMCompiler
 
 import scala.collection.{immutable, mutable}
 import scala.util.Random
+import org.scalatest.flatspec.AnyFlatSpec
 
-class SolutionTest extends FlatSpec {
+class SolutionTest extends AnyFlatSpec {
 
   /*
  * 

@@ -2,14 +2,15 @@ package concrete.heuristic
 
 import concrete.{EntailmentManager, IntDomain, ProblemState, Variable}
 import concrete.heuristic.branch.IntervalBranch
-import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.immutable.IntMap
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * @author vion
   */
-class IntervalBranchTest extends FlatSpec with Matchers {
+class IntervalBranchTest extends AnyFlatSpec with Matchers {
   "Interval heuristic" should "select two intervals" in {
     val i = IntDomain.ofInterval(0, 1)
     val j = IntDomain.ofInterval(10, 15)

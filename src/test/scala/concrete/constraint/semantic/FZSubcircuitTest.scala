@@ -2,9 +2,10 @@ package concrete.constraint.semantic
 
 import concrete.constraint.AdviseCount
 import concrete.{IntDomain, Problem, Variable}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class FZSubcircuitTest extends FlatSpec with Matchers {
+class FZSubcircuitTest extends AnyFlatSpec with Matchers {
 
   behavior of "FZSubcircuitTest"
 

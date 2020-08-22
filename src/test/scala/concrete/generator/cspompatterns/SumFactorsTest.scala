@@ -6,9 +6,10 @@ import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.compiler.{CSPOMCompiler, MergeEq}
 import cspom.variable.IntVariable
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class SumFactorsTest extends FlatSpec with Matchers {
+class SumFactorsTest extends AnyFlatSpec with Matchers {
   "SumFactors" should "canonize" in {
     val problem = CSPOM { implicit p =>
       val Seq(x, y, z) = Seq.fill(3) {

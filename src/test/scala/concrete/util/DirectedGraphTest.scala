@@ -2,9 +2,10 @@ package concrete.util
 
 import concrete.constraint.semantic.FZSubcircuit
 import concrete.{IntDomain, Problem, Variable}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class DirectedGraphTest extends FlatSpec with Matchers {
+class DirectedGraphTest extends AnyFlatSpec with Matchers {
 
   "DirectedGraph" should "buildDomTree" in {
     // Test case from Lengauer & Tarjan 1979

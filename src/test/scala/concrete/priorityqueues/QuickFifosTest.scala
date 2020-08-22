@@ -4,11 +4,11 @@ import bitvectors.BitVector
 import concrete.constraint.Constraint
 
 import scala.util.Random
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 import concrete._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class QuickFifosTest extends FlatSpec with Matchers {
+class QuickFifosTest extends AnyFlatSpec with Matchers {
 
   class TestConstraint(val eval: Int, val variable: Variable) extends Constraint(variable) {
     def init(ps: ProblemState): ProblemState = ps

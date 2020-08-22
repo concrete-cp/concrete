@@ -3,12 +3,14 @@ package concrete.constraint.semantic
 import concrete._
 import concrete.constraint.AdviseCount
 import org.scalacheck.Gen
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.Inspectors
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.mutable
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-final class NeqVecTest extends FlatSpec with Matchers with ScalaCheckPropertyChecks with Inspectors {
+final class NeqVecTest extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks with Inspectors {
 
   def project(relation: Seq[Seq[Int]]): IndexedSeq[Set[Int]] = {
     val projection = IndexedSeq.fill(relation.head.size)(new mutable.HashSet[Int])
