@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
   "com.typesafe.slick" %% "slick" % "3.3.2",
   "com.typesafe" % "config" % "1.4.0",
-  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.9" % "test",
   "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
   "com.github.davidmoten" % "rtree" % "0.8.7",
   "org.eclipse.collections" % "eclipse-collections" % "10.0.0",
