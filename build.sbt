@@ -10,7 +10,7 @@ packageDescription := "Concrete is a Scala CSP Solving API"
 
 version := "3.12.3"
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.13"
 
 javaOptions in ThisBuild += "-Xss16M"
 
